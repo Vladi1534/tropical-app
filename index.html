@@ -1044,6 +1044,17 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <div class="sec" id="s-progreso">
   <div class="ps">
     <div class="mh"><div class="mt-title">📊 Mi Progreso</div><div class="mt-sub" id="mo-label">—</div></div>
+    <div id="month-nav" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px">
+      <select id="sel-month" onchange="navMonthDirect()" style="padding:8px 12px;border-radius:8px;background:var(--card2);color:var(--txt);border:1px solid rgba(168,85,247,.15);font-size:13px;font-family:'Nunito',sans-serif;outline:none;cursor:pointer">
+        <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+        <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+        <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+        <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+      </select>
+      <select id="sel-year" onchange="navMonthDirect()" style="padding:8px 12px;border-radius:8px;background:var(--card2);color:var(--txt);border:1px solid rgba(168,85,247,.15);font-size:13px;font-family:'Nunito',sans-serif;outline:none;cursor:pointer"></select>
+      <button onclick="navMonthDirect(true)" style="padding:8px 14px;border-radius:8px;background:var(--grad-b);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">Hoy</button>
+    </div>
+    <div id="history-banner" style="display:none;text-align:center;padding:6px;font-size:10px;color:var(--cyan);background:rgba(34,211,238,.06);border-radius:8px;margin:0 16px 8px">📂 Viendo historial</div>
     <div class="dp-coins">
       <div class="dp-box tot" onclick="openM('m-coins')"><div class="dp-label">🪙 Total en mi cuenta</div><div class="dp-val pk" id="p-coins-total">0</div><div class="dp-hint">Toca para actualizar</div></div>
       <div class="dp-box mes"><div class="dp-label">🪙 Ganadas este mes</div><div class="dp-val gd" id="p-coins-month">0</div><div class="dp-hint">Suma de tus sesiones</div></div>
@@ -1489,7 +1500,7 @@ function init(){
 function load(){
   sbq('emisora_perfil?id=eq.'+U.id+'&select=*').then(function(r){return r.json()}).then(function(d){
     P=(d&&d.length>0)?d[0]:{id:U.id,nombre:U.name,monedas_acumuladas:0,monedas_cuenta_total:0};
-    refreshAll();loadSes();loadCat();hideLd();checkOnboarding();
+    refreshAll();loadSes();loadCat();hideLd();checkOnboarding();initMonthNav();saveMonthlySnapshot();
   }).catch(function(e){console.error(e);P={id:U.id,nombre:U.name||'Emisora',monedas_acumuladas:0,monedas_cuenta_total:0};refreshAll();loadCat();hideLd();checkOnboarding()});
 }
 function hideLd(){var e=document.getElementById('ld');e.classList.add('out');setTimeout(function(){e.style.display='none'},500)}
@@ -1711,6 +1722,125 @@ function rChip(g,v){var w=document.getElementById('c-'+g);if(!w)return;var cs=w.
 function rMulti(g,vs){var w=document.getElementById('c-'+g);if(!w)return;var cs=w.querySelectorAll('.ch');for(var i=0;i<cs.length;i++)for(var j=0;j<vs.length;j++)if(cs[i].textContent.indexOf(vs[j])!==-1)cs[i].classList.add('sel')}
 
 /* ===== SESSIONS ===== */
+/* ===== MONTH NAVIGATION ===== */
+var viewMonth=null,viewYear=null;
+var mnsNav=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function initMonthNav(){
+  var now=new Date();
+  var selM=document.getElementById('sel-month');
+  var selY=document.getElementById('sel-year');
+  if(!selM||!selY)return;
+  selM.value=String(now.getMonth());
+  /* Build year options from 2026 to current */
+  var startYear=2026;
+  var h='';
+  for(var y=now.getFullYear();y>=startYear;y--)h+='<option value="'+y+'">'+y+'</option>';
+  selY.innerHTML=h;
+  selY.value=String(now.getFullYear());
+}
+
+function navMonthDirect(goToday){
+  var now=new Date();
+  var selM=document.getElementById('sel-month');
+  var selY=document.getElementById('sel-year');
+  if(!selM||!selY)return;
+  
+  if(goToday){
+    selM.value=String(now.getMonth());
+    selY.value=String(now.getFullYear());
+  }
+  
+  var m=parseInt(selM.value);
+  var y=parseInt(selY.value);
+  
+  /* Don't go to future */
+  if(y>now.getFullYear()||(y===now.getFullYear()&&m>now.getMonth())){
+    m=now.getMonth();y=now.getFullYear();
+    selM.value=String(m);selY.value=String(y);
+  }
+  
+  var isCurrentMonth=(m===now.getMonth()&&y===now.getFullYear());
+  document.getElementById('history-banner').style.display=isCurrentMonth?'none':'block';
+  
+  if(isCurrentMonth){
+    viewMonth=null;viewYear=null;
+    loadSes();
+  }else{
+    viewMonth=m;viewYear=y;
+    loadHistoricalMonth(y,m);
+  }
+}
+
+function loadHistoricalMonth(year,month){
+  var startDate=year+'-'+String(month+1).padStart(2,'0')+'-01';
+  var endMonth=month+1>11?1:month+2;
+  var endYear=month+1>11?year+1:year;
+  var endDate=endYear+'-'+String(endMonth).padStart(2,'0')+'-01';
+  
+  sbq('historial_sesiones?emisora_id=eq.'+U.id+'&created_at=gte.'+startDate+'&created_at=lt.'+endDate+'&order=created_at.desc&limit=100')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      allS=d||[];
+      renderSes();
+      /* Calculate historical stats */
+      var totalCoins=0,totalHours=0,totalContable=0;
+      for(var i=0;i<allS.length;i++){
+        totalCoins+=(allS[i].monedas_reportadas||0);
+        var h=allS[i].horas_transmitidas||0;
+        totalHours+=h;
+        totalContable+=Math.min(3,h);
+      }
+      document.getElementById('p-coins-month').textContent=fmt(totalCoins);
+      document.getElementById('h-contables').textContent=totalContable.toFixed(1);
+      document.getElementById('h-real').textContent=totalHours.toFixed(1);
+      document.getElementById('h-dias').textContent=allS.length;
+    }).catch(function(){});
+  
+  /* Also check for monthly snapshot */
+  sbq('historial_mensual?emisora_id=eq.'+U.id+'&anio=eq.'+year+'&mes=eq.'+(month+1)+'&limit=1')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d&&d.length>0){
+        var snap=d[0];
+        document.getElementById('mo-label').textContent=mnsNav[month]+' '+year+' — '+(snap.meta_alcanzada?'✅ Meta cumplida':'Meta: '+fmt(snap.meta_monedas_mes));
+      }else{
+        document.getElementById('mo-label').textContent=mnsNav[month]+' '+year+' — '+allS.length+' sesiones registradas';
+      }
+    }).catch(function(){});
+}
+
+/* ===== SAVE MONTHLY SNAPSHOT ===== */
+function saveMonthlySnapshot(){
+  if(!P||!U)return;
+  var now=new Date();
+  var anio=now.getFullYear(),mes=now.getMonth()+1;
+  var hc=P.horas_contables||0;
+  var snapshot={
+    emisora_id:U.id,
+    anio:anio,
+    mes:mes,
+    monedas_acumuladas:P.monedas_acumuladas||0,
+    monedas_cuenta_total:P.monedas_cuenta_total||P.monedas_actuales||0,
+    horas_contables:hc,
+    horas_realizadas:P.horas_mes||0,
+    dias_transmitidos:P.dias_transmitidos||0,
+    meta_monedas_mes:P.meta_monedas_mes||0,
+    meta_alcanzada:(P.monedas_acumuladas||0)>=(P.meta_monedas_mes||0)&&(P.meta_monedas_mes||0)>0,
+    bono_activo:hc>=40,
+    mejor_dia_monedas:P.mejor_dia_monedas||0,
+    mejor_dia_fecha:P.mejor_dia_fecha||null,
+    quiz_completados:P.quiz_total_completados||0,
+    quiz_mejor_puntaje:P.quiz_mejor_puntaje||0,
+    sesiones_total:allS.length
+  };
+  /* Upsert */
+  sbq('historial_mensual',{m:'POST',b:snapshot,h:{'Prefer':'return=minimal','on-conflict':'emisora_id,anio,mes','Resolution':'merge-duplicates'}}).catch(function(){
+    /* If upsert header not supported, try update then insert */
+    sbq('historial_mensual?emisora_id=eq.'+U.id+'&anio=eq.'+anio+'&mes=eq.'+mes,{m:'PATCH',b:snapshot,h:{'Prefer':'return=minimal'}}).catch(function(){});
+  });
+}
+
 function loadSes(){
   var now=new Date(),ms=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
   sbq('historial_sesiones?emisora_id=eq.'+U.id+'&created_at=gte.'+ms+'&order=created_at.desc&limit=50').then(function(r){return r.json()}).then(function(d){allS=d||[];renderSes();syncFromSessions()}).catch(function(e){console.error(e)});
@@ -2132,7 +2262,7 @@ function renderQ(){
   var imgArea=document.getElementById('qz-img');
   if(imgArea){
     if(q.img){
-      imgArea.innerHTML='<div style="width:120px;height:55px;margin:10px auto;border-radius:12px;background:url(\''+q.img+'\') top center / cover no-repeat var(--card2);border:1px solid rgba(168,85,247,.15)"></div>';
+      imgArea.innerHTML='<div style="width:130px;margin:10px auto;border-radius:12px;overflow:hidden;background:var(--card2);border:1px solid rgba(168,85,247,.15)"><img src="'+q.img+'" style="width:130px;display:block;clip-path:inset(0 0 38% 0)" onerror="this.parentNode.style.display=\'none\'"></div>';
       imgArea.style.display='block';
     }else{imgArea.style.display='none'}
   }

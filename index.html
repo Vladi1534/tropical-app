@@ -1500,7 +1500,7 @@ var U=null,P=null,htype='Orgánica',sMeta=null,svT=null,allS=[],hExp=false;
 var catAll=[],catFilt=[],catTier='all',catQ='';
 var qzLvl='facil',qzBank=[],qzCur=0,qzOk=0,qzFail=0,qzScore=0,qzAns=false,qzTimer=null,qzSecs=30,qzActive=false,qzStartTime=0;
 
-function sbq(p,o){o=o||{};var h={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'};if(o.h)for(var k in o.h)h[k]=o.h[k];return fetch(SB+'/rest/v1/'+p,{method:o.m||'GET',headers:h,body:o.b?JSON.stringify(o.b):undefined})}
+function sbq(p,o){o=o||{};var h={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'};if(o.h)for(var k in o.h)h[k]=o.h[k];var opts={method:o.m||'GET',headers:h};if(o.b&&o.m!=='DELETE')opts.body=JSON.stringify(o.b);return fetch(SB+'/rest/v1/'+p,opts)}
 
 function init(){
   var tid=userId||null,tn=userName||'';
@@ -2717,7 +2717,7 @@ function renderGifts(){
     if(!g.imagen_url)h+='<div class="gi-noimg"></div>';
     h+='<div class="gi-img">'+img+'</div>';
     h+='<div class="gi-info"><div class="gi-name">'+(g.nombre||'?')+'</div><div class="gi-price">💎 '+fmt(g.diamantes||0)+'</div></div>';
-    h+='<div class="gi-actions"><button class="gi-btn edit" onclick="editGift('+g.id+')">✏️</button><button class="gi-btn img" onclick="uploadGiftImg('+g.id+')">📷</button><button class="gi-btn del" onclick="deleteGift('+g.id+',\''+g.nombre.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')">🗑️</button></div></div>';
+    h+='<div class="gi-actions"><button class="gi-btn edit" onclick="editGift('+g.id+')">✏️</button><button class="gi-btn img" onclick="uploadGiftImg('+g.id+')">📷</button><button class="gi-btn del" onclick="deleteGiftById('+g.id+')">🗑️</button></div></div>';
   }
   grid.innerHTML=h;
 }
@@ -2742,9 +2742,10 @@ function createGift(){
 }
 
 function editGift(id){
-  var g=regalos.find(function(x){return x.id===id});if(!g)return;
+  var g=regalos.find(function(x){return String(x.id)===String(id)});if(!g)return;
+  var safeName=(g.nombre||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
   var h='<div class="mtt"><span>✏️ Editar regalo</span><button class="m-close" onclick="closeM(\'m-gift\')">✕</button></div>';
-  h+='<div class="mfield"><label>Nombre</label><input class="ti" id="eg-name" value="'+g.nombre+'"></div>';
+  h+='<div class="mfield"><label>Nombre</label><input class="ti" id="eg-name" value="'+safeName+'"></div>';
   h+='<div class="mfield"><label>Diamantes</label><input class="ni" id="eg-price" value="'+g.diamantes+'" inputmode="numeric"></div>';
   h+='<button class="bp" onclick="saveGift('+id+')">Guardar cambios</button>';
   document.getElementById('m-gift-content').innerHTML=h;
@@ -2755,16 +2756,23 @@ function saveGift(id){
   var name=document.getElementById('eg-name').value.trim();
   var price=parseInt(document.getElementById('eg-price').value)||0;
   sbq('regalos?id=eq.'+id,{m:'PATCH',b:{nombre:name,diamantes:price},h:{'Prefer':'return=minimal'}}).then(function(){
-    var g=regalos.find(function(x){return x.id===id});if(g){g.nombre=name;g.diamantes=price}
+    var g=regalos.find(function(x){return String(x.id)===String(id)});if(g){g.nombre=name;g.diamantes=price}
     renderGifts();closeM('m-gift');toast('✅ Regalo actualizado');
   }).catch(function(e){alert('Error')});
 }
 
+function deleteGiftById(id){
+  var g=regalos.find(function(x){return String(x.id)===String(id)});
+  var name=g?g.nombre:'Regalo #'+id;
+  deleteGift(id,name);
+}
+
 function deleteGift(id,name){
   if(!confirm('¿Eliminar "'+name+'"?'))return;
-  sbq('regalos?id=eq.'+id,{m:'DELETE'}).then(function(){
-    regalos=regalos.filter(function(x){return x.id!==id});renderGifts();toast('🗑️ Eliminado');
-  }).catch(function(e){alert('Error')});
+  sbq('regalos?id=eq.'+id,{m:'DELETE'}).then(function(r){
+    if(!r.ok)throw new Error('Status '+r.status);
+    regalos=regalos.filter(function(x){return String(x.id)!==String(id)});renderGifts();toast('🗑️ Eliminado');
+  }).catch(function(e){toast('❌ Error al eliminar: '+e.message)});
 }
 
 function uploadGiftImg(id){
@@ -2778,7 +2786,7 @@ function uploadGiftImg(id){
       if(r.ok){
         var url=SB+'/storage/v1/object/public/regalos/'+id+'.jpg?t='+Date.now();
         sbq('regalos?id=eq.'+id,{m:'PATCH',b:{imagen_url:url},h:{'Prefer':'return=minimal'}}).then(function(){
-          var g=regalos.find(function(x){return x.id===id});if(g)g.imagen_url=url;
+          var g=regalos.find(function(x){return String(x.id)===String(id)});if(g)g.imagen_url=url;
           renderGifts();toast('✅ Imagen subida');
         });
       }else{toast('❌ Error al subir')}
@@ -2806,7 +2814,7 @@ function renderSalaries(){
 function updateSalary(id,field,val){
   var upd={};upd[field]=parseInt(val)||0;
   sbq('salarios?meta_id=eq.'+id,{m:'PATCH',b:upd,h:{'Prefer':'return=minimal'}}).then(function(){
-    var s=salarios.find(function(x){return x.meta_id===id});
+    var s=salarios.find(function(x){return String(x.meta_id)===String(id)});
     if(s){s[field]=parseInt(val)||0;s.col_c=(s.col_a||0)+(s.col_b||0)}
     renderSalaries();toast('✅ Actualizado');
   });
@@ -2814,9 +2822,10 @@ function updateSalary(id,field,val){
 
 function deleteSalary(id){
   if(!confirm('¿Eliminar esta meta?'))return;
-  sbq('salarios?meta_id=eq.'+id,{m:'DELETE'}).then(function(){
-    salarios=salarios.filter(function(x){return x.meta_id!==id});renderSalaries();toast('🗑️ Meta eliminada');
-  });
+  sbq('salarios?meta_id=eq.'+id,{m:'DELETE'}).then(function(r){
+    if(!r.ok)throw new Error('Status '+r.status);
+    salarios=salarios.filter(function(x){return String(x.meta_id)!==String(id)});renderSalaries();toast('🗑️ Meta eliminada');
+  }).catch(function(e){toast('❌ Error: '+e.message)});
 }
 
 function openNewSalary(){
@@ -2876,7 +2885,7 @@ function createRule(){
 }
 
 function editRule(id){
-  var r=reglas.find(function(x){return x.id===id});if(!r)return;
+  var r=reglas.find(function(x){return String(x.id)===String(id)});if(!r)return;
   var title=r.titulo||'';
   var text=r.contenido||'';
   var cat=r.categoria||'General';
@@ -2893,16 +2902,17 @@ function saveRule(id){
   var title=document.getElementById('er-title').value.trim();
   var text=document.getElementById('er-text').value.trim();
   sbq('reglamentos?id=eq.'+id,{m:'PATCH',b:{titulo:title,contenido:text},h:{'Prefer':'return=minimal'}}).then(function(){
-    var r=reglas.find(function(x){return x.id===id});if(r){r.titulo=title;r.contenido=text}
+    var r=reglas.find(function(x){return String(x.id)===String(id)});if(r){r.titulo=title;r.contenido=text}
     renderRules();closeM('m-rule');toast('✅ Regla actualizada');
   });
 }
 
 function deleteRule(id){
   if(!confirm('¿Eliminar esta regla?'))return;
-  sbq('reglamentos?id=eq.'+id,{m:'DELETE'}).then(function(){
-    reglas=reglas.filter(function(x){return x.id!==id});renderRules();toast('🗑️ Eliminada');
-  });
+  sbq('reglamentos?id=eq.'+id,{m:'DELETE'}).then(function(r){
+    if(!r.ok)throw new Error('Status '+r.status);
+    reglas=reglas.filter(function(x){return String(x.id)!==String(id)});renderRules();toast('🗑️ Eliminada');
+  }).catch(function(e){toast('❌ Error: '+e.message)});
 }
 
 /* ===== TEAM ===== */
@@ -2939,7 +2949,7 @@ function renderTeam(q){
 }
 
 function editUser(id){
-  var u=team.find(function(x){return x.id===id});if(!u)return;
+  var u=team.find(function(x){return String(x.id)===String(id)});if(!u)return;
   var h='<div class="mtt"><span>⚙️ Gestionar usuario</span><button class="m-close" onclick="closeM(\'m-user\')">✕</button></div>';
   h+='<div style="text-align:center;margin-bottom:14px"><div style="font-size:28px">👤</div><div style="font-family:Fredoka,sans-serif;font-size:16px;font-weight:700">'+(u.nombre||'Sin nombre')+'</div><div style="font-size:11px;color:var(--txt3)">ID: '+u.id+'</div></div>';
   h+='<div class="mfield"><label>Nombre</label><input class="ti" id="eu-name" value="'+(u.nombre||'')+'"></div>';
@@ -2954,7 +2964,7 @@ function saveUser(id){
   var name=document.getElementById('eu-name').value.trim();
   var rol=document.getElementById('eu-rol').value;
   sbq('usuarios?id=eq.'+id,{m:'PATCH',b:{nombre:name,rol:rol},h:{'Prefer':'return=minimal'}}).then(function(){
-    var u=team.find(function(x){return x.id===id});if(u){u.nombre=name;u.rol=rol}
+    var u=team.find(function(x){return String(x.id)===String(id)});if(u){u.nombre=name;u.rol=rol}
     renderTeam();closeM('m-user');toast('✅ Usuario actualizado');
   });
 }
@@ -2962,7 +2972,7 @@ function saveUser(id){
 function blockUser(id){
   if(!confirm('¿Bloquear este usuario?'))return;
   sbq('usuarios?id=eq.'+id,{m:'PATCH',b:{rol:'bloqueado'},h:{'Prefer':'return=minimal'}}).then(function(){
-    var u=team.find(function(x){return x.id===id});if(u)u.rol='bloqueado';
+    var u=team.find(function(x){return String(x.id)===String(id)});if(u)u.rol='bloqueado';
     renderTeam();closeM('m-user');toast('🚫 Usuario bloqueado');
   });
 }
@@ -3016,7 +3026,7 @@ function sendInviteManual(){
   if(!id){alert('Ingresa un ID válido');return}
   if(!name)name='Invitado Pendiente ('+id+')';
   
-  var existing=team.find(function(u){return u.id===id});
+  var existing=team.find(function(u){return String(u.id)===String(id)});
   if(existing){alert('Este usuario ya existe: '+(existing.nombre||existing.id));return}
   
   sbq('usuarios',{m:'POST',b:{id:id,nombre:name,rol:rol,invitado_por:'admin_panel',modo_ia:true},h:{'Prefer':'return=representation'}}).then(function(r){
@@ -3143,7 +3153,7 @@ saveRule=function(id){
   var text=document.getElementById('er-text').value.trim();
   var cat=document.getElementById('er-cat').value;
   sbq('reglamentos?id=eq.'+id,{m:'PATCH',b:{titulo:title,contenido:text,categoria:cat},h:{'Prefer':'return=minimal'}}).then(function(){
-    var r=reglas.find(function(x){return x.id===id});if(r){r.titulo=title;r.contenido=text;r.categoria=cat}
+    var r=reglas.find(function(x){return String(x.id)===String(id)});if(r){r.titulo=title;r.contenido=text;r.categoria=cat}
     renderRules();closeM('m-rule');toast('✅ Regla actualizada');
   });
 };
@@ -3308,7 +3318,7 @@ function cacheTgFile(bibId,fileId,tipo){
       /* Step 4: Save URL to database */
       var publicUrl=SB+'/storage/v1/object/public/biblioteca/'+filename;
       return sbq('biblioteca_media?id=eq.'+bibId,{m:'PATCH',b:{preview_url:publicUrl},h:{'Prefer':'return=minimal'}}).then(function(){
-        var b=biblioteca.find(function(x){return x.id===bibId});
+        var b=biblioteca.find(function(x){return String(x.id)===String(bibId)});
         if(b)b.preview_url=publicUrl;
         renderBib();
         toast('✅ Archivo cacheado permanentemente');
@@ -3325,7 +3335,7 @@ function cacheTgFile(bibId,fileId,tipo){
 
 /* Send biblioteca item to a chat via Telegram */
 function sendBibToChat(bibId){
-  var b=biblioteca.find(function(x){return x.id===bibId});if(!b)return;
+  var b=biblioteca.find(function(x){return String(x.id)===String(bibId)});if(!b)return;
   var chatId=currentUser?currentUser.id:null;
   if(!chatId){
     try{if(window.Telegram&&window.Telegram.WebApp)chatId=window.Telegram.WebApp.initDataUnsafe.user.id}catch(e){}
@@ -3346,7 +3356,7 @@ function sendBibToChat(bibId){
 }
 
 function editBib(id){
-  var b=biblioteca.find(function(x){return x.id===id});if(!b)return;
+  var b=biblioteca.find(function(x){return String(x.id)===String(id)});if(!b)return;
   var h='<div class="mtt"><span>✏️ Editar contenido</span><button class="m-close" onclick="closeM(\'m-rule\')">✕</button></div>';
   if(b.preview_url)h+='<div style="text-align:center;margin-bottom:12px"><img src="'+b.preview_url+'" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover"></div>';
   h+='<div class="mfield"><label>Título</label><input class="ti" id="eb-title" value="'+(b.titulo||'').replace(/"/g,'&quot;')+'"></div>';
@@ -3360,16 +3370,17 @@ function saveBib(id){
   var title=document.getElementById('eb-title').value.trim();
   var app=document.getElementById('eb-app').value;
   sbq('biblioteca_media?id=eq.'+id,{m:'PATCH',b:{titulo:title,app_id:app},h:{'Prefer':'return=minimal'}}).then(function(){
-    var b=biblioteca.find(function(x){return x.id===id});if(b){b.titulo=title;b.app_id=app}
+    var b=biblioteca.find(function(x){return String(x.id)===String(id)});if(b){b.titulo=title;b.app_id=app}
     renderBib();closeM('m-rule');toast('✅ Actualizado');
   });
 }
 
 function deleteBib(id,name){
   if(!confirm('¿Eliminar "'+name+'"?'))return;
-  sbq('biblioteca_media?id=eq.'+id,{m:'DELETE'}).then(function(){
-    biblioteca=biblioteca.filter(function(x){return x.id!==id});renderBib();toast('🗑️ Eliminado');
-  });
+  sbq('biblioteca_media?id=eq.'+id,{m:'DELETE'}).then(function(r){
+    if(!r.ok)throw new Error('Status '+r.status);
+    biblioteca=biblioteca.filter(function(x){return String(x.id)!==String(id)});renderBib();toast('🗑️ Eliminado');
+  }).catch(function(e){toast('❌ Error: '+e.message)});
 }
 
 /* ===== NAV ===== */

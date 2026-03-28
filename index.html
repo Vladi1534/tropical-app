@@ -1092,6 +1092,21 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
       <div class="pbw"><div class="pbf" id="h-bar" style="width:0%;background:linear-gradient(135deg,var(--pink),var(--cyan))"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:3px"><span style="font-size:10px;color:var(--txt3)" id="h-pct">0%</span><span style="font-size:10px;color:var(--txt3)" id="h-hint"></span></div>
       <div style="font-size:10px;color:var(--txt3);margin-top:8px;line-height:1.4;padding:6px 8px;background:rgba(34,211,238,.06);border-radius:6px">📋 <strong>Contables:</strong> máx 3h/día para el bono (necesitas 40). <strong>Realizadas:</strong> todas tus horas, sin límite. <strong>Días:</strong> tus horas contables ÷ 3.</div>
+      
+      <!-- GHOST HOURS RISK METER -->
+      <div id="ghost-risk" style="display:none;margin-top:10px;padding:10px;border-radius:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;color:var(--red)">👻 Horas fantasma en riesgo</span>
+          <span style="font-size:12px;font-weight:700;color:var(--red)" id="ghost-hours-val">0h</span>
+        </div>
+        <div class="pbw" style="margin-bottom:4px"><div class="pbf" id="ghost-bar" style="width:0%;background:linear-gradient(135deg,#f59e0b,#ef4444)"></div></div>
+        <div style="font-size:9px;color:var(--txt3);line-height:1.5" id="ghost-detail">
+          Sin horas fantasma registradas
+        </div>
+        <div style="font-size:9px;color:var(--red);margin-top:4px;line-height:1.4;padding:5px 8px;background:rgba(239,68,68,.05);border-radius:6px">
+          ⚠️ <strong>Riesgo:</strong> La app puede descontar horas fantasma a fin de mes. Estas <strong id="ghost-contable-risk">0</strong> horas contables podrían NO contar para tu bono. Si te descuentan, necesitarías <strong id="ghost-extra-needed">0</strong> horas orgánicas extra para compensar.
+        </div>
+      </div>
     </div>
 
     <!-- Starting hours for mid-month joiners -->
@@ -1876,26 +1891,46 @@ function syncFromSessions(){
     changed.monedas_cuenta_total=P.monedas_cuenta_total;
   }
 
-  /* Calculate dual hours from sessions */
+  /* Calculate dual hours from sessions + ghost tracking */
   var totalReal=0,totalCont=0;
+  var ghostReal=0,ghostCont=0,ghostSessions=0;
+  var orgReal=0,orgCont=0;
   var byDate={};
   var bestCoins=P.mejor_dia_monedas||0,bestDate=P.mejor_dia_fecha||null;
+  
   for(var i=0;i<allS.length;i++){
     var h=parseFloat(allS[i].horas_transmitidas)||0;
     var c=parseInt(allS[i].monedas_reportadas)||0;
+    var tipo=(allS[i].tipo_horas||'Orgánica').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     totalReal+=h;
     var dt=allS[i].created_at?allS[i].created_at.slice(0,10):'unknown';
-    if(!byDate[dt])byDate[dt]={h:0,c:0};
+    if(!byDate[dt])byDate[dt]={h:0,c:0,ghost:0,org:0};
     byDate[dt].h+=h;
     byDate[dt].c+=c;
+    
+    if(tipo==='fantasma'){
+      ghostReal+=h;ghostSessions++;
+      byDate[dt].ghost+=h;
+    }else if(tipo==='mixta'){
+      ghostReal+=h*0.5;ghostSessions++;
+      byDate[dt].ghost+=h*0.5;
+      byDate[dt].org+=h*0.5;
+    }else{
+      orgReal+=h;
+      byDate[dt].org+=h;
+    }
   }
+  
   for(var d in byDate){
     totalCont+=Math.min(3,byDate[d].h);
-    /* Auto-detect best day */
+    ghostCont+=Math.min(3,byDate[d].ghost);
+    orgCont+=Math.min(3,byDate[d].org);
     if(byDate[d].c>bestCoins){bestCoins=byDate[d].c;bestDate=d}
   }
   totalReal=Math.round(totalReal*10)/10;
   totalCont=Math.round(totalCont*10)/10;
+  ghostCont=Math.round(ghostCont*10)/10;
+  ghostReal=Math.round(ghostReal*10)/10;
 
   if(P.horas_mes!==totalReal){P.horas_mes=totalReal;changed.horas_mes=totalReal}
   if(P.horas_contables!==totalCont){P.horas_contables=totalCont;changed.horas_contables=totalCont}
@@ -1907,6 +1942,36 @@ function syncFromSessions(){
   }
 
   if(Object.keys(changed).length>0)save(changed);
+  
+  /* ===== GHOST RISK METER ===== */
+  var riskEl=document.getElementById('ghost-risk');
+  if(riskEl){
+    if(ghostCont>0){
+      riskEl.style.display='block';
+      document.getElementById('ghost-hours-val').textContent=ghostCont+'h contables';
+      var pctGhost=totalCont>0?Math.round((ghostCont/totalCont)*100):0;
+      document.getElementById('ghost-bar').style.width=pctGhost+'%';
+      
+      var orgContSafe=totalCont-ghostCont;
+      var needExtra=Math.max(0,40-orgContSafe);
+      document.getElementById('ghost-contable-risk').textContent=ghostCont;
+      document.getElementById('ghost-extra-needed').textContent=needExtra.toFixed(1);
+      
+      var detailText='';
+      if(pctGhost>=50){
+        detailText='⛔ '+pctGhost+'% de tus horas contables son fantasma. Si la app las descuenta, perderías el bono. Transmite más orgánica.';
+      }else if(pctGhost>=25){
+        detailText='⚠️ '+pctGhost+'% de tus horas son fantasma. Riesgo moderado. Intenta compensar con horas orgánicas.';
+      }else{
+        detailText='📊 '+pctGhost+'% de tus horas son fantasma. Riesgo bajo, pero mantén más orgánicas.';
+      }
+      detailText+=' ('+ghostSessions+' sesiones fantasma/mixtas · '+ghostReal+'h reales fantasma)';
+      document.getElementById('ghost-detail').textContent=detailText;
+    }else{
+      riskEl.style.display='none';
+    }
+  }
+  
   refreshAll();
 }
 

@@ -1486,6 +1486,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 </div>
 
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 /* ===== SHARED STATE ===== */
 var currentMode='emisora';var userRole='emisora';var userId=null;var userName='';
@@ -3554,12 +3555,34 @@ function checkOnboarding(){
 
 /* ===== UNIFIED AUTH + MODE SWITCH ===== */
 function unifiedAuth(){
-  var tid=null;
-  try{if(window.Telegram&&window.Telegram.WebApp){var tg=window.Telegram.WebApp;tg.ready();tg.expand();if(tg.initDataUnsafe&&tg.initDataUnsafe.user){tid=tg.initDataUnsafe.user.id;userName=tg.initDataUnsafe.user.first_name||''}}}catch(e){}
-  if(!tid){var p=new URLSearchParams(window.location.search);tid=parseInt(p.get('id'))||null}
+  var tid=null;var userName='';
+  /* Try Telegram WebApp */
+  try{
+    if(window.Telegram&&window.Telegram.WebApp){
+      var tg=window.Telegram.WebApp;
+      tg.ready();tg.expand();
+      if(tg.initDataUnsafe&&tg.initDataUnsafe.user){
+        tid=tg.initDataUnsafe.user.id;
+        userName=tg.initDataUnsafe.user.first_name||'';
+      }
+      /* Fallback: parse initData string */
+      if(!tid&&tg.initData){
+        try{
+          var params=new URLSearchParams(tg.initData);
+          var userStr=params.get('user');
+          if(userStr){var u2=JSON.parse(decodeURIComponent(userStr));tid=u2.id;userName=u2.first_name||''}
+        }catch(e2){}
+      }
+    }
+  }catch(e){}
+  /* Fallback: URL params */
+  if(!tid){var p=new URLSearchParams(window.location.search);tid=parseInt(p.get('id'))||null;if(!tid)tid=parseInt(p.get('user_id'))||null}
+  /* Fallback: hash params */
+  if(!tid&&window.location.hash){try{var hp=new URLSearchParams(window.location.hash.slice(1));tid=parseInt(hp.get('id'))||null}catch(e3){}}
+  
   if(tid){
     userId=tid;
-    document.getElementById('ua-msg').textContent='Verificando tu perfil...';
+    document.getElementById('ua-msg').textContent='Verificando...';
     sbq('usuarios?id=eq.'+tid+'&select=id,nombre,rol').then(function(r){return r.json()}).then(function(d){
       if(d&&d.length>0){
         var u=d[0];userName=u.nombre||userName;

@@ -1274,12 +1274,15 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <!-- ====== RANKING ====== -->
 <div class="sec a" id="s-ranking">
   <div class="section-title">🏆 Ranking de Emisoras <span class="count-badge" id="rank-count">0</span></div>
-  <div class="rank-filters">
-    <button class="rf-btn a" onclick="rankSort('coins',this)">🪙 Monedas</button>
-    <button class="rf-btn" onclick="rankSort('hours',this)">⏱️ Horas</button>
-    <button class="rf-btn" onclick="rankSort('days',this)">📅 Constancia</button>
-    <button class="rf-btn" onclick="rankSort('quiz',this)">🧠 Quiz</button>
-    <button class="rf-btn" onclick="rankSort('bonus',this)">💰 Bono</button>
+  <div style="margin-bottom:12px">
+    <select id="rank-select" onchange="rankSort(this.value)" style="width:100%;padding:10px 14px;border-radius:var(--rs);border:1.5px solid rgba(168,85,247,.2);background:var(--card2);color:var(--txt);font-size:13px;font-weight:700;font-family:'Nunito',sans-serif;outline:none;cursor:pointer;appearance:auto">
+      <option value="coins">🪙 Monedas del mes</option>
+      <option value="hours">⏱️ Horas contables</option>
+      <option value="days">📅 Constancia (días)</option>
+      <option value="quiz">🧠 Quiz (puntos)</option>
+      <option value="bonus">💰 Estado del bono</option>
+      <option value="ghost">👻 Horas fantasma</option>
+    </select>
   </div>
   <div id="rank-list"><div class="empty"><div class="em-icon">📊</div>Cargando emisoras...</div></div>
 </div>
@@ -2663,10 +2666,8 @@ function loadAll(){
 }
 
 /* ===== RANKING ===== */
-function rankSort(mode,el){
+function rankSort(mode){
   rankMode=mode;
-  var btns=document.querySelectorAll('.rank-filters .rf-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('a');
-  if(el)el.classList.add('a');
   renderRanking();
 }
 
@@ -2677,6 +2678,13 @@ function renderRanking(){
   else if(rankMode==='days')list.sort(function(a,b){return(b.dias_transmitidos||0)-(a.dias_transmitidos||0)});
   else if(rankMode==='quiz')list.sort(function(a,b){return(b.quiz_mejor_puntaje||0)-(a.quiz_mejor_puntaje||0)});
   else if(rankMode==='bonus')list.sort(function(a,b){return((b.horas_contables||0)>=40?1:0)-((a.horas_contables||0)>=40?1:0)||(b.monedas_acumuladas||0)-(a.monedas_acumuladas||0)});
+  else if(rankMode==='ghost'){
+    list.sort(function(a,b){
+      var ga=(a.horas_mes||0)-(a.horas_contables||0);
+      var gb=(b.horas_mes||0)-(b.horas_contables||0);
+      return gb-ga;
+    });
+  }
 
   document.getElementById('rank-count').textContent=list.length;
   if(!list.length){document.getElementById('rank-list').innerHTML='<div class="empty"><div class="em-icon">📊</div>No hay emisoras</div>';return}
@@ -2696,6 +2704,7 @@ function renderRanking(){
     else if(rankMode==='hours'){statVal='⏱️ '+fmt(hCont);statLbl='contables'}
     else if(rankMode==='days'){statVal='📅 '+(e.dias_transmitidos||0);statLbl='días'}
     else if(rankMode==='quiz'){statVal='🧠 '+(e.quiz_mejor_puntaje||0);statLbl='puntos'}
+    else if(rankMode==='ghost'){var ghostH=Math.max(0,Math.round(((e.horas_mes||0)-(e.horas_contables||0))*10)/10);statVal='👻 '+ghostH+'h';statLbl=ghostH>0?'en riesgo':'limpia'}
     else{statVal=bonusTxt;statLbl=fmt(hCont)+'/40h'}
 
     h+='<div class="rank-item'+posClass+'" onclick="showProfile('+i+',\''+rankMode+'\')">';

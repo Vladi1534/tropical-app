@@ -824,6 +824,28 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .badge.earned{background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.25)}
 .badge.locked{background:var(--card2);color:var(--txt3);border:1px solid rgba(168,85,247,.08);opacity:.5}
 .badge .badge-icon{font-size:14px}
+/* Logros categories */
+.logro-cat{padding:0 16px;margin-bottom:16px;animation:fadeUp .4s ease both}
+.logro-cat-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.logro-cat-icon{font-size:20px}
+.logro-cat-title{font-family:'Fredoka',sans-serif;font-size:14px;font-weight:700;color:var(--txt)}
+.logro-cat-count{font-size:10px;color:var(--txt3);margin-left:auto}
+.logro-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:var(--rs);margin-bottom:6px;border:1px solid rgba(168,85,247,.08);transition:all .2s}
+.logro-item.earned{border-color:rgba(251,191,36,.25);background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(236,72,153,.03))}
+.logro-item.locked{opacity:.45}
+.logro-icon{font-size:22px;width:32px;text-align:center;flex-shrink:0}
+.logro-info{flex:1;min-width:0}
+.logro-name{font-size:12px;font-weight:700;color:var(--txt)}
+.logro-desc{font-size:9px;color:var(--txt3);margin-top:1px}
+.logro-prog{margin-top:4px;display:flex;align-items:center;gap:6px}
+.logro-bar{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.logro-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.logro-pct{font-size:9px;font-weight:700;min-width:28px;text-align:right}
+.logro-check{font-size:16px;flex-shrink:0;width:24px;text-align:center}
+.logro-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:16px}
+.logro-sum-box{background:var(--card);border-radius:var(--rs);padding:12px 8px;text-align:center;border:1px solid rgba(168,85,247,.08)}
+.logro-sum-val{font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700}
+.logro-sum-lbl{font-size:9px;color:var(--txt3);margin-top:2px;text-transform:uppercase}
 .inspire-card{margin:10px 16px;padding:14px;border-radius:var(--r);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.05));border:1px solid rgba(168,85,247,.15);animation:fadeUp .5s ease both}
 .inspire-card .ic-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
 .inspire-card .ic-idea{font-size:13px;color:var(--txt);line-height:1.5;margin-bottom:10px}
@@ -1050,11 +1072,12 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <!-- ====== LOGROS ====== -->
 <div class="sec" id="s-logros">
-  <div style="text-align:center;padding:20px 16px 10px">
+  <div style="text-align:center;padding:20px 16px 14px">
     <div style="font-size:32px">🏅</div>
     <h2 style="font-family:'Fredoka',sans-serif;font-size:20px;margin-top:6px">Mis Logros</h2>
-    <p style="font-size:12px;color:var(--txt2);margin-top:3px">Desbloquea logros transmitiendo</p>
+    <p style="font-size:12px;color:var(--txt2);margin-top:3px">Desbloquea logros transmitiendo y creciendo</p>
   </div>
+  <div id="logros-summary"></div>
   <div id="badges-area" style="padding:0"></div>
 </div>
 
@@ -1296,10 +1319,15 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <div style="margin-bottom:12px">
     <select id="rank-select" onchange="rankSort(this.value)" style="width:100%;padding:10px 14px;border-radius:var(--rs);border:1.5px solid rgba(168,85,247,.2);background:var(--card2);color:var(--txt);font-size:13px;font-weight:700;font-family:'Nunito',sans-serif;outline:none;cursor:pointer;appearance:auto">
       <option value="coins">🪙 Monedas del mes</option>
+      <option value="total">💰 Total en cuenta</option>
       <option value="hours">⏱️ Horas contables</option>
+      <option value="real_hours">🕐 Horas realizadas</option>
+      <option value="efficiency">⚡ Eficiencia (monedas/hora)</option>
+      <option value="meta_pct">🎯 Progreso de meta (%)</option>
       <option value="days">📅 Constancia (días)</option>
       <option value="quiz">🧠 Quiz (puntos)</option>
-      <option value="bonus">💰 Estado del bono</option>
+      <option value="best_day">🌟 Mejor día (récord)</option>
+      <option value="bonus">💼 Estado del bono</option>
       <option value="ghost">👻 Horas fantasma</option>
     </select>
   </div>
@@ -1715,34 +1743,103 @@ function refreshAll(){
 /* ===== BADGES SYSTEM ===== */
 function renderBadges(){
   if(!P)return;
-  var badges=[];
-  var hc=P.horas_contables||0,coins=P.monedas_acumuladas||0,meta=P.meta_monedas_mes||0;
-  var dias=P.dias_transmitidos||0,quiz=P.quiz_total_completados||0;
+  var hc=P.horas_contables||0,hr=P.horas_mes||0,coins=P.monedas_acumuladas||0;
+  var total=P.monedas_cuenta_total||0,meta=P.meta_monedas_mes||0;
+  var dias=P.dias_transmitidos||0,quiz=P.quiz_total_completados||0,qBest=P.quiz_mejor_puntaje||0;
   var best=P.mejor_dia_monedas||0;
-  
-  badges.push({icon:'🎤',name:'Primera transmisión',earned:dias>=1});
-  badges.push({icon:'🔥',name:'Racha 3 días',earned:dias>=3});
-  badges.push({icon:'⚡',name:'Racha 7 días',earned:dias>=7});
-  badges.push({icon:'💎',name:'Racha 15 días',earned:dias>=15});
-  badges.push({icon:'⏱️',name:'10h contables',earned:hc>=10});
-  badges.push({icon:'🏆',name:'40h = Bono',earned:hc>=40});
-  badges.push({icon:'🪙',name:'1K monedas',earned:coins>=1000});
-  badges.push({icon:'💰',name:'10K monedas',earned:coins>=10000});
-  badges.push({icon:'👑',name:'50K monedas',earned:coins>=50000});
-  badges.push({icon:'🎯',name:'Meta cumplida',earned:meta>0&&coins>=meta});
-  badges.push({icon:'🧠',name:'Quiz x5',earned:quiz>=5});
-  badges.push({icon:'🌟',name:'Récord 3K+',earned:best>=3000});
-  
-  var earnedCount=0;
-  var h='<div style="padding:6px 16px 0;font-size:11px;font-weight:700;color:var(--txt2)">🏅 Logros <span style="color:var(--txt3);font-weight:400" id="badge-count"></span></div><div class="badge-grid">';
-  for(var i=0;i<badges.length;i++){
-    var b=badges[i];
-    if(b.earned)earnedCount++;
-    h+='<div class="badge '+(b.earned?'earned':'locked')+'"><span class="badge-icon">'+(b.earned?b.icon:'🔒')+'</span>'+b.name+'</div>';
+
+  var cats=[
+    {name:'Constancia',icon:'📅',color:'var(--green)',badges:[
+      {icon:'🎤',name:'Primera transmisión',desc:'Registra tu primera sesión',cur:dias,goal:1},
+      {icon:'🔥',name:'Racha de 3',desc:'Transmite 3 días en el mes',cur:dias,goal:3},
+      {icon:'⚡',name:'Semana completa',desc:'Transmite 7 días en el mes',cur:dias,goal:7},
+      {icon:'💎',name:'Media maratón',desc:'Transmite 15 días en el mes',cur:dias,goal:15},
+      {icon:'👑',name:'Guerrera del mes',desc:'Transmite 25 días en el mes',cur:dias,goal:25}
+    ]},
+    {name:'Monedas del mes',icon:'🪙',color:'var(--gold)',badges:[
+      {icon:'🌱',name:'Primeras monedas',desc:'Gana 500 monedas en el mes',cur:coins,goal:500},
+      {icon:'🪙',name:'1K Club',desc:'Gana 1,000 monedas en el mes',cur:coins,goal:1000},
+      {icon:'💰',name:'5K Club',desc:'Gana 5,000 monedas en el mes',cur:coins,goal:5000},
+      {icon:'🤑',name:'10K Club',desc:'Gana 10,000 monedas en el mes',cur:coins,goal:10000},
+      {icon:'💎',name:'50K Club',desc:'Gana 50,000 monedas en el mes',cur:coins,goal:50000},
+      {icon:'👑',name:'100K Club',desc:'Gana 100,000 monedas en el mes',cur:coins,goal:100000}
+    ]},
+    {name:'Cuenta total',icon:'💰',color:'var(--pink)',badges:[
+      {icon:'🏦',name:'Ahorradora',desc:'Acumula 10K en tu cuenta',cur:total,goal:10000},
+      {icon:'💳',name:'Cuenta sólida',desc:'Acumula 50K en tu cuenta',cur:total,goal:50000},
+      {icon:'🏛️',name:'Cuenta premium',desc:'Acumula 100K en tu cuenta',cur:total,goal:100000},
+      {icon:'💎',name:'Cuenta diamante',desc:'Acumula 500K en tu cuenta',cur:total,goal:500000},
+      {icon:'👑',name:'Millonaria',desc:'Acumula 1M en tu cuenta',cur:total,goal:1000000}
+    ]},
+    {name:'Dedicación',icon:'⏱️',color:'var(--cyan)',badges:[
+      {icon:'⏰',name:'5 horas',desc:'Acumula 5h contables en el mes',cur:hc,goal:5},
+      {icon:'⏱️',name:'10 horas',desc:'Acumula 10h contables en el mes',cur:hc,goal:10},
+      {icon:'🕐',name:'20 horas',desc:'Acumula 20h contables en el mes',cur:hc,goal:20},
+      {icon:'🏆',name:'Bono activo',desc:'Llega a 40h contables para el bono',cur:hc,goal:40},
+      {icon:'💪',name:'Máquina',desc:'Realiza 60h totales en el mes',cur:hr,goal:60}
+    ]},
+    {name:'Conocimiento',icon:'🧠',color:'var(--purple)',badges:[
+      {icon:'📝',name:'Primer quiz',desc:'Completa tu primer quiz',cur:quiz,goal:1},
+      {icon:'🧠',name:'Estudiosa',desc:'Completa 5 quizzes',cur:quiz,goal:5},
+      {icon:'🎓',name:'Experta',desc:'Completa 15 quizzes',cur:quiz,goal:15},
+      {icon:'🏅',name:'Puntaje 15+',desc:'Obtén 15+ puntos en un quiz',cur:qBest,goal:15},
+      {icon:'👑',name:'Puntaje 25+',desc:'Obtén 25+ puntos en un quiz',cur:qBest,goal:25}
+    ]},
+    {name:'Especiales',icon:'🌟',color:'var(--pink)',badges:[
+      {icon:'🎯',name:'Meta cumplida',desc:'Alcanza tu meta mensual de monedas',cur:meta>0&&coins>=meta?1:0,goal:1},
+      {icon:'🌟',name:'Récord 1K',desc:'Gana 1,000+ monedas en un solo día',cur:best,goal:1000},
+      {icon:'🔥',name:'Récord 3K',desc:'Gana 3,000+ monedas en un solo día',cur:best,goal:3000},
+      {icon:'💥',name:'Récord 5K',desc:'Gana 5,000+ monedas en un solo día',cur:best,goal:5000},
+      {icon:'👑',name:'Récord 10K',desc:'Gana 10,000+ en un solo día',cur:best,goal:10000}
+    ]}
+  ];
+
+  var totalBadges=0,earnedBadges=0;
+  var h='';
+
+  for(var c=0;c<cats.length;c++){
+    var cat=cats[c];
+    var catEarned=0;
+    for(var b=0;b<cat.badges.length;b++)if(cat.badges[b].cur>=cat.badges[b].goal)catEarned++;
+    totalBadges+=cat.badges.length;
+    earnedBadges+=catEarned;
+
+    h+='<div class="logro-cat" style="animation-delay:'+(c*0.05)+'s">';
+    h+='<div class="logro-cat-header"><span class="logro-cat-icon">'+cat.icon+'</span>';
+    h+='<span class="logro-cat-title">'+cat.name+'</span>';
+    h+='<span class="logro-cat-count">'+catEarned+'/'+cat.badges.length+'</span></div>';
+
+    for(var b2=0;b2<cat.badges.length;b2++){
+      var bg=cat.badges[b2];
+      var done=bg.cur>=bg.goal;
+      var pct=Math.min(100,Math.round((bg.cur/bg.goal)*100));
+      var fillColor=done?'var(--green)':cat.color;
+
+      h+='<div class="logro-item'+(done?' earned':' locked')+'">';
+      h+='<div class="logro-icon">'+(done?bg.icon:'🔒')+'</div>';
+      h+='<div class="logro-info"><div class="logro-name">'+bg.name+'</div>';
+      h+='<div class="logro-desc">'+bg.desc+'</div>';
+      if(!done){
+        h+='<div class="logro-prog"><div class="logro-bar"><div class="logro-fill" style="width:'+pct+'%;background:'+fillColor+'"></div></div>';
+        h+='<span class="logro-pct" style="color:'+fillColor+'">'+fmt(bg.cur)+'/'+fmt(bg.goal)+'</span></div>';
+      }
+      h+='</div>';
+      h+='<div class="logro-check">'+(done?'✅':'')+'</div>';
+      h+='</div>';
+    }
+    h+='</div>';
   }
-  h+='</div>';
+
   document.getElementById('badges-area').innerHTML=h;
-  var bc=document.getElementById('badge-count');if(bc)bc.textContent=earnedCount+'/'+badges.length;
+
+  /* Summary boxes */
+  var pctTotal=totalBadges>0?Math.round((earnedBadges/totalBadges)*100):0;
+  var sh='<div class="logro-summary">';
+  sh+='<div class="logro-sum-box"><div class="logro-sum-val" style="color:var(--gold)">'+earnedBadges+'</div><div class="logro-sum-lbl">Desbloqueados</div></div>';
+  sh+='<div class="logro-sum-box"><div class="logro-sum-val" style="color:var(--txt3)">'+(totalBadges-earnedBadges)+'</div><div class="logro-sum-lbl">Por desbloquear</div></div>';
+  sh+='<div class="logro-sum-box"><div class="logro-sum-val" style="color:var(--green)">'+pctTotal+'%</div><div class="logro-sum-lbl">Completado</div></div>';
+  sh+='</div>';
+  var sumEl=document.getElementById('logros-summary');if(sumEl)sumEl.innerHTML=sh;
 }
 
 /* ===== INSPIRACIÓN DEL DÍA ===== */
@@ -2710,17 +2807,16 @@ function rankSort(mode){
 function renderRanking(){
   var list=emisoras.slice();
   if(rankMode==='coins')list.sort(function(a,b){return(b.monedas_acumuladas||0)-(a.monedas_acumuladas||0)});
+  else if(rankMode==='total')list.sort(function(a,b){return(b.monedas_cuenta_total||0)-(a.monedas_cuenta_total||0)});
   else if(rankMode==='hours')list.sort(function(a,b){return(b.horas_contables||0)-(a.horas_contables||0)});
+  else if(rankMode==='real_hours')list.sort(function(a,b){return(b.horas_mes||0)-(a.horas_mes||0)});
+  else if(rankMode==='efficiency'){list.sort(function(a,b){var ea=(a.horas_mes||0)>0?(a.monedas_acumuladas||0)/(a.horas_mes):0;var eb=(b.horas_mes||0)>0?(b.monedas_acumuladas||0)/(b.horas_mes):0;return eb-ea})}
+  else if(rankMode==='meta_pct'){list.sort(function(a,b){var pa=(a.meta_monedas_mes||0)>0?((a.monedas_acumuladas||0)/(a.meta_monedas_mes))*100:0;var pb=(b.meta_monedas_mes||0)>0?((b.monedas_acumuladas||0)/(b.meta_monedas_mes))*100:0;return pb-pa})}
   else if(rankMode==='days')list.sort(function(a,b){return(b.dias_transmitidos||0)-(a.dias_transmitidos||0)});
   else if(rankMode==='quiz')list.sort(function(a,b){return(b.quiz_mejor_puntaje||0)-(a.quiz_mejor_puntaje||0)});
+  else if(rankMode==='best_day')list.sort(function(a,b){return(b.mejor_dia_monedas||0)-(a.mejor_dia_monedas||0)});
   else if(rankMode==='bonus')list.sort(function(a,b){return((b.horas_contables||0)>=40?1:0)-((a.horas_contables||0)>=40?1:0)||(b.monedas_acumuladas||0)-(a.monedas_acumuladas||0)});
-  else if(rankMode==='ghost'){
-    list.sort(function(a,b){
-      var ga=(a.horas_mes||0)-(a.horas_contables||0);
-      var gb=(b.horas_mes||0)-(b.horas_contables||0);
-      return gb-ga;
-    });
-  }
+  else if(rankMode==='ghost'){list.sort(function(a,b){var ga=(a.horas_mes||0)-(a.horas_contables||0);var gb=(b.horas_mes||0)-(b.horas_contables||0);return gb-ga})}
 
   document.getElementById('rank-count').textContent=list.length;
   if(!list.length){document.getElementById('rank-list').innerHTML='<div class="empty"><div class="em-icon">📊</div>No hay emisoras</div>';return}
@@ -2737,9 +2833,14 @@ function renderRanking(){
     var bonusTxt=hCont>=40?'✅ Bono':'⏳ '+Math.max(0,40-hCont)+'h';
     var statVal='',statLbl='';
     if(rankMode==='coins'){statVal='🪙 '+fmt(e.monedas_acumuladas||0);statLbl='este mes'}
+    else if(rankMode==='total'){statVal='💰 '+fmt(e.monedas_cuenta_total||0);statLbl='en cuenta'}
     else if(rankMode==='hours'){statVal='⏱️ '+fmt(hCont);statLbl='contables'}
+    else if(rankMode==='real_hours'){statVal='🕐 '+(e.horas_mes||0)+'h';statLbl='realizadas'}
+    else if(rankMode==='efficiency'){var eff=(e.horas_mes||0)>0?Math.round((e.monedas_acumuladas||0)/(e.horas_mes)):0;statVal='⚡ '+fmt(eff);statLbl='monedas/hora'}
+    else if(rankMode==='meta_pct'){var mp2=(e.meta_monedas_mes||0)>0?Math.round(((e.monedas_acumuladas||0)/(e.meta_monedas_mes))*100):0;statVal='🎯 '+mp2+'%';statLbl=fmt(e.monedas_acumuladas||0)+'/'+fmt(e.meta_monedas_mes||0)}
     else if(rankMode==='days'){statVal='📅 '+(e.dias_transmitidos||0);statLbl='días'}
     else if(rankMode==='quiz'){statVal='🧠 '+(e.quiz_mejor_puntaje||0);statLbl='puntos'}
+    else if(rankMode==='best_day'){statVal='🌟 '+fmt(e.mejor_dia_monedas||0);statLbl=e.mejor_dia_fecha||'sin récord'}
     else if(rankMode==='ghost'){var ghostH=Math.max(0,Math.round(((e.horas_mes||0)-(e.horas_contables||0))*10)/10);statVal='👻 '+ghostH+'h';statLbl=ghostH>0?'en riesgo':'limpia'}
     else{statVal=bonusTxt;statLbl=fmt(hCont)+'/40h'}
 

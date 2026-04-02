@@ -953,6 +953,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <button class="nt" onclick="go('progreso')" id="tab-progreso"><span class="te">📊</span>Progreso</button>
   <button class="nt" onclick="go('calc')" id="tab-calc"><span class="te">🎯</span>Metas</button>
   <button class="nt" onclick="go('catalogo')" id="tab-catalogo"><span class="te">🎁</span>Catálogo</button>
+  <button class="nt" onclick="go('logros')" id="tab-logros"><span class="te">🏅</span>Logros</button>
   <button class="nt" onclick="go('quiz')" id="tab-quiz"><span class="te">🧠</span>Quiz</button>
 </div>
 
@@ -1031,14 +1032,21 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
       </div>
     </div>
 
+    <!-- Inspiración del día (solo en perfil) -->
+    <div id="inspire-area" style="padding:0 16px"></div>
+
   </div>
 </div>
 
-<!-- ====== BADGES ====== -->
-<div id="badges-area" style="padding:0"></div>
-
-<!-- ====== INSPIRACIÓN DEL DÍA ====== -->
-<div id="inspire-area" style="padding:0"></div>
+<!-- ====== LOGROS ====== -->
+<div class="sec" id="s-logros">
+  <div style="text-align:center;padding:20px 16px 10px">
+    <div style="font-size:32px">🏅</div>
+    <h2 style="font-family:'Fredoka',sans-serif;font-size:20px;margin-top:6px">Mis Logros</h2>
+    <p style="font-size:12px;color:var(--txt2);margin-top:3px">Desbloquea logros transmitiendo</p>
+  </div>
+  <div id="badges-area" style="padding:0"></div>
+</div>
 
 <!-- ====== PROGRESO ====== -->
 <div class="sec" id="s-progreso">
@@ -1516,8 +1524,61 @@ function init(){
 function load(){
   sbq('emisora_perfil?id=eq.'+U.id+'&select=*').then(function(r){return r.json()}).then(function(d){
     P=(d&&d.length>0)?d[0]:{id:U.id,nombre:U.name,monedas_acumuladas:0,monedas_cuenta_total:0};
+    checkMonthlyReset();
     refreshAll();loadSes();loadCat();hideLd();checkOnboarding();initMonthNav();saveMonthlySnapshot();
   }).catch(function(e){console.error(e);P={id:U.id,nombre:U.name||'Emisora',monedas_acumuladas:0,monedas_cuenta_total:0};refreshAll();loadCat();hideLd();checkOnboarding()});
+}
+
+/* ===== AUTO-RESET MENSUAL ===== */
+function checkMonthlyReset(){
+  if(!P||!P.id)return;
+  var now=new Date();
+  var mesActual=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  /* Detectar último mes activo desde la fecha guardada */
+  var ultimaFecha=P.monedas_actuales_fecha||P.updated_at||null;
+  if(!ultimaFecha)return;/* primera vez, no resetear */
+  var partes=String(ultimaFecha).slice(0,7);/* "2026-03" */
+  if(!partes||partes.length<7)return;
+  if(partes===mesActual)return;/* mismo mes, no resetear */
+  /* Es un mes nuevo — guardar snapshot del mes anterior y resetear */
+  console.log('🔄 Nuevo mes detectado: '+partes+' → '+mesActual+'. Reseteando contadores...');
+  /* Snapshot del mes anterior ya se guarda en saveMonthlySnapshot, pero por seguridad: */
+  var mesAnterior=parseInt(partes.split('-')[1]);
+  var anioAnterior=parseInt(partes.split('-')[0]);
+  var snapAnterior={
+    emisora_id:U.id,anio:anioAnterior,mes:mesAnterior,
+    monedas_acumuladas:P.monedas_acumuladas||0,
+    monedas_cuenta_total:P.monedas_cuenta_total||0,
+    horas_contables:P.horas_contables||0,
+    horas_realizadas:P.horas_mes||0,
+    dias_transmitidos:P.dias_transmitidos||0,
+    meta_monedas_mes:P.meta_monedas_mes||0,
+    meta_alcanzada:(P.monedas_acumuladas||0)>=(P.meta_monedas_mes||0)&&(P.meta_monedas_mes||0)>0,
+    bono_activo:(P.horas_contables||0)>=40,
+    mejor_dia_monedas:P.mejor_dia_monedas||0,
+    quiz_mejor_puntaje:P.quiz_mejor_puntaje||0
+  };
+  sbq('historial_mensual?on_conflict=emisora_id,anio,mes',{m:'POST',b:snapAnterior,h:{'Prefer':'return=minimal,resolution=merge-duplicates'}}).catch(function(){});
+  /* Resetear contadores del nuevo mes */
+  P.monedas_acumuladas=0;
+  P.horas_mes=0;
+  P.horas_contables=0;
+  P.dias_transmitidos=0;
+  P.es_primer_mes=false;
+  P.mejor_dia_monedas=0;
+  P.mejor_dia_fecha=null;
+  P.mejor_show_desc=null;
+  P.mejor_show_tipo=null;
+  var resetData={
+    monedas_acumuladas:0,horas_mes:0,horas_contables:0,dias_transmitidos:0,
+    es_primer_mes:false,mejor_dia_monedas:0,mejor_dia_fecha:null,
+    mejor_show_desc:null,mejor_show_tipo:null,
+    monedas_actuales_fecha:now.toISOString().slice(0,10)
+  };
+  sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:resetData,h:{'Prefer':'return=minimal'}}).then(function(){
+    console.log('✅ Contadores reseteados para '+mesActual);
+    toast('🗓️ ¡Nuevo mes! Contadores reiniciados');
+  }).catch(function(e){console.error('Reset error:',e)});
 }
 function hideLd(){var e=document.getElementById('ld');e.classList.add('out');setTimeout(function(){e.style.display='none'},500)}
 
@@ -2315,7 +2376,7 @@ function startQuiz(){
 }
 
 function lockTabs(lock){
-  var tabs=['tab-perfil','tab-progreso','tab-calc','tab-catalogo'];
+  var tabs=['tab-perfil','tab-progreso','tab-calc','tab-catalogo','tab-logros'];
   for(var i=0;i<tabs.length;i++){var t=document.getElementById(tabs[i]);if(lock)t.classList.add('locked');else t.classList.remove('locked')}
 }
 
@@ -2512,10 +2573,11 @@ function go(t){
   if(qzActive&&t!=='quiz'){toast('🔒 Completa el quiz primero');return}
   var ts=document.querySelectorAll('#nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
   var ss=document.querySelectorAll('#app-emisora .sec');for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
-  var mp={perfil:0,progreso:1,calc:2,catalogo:3,quiz:4};
+  var mp={perfil:0,progreso:1,calc:2,catalogo:3,logros:4,quiz:5};
   if(mp[t]!==undefined)ts[mp[t]].classList.add('a');
   var s=document.getElementById('s-'+t);if(s)s.classList.add('a');
   if(ts[mp[t]])ts[mp[t]].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  if(t==='logros')renderBadges();
   if(t==='quiz')loadQuizRanking();
   window.scrollTo({top:0,behavior:'smooth'});
 }

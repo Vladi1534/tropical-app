@@ -1163,14 +1163,18 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <!-- ====== CATALOGO ====== -->
 <div class="sec" id="s-catalogo">
-  <div class="cat-bar"><div class="cat-search-wrap"><span class="cat-si">🔍</span><input type="text" class="cat-search" id="cat-search" placeholder="Buscar regalo..." oninput="filterCat()"></div></div>
-  <div class="cat-filters" id="cat-filters">
-    <button class="cat-fbtn sel" onclick="filterTier('all',this)">Todos</button>
-    <button class="cat-fbtn" onclick="filterTier('1-99',this)">💎 1-99</button>
-    <button class="cat-fbtn" onclick="filterTier('100-499',this)">💎 100-499</button>
-    <button class="cat-fbtn" onclick="filterTier('500-999',this)">💎 500-999</button>
-    <button class="cat-fbtn" onclick="filterTier('1000-4999',this)">💎 1K-5K</button>
-    <button class="cat-fbtn" onclick="filterTier('5000+',this)">💎 5K+</button>
+  <div class="cat-bar">
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="cat-search-wrap" style="flex:1"><span class="cat-si">🔍</span><input type="text" class="cat-search" id="cat-search" placeholder="Buscar regalo..." oninput="filterCat()"></div>
+      <select id="cat-tier-select" onchange="filterTier(this.value)" style="padding:10px 8px;border-radius:25px;border:1.5px solid rgba(168,85,247,.2);background:var(--card2);color:var(--txt);font-size:11px;font-weight:700;font-family:'Nunito',sans-serif;outline:none;cursor:pointer;min-width:90px">
+        <option value="all">💎 Todos</option>
+        <option value="1-99">💎 1-99</option>
+        <option value="100-499">💎 100-499</option>
+        <option value="500-999">💎 500-999</option>
+        <option value="1000-4999">💎 1K-5K</option>
+        <option value="5000+">💎 5K+</option>
+      </select>
+    </div>
   </div>
   <div class="cat-count" id="cat-count"></div>
   <div class="cat-grid" id="cat-grid"><div class="cat-empty">Cargando regalos...</div></div>
@@ -2160,7 +2164,7 @@ function toggleSalTable(){var w=document.getElementById('sal-wrap');w.classList.
 /* ===== CATALOG ===== */
 function loadCat(){sbq('regalos?select=*&order=diamantes.asc').then(function(r){return r.json()}).then(function(d){catAll=d||[];catFilt=catAll;renderCat();renderFavDisplay()}).catch(function(){document.getElementById('cat-grid').innerHTML='<div class="cat-empty">Error cargando</div>'})}
 function filterCat(){catQ=(document.getElementById('cat-search').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');applyCF()}
-function filterTier(t,el){catTier=t;var b=document.querySelectorAll('.cat-fbtn');for(var i=0;i<b.length;i++)b[i].classList.remove('sel');el.classList.add('sel');applyCF()}
+function filterTier(t){catTier=t;applyCF()}
 function applyCF(){catFilt=[];for(var i=0;i<catAll.length;i++){var g=catAll[i],nm=(g.nombre||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),d=g.diamantes||0;var mQ=!catQ||nm.indexOf(catQ)!==-1||String(d).indexOf(catQ)!==-1,mT=true;if(catTier==='1-99')mT=d>=1&&d<=99;else if(catTier==='100-499')mT=d>=100&&d<=499;else if(catTier==='500-999')mT=d>=500&&d<=999;else if(catTier==='1000-4999')mT=d>=1000&&d<=4999;else if(catTier==='5000+')mT=d>=5000;if(mQ&&mT)catFilt.push(g)}renderCat()}
 function renderCat(){
   var grid=document.getElementById('cat-grid'),ct=document.getElementById('cat-count');

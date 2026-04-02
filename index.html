@@ -946,6 +946,16 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <div id="m-name" class="modal"><div class="mbox"><div class="mtt">✏️ Tu nombre</div><div class="miw"><label>Nombre que ven los demás</label><input type="text" class="ti" id="inp-name" placeholder="Escribe tu nombre..."></div><button class="bp" onclick="saveName()">Guardar</button><button class="bs" onclick="closeM('m-name')">Cancelar</button></div></div>
 <div id="m-bio" class="modal"><div class="mbox"><div class="mtt">✨ Tu bio</div><div class="miw"><label>Cuéntanos algo de ti</label><input type="text" class="ti" id="inp-bio" placeholder="Ej: Bailarina y cantante 💃🎤" maxlength="100"></div><button class="bp" onclick="saveBio()">Guardar</button><button class="bs" onclick="closeM('m-bio')">Cancelar</button></div></div>
 <div id="m-coins" class="modal"><div class="mbox"><div class="mtt">🪙 Monedas de tu cuenta</div><div class="miw"><label>Total en tu perfil de Buzzcast</label><input type="number" class="ni" id="inp-coins-total" placeholder="Ej: 45600" inputmode="numeric"></div><div style="font-size:10px;color:var(--txt3);margin-bottom:12px;line-height:1.4">Puedes actualizarlo manualmente o se sumará automáticamente con tus sesiones registradas.</div><button class="bp" onclick="saveCoinsTotal()">Guardar</button><button class="bs" onclick="closeM('m-coins')">Cancelar</button></div></div>
+<div id="m-corregir" class="modal"><div class="mbox">
+  <div class="mtt">✏️ Corregir datos del mes</div>
+  <div style="font-size:11px;color:var(--txt2);margin-bottom:12px;line-height:1.5;padding:8px 10px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:8px">⚠️ Usa esto si ingresaste datos del <b>mes equivocado</b> en el onboarding. Esto reemplaza tus valores actuales del mes.</div>
+  <div id="corregir-month-label" style="text-align:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:700;color:var(--gold);margin-bottom:12px"></div>
+  <div class="miw"><label>🪙 Total de monedas en tu cuenta (perfil de Buzzcast)</label><input type="number" class="ni" id="fix-coins-total" placeholder="Ej: 45000" inputmode="numeric"></div>
+  <div class="miw" style="margin-top:8px"><label>🪙 Monedas ganadas este mes (solo este mes)</label><input type="number" class="ni" id="fix-coins-month" placeholder="Ej: 3000" inputmode="numeric"></div>
+  <div class="miw" style="margin-top:8px"><label>⏱️ Horas contables este mes</label><input type="number" class="ni" id="fix-hours" placeholder="Ej: 10" inputmode="decimal" step="0.5"></div>
+  <button class="bp" onclick="saveCorrection()" style="margin-top:12px">💾 Guardar corrección</button>
+  <button class="bs" onclick="closeM('m-corregir')">Cancelar</button>
+</div></div>
 
 <!-- NAV -->
 <div class="nav" id="nav">
@@ -1135,6 +1145,11 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <div class="sht">📋 Historial del mes</div>
     <div id="ses-list"><div style="text-align:center;color:var(--txt3);font-size:12px;padding:20px">Sin sesiones aún</div></div>
     <div id="ses-expand" style="display:none"><button class="expand-btn" onclick="expandHist()">Ver más ▼</button></div>
+    
+    <!-- Corregir datos del mes -->
+    <div style="margin-top:14px;text-align:center">
+      <button class="expand-btn" onclick="openM('m-corregir')" style="color:var(--pink);border-color:rgba(236,72,153,.2)">✏️ ¿Datos incorrectos? Corregir valores del mes</button>
+    </div>
   </div>
 </div>
 
@@ -1456,10 +1471,15 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <div class="ob-slide" id="ob-7">
     <div class="ob-bot"><div class="ob-bot-av">🤖</div><div class="ob-bubble">Ahora necesito saber tu <strong>progreso actual</strong> 🪙 para darte las mejores recomendaciones</div></div>
     <div class="ob-content">
+      <div id="ob-month-banner" style="text-align:center;padding:10px;margin-bottom:10px;border-radius:10px;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(236,72,153,.08));border:1.5px solid rgba(251,191,36,.3)">
+        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:1px">Estamos en</div>
+        <div style="font-family:'Fredoka',sans-serif;font-size:20px;font-weight:700;color:var(--gold)" id="ob-current-month">—</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:2px">Ingresa los datos de ESTE mes, no del anterior</div>
+      </div>
       <div class="ob-input-group"><label>🪙 Total de monedas en tu cuenta (las que ves en tu perfil)</label><input class="ni" id="ob-coins-total" placeholder="Ej: 45000" inputmode="numeric" oninput="obValidate()" style="text-align:center"></div>
-      <div class="ob-input-group"><label>🪙 Monedas ganadas ESTE MES (solo las de este mes)</label><input class="ni" id="ob-coins-month" placeholder="Ej: 5000" inputmode="numeric" oninput="obValidate()" style="text-align:center"></div>
-      <div class="ob-input-group"><label>⏱️ Horas contables que ya llevas ESTE MES (máx 3h/día cuentan)</label><input class="ni" id="ob-hours" placeholder="Ej: 12" inputmode="decimal" step="0.5" oninput="obValidate()" style="text-align:center"></div>
-      <div style="font-size:10px;color:var(--txt3);text-align:center;line-height:1.4">Si no sabes exacto, pon un aproximado. Después puedes actualizarlo.</div>
+      <div class="ob-input-group"><label id="ob-month-label-coins">🪙 Monedas ganadas ESTE MES</label><input class="ni" id="ob-coins-month" placeholder="Ej: 5000" inputmode="numeric" oninput="obValidate()" style="text-align:center"></div>
+      <div class="ob-input-group"><label id="ob-month-label-hours">⏱️ Horas contables ESTE MES (máx 3h/día)</label><input class="ni" id="ob-hours" placeholder="Ej: 12" inputmode="decimal" step="0.5" oninput="obValidate()" style="text-align:center"></div>
+      <div style="font-size:10px;color:var(--txt3);text-align:center;line-height:1.4">Si no sabes exacto, pon un aproximado. Después puedes corregirlo desde <b>Progreso</b>.</div>
     </div>
     <button class="ob-next" id="ob-next-7" onclick="obNext()" disabled>Siguiente →</button>
   </div>
@@ -2114,11 +2134,23 @@ function togglePrimerMes(){
 }
 
 /* ===== MODALS ===== */
-function openM(id){document.getElementById(id).classList.add('s');if(id==='m-coins')document.getElementById('inp-coins-total').value=P.monedas_cuenta_total||''}
+function openM(id){document.getElementById(id).classList.add('s');if(id==='m-coins')document.getElementById('inp-coins-total').value=P.monedas_cuenta_total||'';if(id==='m-corregir'){var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];var now=new Date();document.getElementById('corregir-month-label').textContent='📅 '+meses[now.getMonth()]+' '+now.getFullYear();document.getElementById('fix-coins-total').value=P.monedas_cuenta_total||'';document.getElementById('fix-coins-month').value=P.monedas_acumuladas||'';document.getElementById('fix-hours').value=P.horas_contables||''}}
 function closeM(id){document.getElementById(id).classList.remove('s')}
 function saveName(){var n=document.getElementById('inp-name').value.trim();if(!n)return;P.nombre=n;save({nombre:n});refreshAll();closeM('m-name')}
 function saveBio(){var b=document.getElementById('inp-bio').value.trim();P.bio=b;save({bio:b});document.getElementById('d-bio').textContent=b||'✨ Toca para agregar tu bio...';closeM('m-bio')}
 function saveCoinsTotal(){var v=parseInt(document.getElementById('inp-coins-total').value)||0;P.monedas_cuenta_total=v;save({monedas_cuenta_total:v});refreshAll();closeM('m-coins')}
+function saveCorrection(){
+  var ct=parseInt(document.getElementById('fix-coins-total').value)||0;
+  var cm=parseInt(document.getElementById('fix-coins-month').value)||0;
+  var hc=parseFloat(document.getElementById('fix-hours').value)||0;
+  if(!confirm('¿Segura? Esto reemplazará tus monedas del mes ('+fmt(P.monedas_acumuladas)+' → '+fmt(cm)+') y horas ('+P.horas_contables+' → '+hc+')'))return;
+  P.monedas_cuenta_total=ct;P.monedas_acumuladas=cm;P.horas_contables=hc;P.horas_mes=hc;
+  P.monedas_al_registrarse=ct;
+  var upd={monedas_cuenta_total:ct,monedas_acumuladas:cm,horas_contables:hc,horas_mes:hc,monedas_al_registrarse:ct,monedas_actuales_fecha:new Date().toISOString().slice(0,10)};
+  sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:upd,h:{'Prefer':'return=minimal'}}).then(function(){
+    refreshAll();closeM('m-corregir');toast('✅ Datos corregidos');
+  }).catch(function(e){alert('Error: '+e.message)});
+}
 
 var selPhoto=null;
 function onPhotoSel(inp){if(inp.files&&inp.files[0]){selPhoto=inp.files[0];var r=new FileReader();r.onload=function(e){document.getElementById('pf-img').src=e.target.result;document.getElementById('pf-prev').style.display='block';document.getElementById('btn-up').disabled=false};r.readAsDataURL(inp.files[0])}}
@@ -3497,6 +3529,12 @@ function startOnboarding(){
   obStep=0;
   obRenderDots();
   obBuildMetas();
+  /* Mostrar mes actual en slide 7 */
+  var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var now=new Date();var mesNombre=meses[now.getMonth()]+' '+now.getFullYear();
+  var mEl=document.getElementById('ob-current-month');if(mEl)mEl.textContent='📅 '+mesNombre;
+  var lc=document.getElementById('ob-month-label-coins');if(lc)lc.textContent='🪙 Monedas ganadas en '+meses[now.getMonth()];
+  var lh=document.getElementById('ob-month-label-hours');if(lh)lh.textContent='⏱️ Horas contables en '+meses[now.getMonth()]+' (máx 3h/día)';
 }
 
 function obRenderDots(){

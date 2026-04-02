@@ -3539,6 +3539,8 @@ function obSaveStep(){
 function obFinish(){
   save({onboarding_completo:true,onboarding_paso:7});
   P.onboarding_completo=true;
+  // Limpiar estado_conversacion en usuarios para que el bot no loop
+  sbq('usuarios?id=eq.'+U.id,{m:'PATCH',b:{estado_conversacion:null,temp_datos:'{}'},h:{'Prefer':'return=minimal'}}).catch(function(e){console.log('Cleanup error:',e)});
   document.getElementById('onboarding').classList.remove('active');
   refreshAll();
   toast('🎉 ¡Bienvenida a Tropical!');
@@ -3600,23 +3602,9 @@ function unifiedAuth(){
           userRole=u.rol;currentRole=u.rol;currentUser=u;
           sbq('emisora_perfil?id=eq.'+tid+'&select=onboarding_completo').then(function(r2){return r2.json()}).then(function(ep){
             if(ep&&ep.length>0&&ep[0].onboarding_completo===true){
-              // Después de marcar onboarding_completo = true en emisora_perfil:
-supabase.from('usuarios')
-  .update({ estado_conversacion: null, temp_datos: '{}' })
-  .eq('id', userId)
-  .then(function(r) { 
-    console.log('Estado limpiado'); 
-  });
               console.log('✅ Onboarding done → Admin');
               startAdminMode();
             }else{
-              // Después de marcar onboarding_completo = true en emisora_perfil:
-supabase.from('usuarios')
-  .update({ estado_conversacion: null, temp_datos: '{}' })
-  .eq('id', userId)
-  .then(function(r) { 
-    console.log('Estado limpiado'); 
-  });
               console.log('⏳ Onboarding pending → Emisora first');
               startEmisoraMode();
             }

@@ -1036,19 +1036,35 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <!-- PET MODALS -->
 <div id="m-pet-select" class="modal"><div class="mbox">
-  <div class="mtt">🐾 Elige tu mascota tropical</div>
-  <div style="font-size:12px;color:var(--txt2);margin-bottom:12px;text-align:center;line-height:1.5">Tu compañera de streaming. Aliméntala con tus monedas y mírala crecer 🌴</div>
+  <div class="mtt">🐾 Adopta tu mascota tropical</div>
+  <div style="font-size:12px;color:var(--txt2);margin-bottom:12px;text-align:center;line-height:1.5">Tu compañera de streaming. Aliméntala y mírala crecer 🌴</div>
   <div class="pet-select" id="pet-select-grid"></div>
-  <div style="margin-top:10px"><label style="text-align:center;display:block">Dale un nombre</label><input class="ti" id="pet-name-input" placeholder="Ej: Luna, Coco, Tropica..." maxlength="15" style="text-align:center;font-size:16px;margin-top:4px"></div>
+  <div style="margin-top:10px;display:flex;gap:8px;justify-content:center" id="pet-gender-area">
+    <button class="ch" onclick="selPetGender('hembra',this)" id="pg-f" style="flex:1;text-align:center">♀️ Hembra</button>
+    <button class="ch" onclick="selPetGender('macho',this)" id="pg-m" style="flex:1;text-align:center">♂️ Macho</button>
+  </div>
+  <div style="margin-top:10px"><label style="text-align:center;display:block">Dale un nombre</label><input class="ti" id="pet-name-input" placeholder="Ej: Luna, Coco, Tropica..." maxlength="15" style="text-align:center;font-size:16px;margin-top:4px" oninput="validateAdopt()"></div>
   <button class="bp" onclick="adoptPet()" id="btn-adopt" style="margin-top:12px" disabled>🐾 Adoptar</button>
 </div></div>
 
 <div id="m-pet-feed" class="modal"><div class="mbox">
-  <div class="mtt">🍽️ Alimentar mascota</div>
+  <div class="mtt">🍽️ Alimentar mascota <button class="m-close" onclick="closeM('m-pet-feed')">✕</button></div>
   <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Tus croquetas: </span><span style="font-family:'Fredoka',sans-serif;font-size:18px;color:var(--gold)" id="feed-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🦴</span></div>
   <div class="feed-grid" id="feed-grid"></div>
-  <div style="font-size:9px;color:var(--txt3);text-align:center;margin-top:10px;line-height:1.4">Las croquetas se obtienen registrando sesiones.<br>Más monedas = más croquetas.</div>
+  <div style="font-size:9px;color:var(--txt3);text-align:center;margin-top:8px;line-height:1.4">Registra sesiones para ganar croquetas</div>
   <button class="bs" onclick="closeM('m-pet-feed')">Cerrar</button>
+</div></div>
+
+<div id="m-pet-shop" class="modal"><div class="mbox">
+  <div class="mtt">🛍️ Tienda tropical <button class="m-close" onclick="closeM('m-pet-shop')">✕</button></div>
+  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Croquetas: </span><span style="font-family:'Fredoka',sans-serif;font-size:16px;color:var(--gold)" id="shop-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🦴</span></div>
+  <div style="display:flex;gap:0;margin-bottom:12px;background:var(--card2);border-radius:25px;padding:3px">
+    <button class="cmt-btn a" onclick="shopTab('accesorios')" id="st-acc">🎀 Accesorios</button>
+    <button class="cmt-btn" onclick="shopTab('juguetes')" id="st-toy">🎾 Juguetes</button>
+    <button class="cmt-btn" onclick="shopTab('habitat')" id="st-hab">🏠 Hábitat</button>
+  </div>
+  <div id="shop-grid" class="feed-grid"></div>
+  <button class="bs" onclick="closeM('m-pet-shop')">Cerrar</button>
 </div></div>
 
 <!-- NAV -->
@@ -1965,161 +1981,238 @@ function renderBadges(){
 }
 function togCat(el){var body=el.nextElementSibling;if(!body)return;if(body.style.display==='none'){body.style.display='block';el.querySelector('.logro-cat-count').style.opacity='1'}else{body.style.display='none';el.querySelector('.logro-cat-count').style.opacity='.5'}}
 
-/* ===== PET SYSTEM ===== */
+/* ===== PET SYSTEM v2 ===== */
 var PET_TYPES={
-  gato:{name:'Gatita',desc:'Curiosa y cariñosa',emoji:'🐱'},
-  perro:{name:'Perrita',desc:'Fiel y juguetona',emoji:'🐶'},
-  conejo:{name:'Conejita',desc:'Tierna y saltarina',emoji:'🐰'}
+  gato:{name:'Gatita',nameM:'Gatito',desc:'Curiosa y cariñosa',emoji:'🐱'},
+  perro:{name:'Perrita',nameM:'Perrito',desc:'Fiel y juguetona',emoji:'🐶'},
+  conejo:{name:'Conejita',nameM:'Conejito',desc:'Tierna y saltarina',emoji:'🐰'}
 };
 var PET_FOOD=[
-  {id:'desayuno',name:'Desayuno',icon:'🥣',cost:5,xp:10,hunger:25},
-  {id:'almuerzo',name:'Almuerzo',icon:'🍗',cost:8,xp:15,hunger:35},
-  {id:'cena',name:'Cena',icon:'🥗',cost:10,xp:20,hunger:40}
+  {id:'desayuno',name:'Desayuno',icon:'🥣',cost:5,xp:8,hunger:25,happy:3},
+  {id:'almuerzo',name:'Almuerzo',icon:'🍗',cost:8,xp:12,hunger:35,happy:5},
+  {id:'cena',name:'Cena',icon:'🥗',cost:12,xp:18,hunger:40,happy:7},
+  {id:'postre',name:'Postre',icon:'🍰',cost:15,xp:10,hunger:10,happy:20},
+  {id:'snack',name:'Snack',icon:'🍪',cost:3,xp:4,hunger:12,happy:4}
 ];
-var PET_XP_TABLE=[0,20,50,90,140,200,270,350,440,550,680,830,1000,1200,1420,1670,1950,2260,2600,2980,3400,3860,4360,4900,5500,6160,6880,7660,8500,9400,10400,11500,12700,14000,15500,17200,19100,21200,23500,26000];
+var PET_TOYS=[
+  {id:'pelota',name:'Pelota',icon:'🎾',cost:40,xp_day:8,days:3,energy_cost:15,desc:'3 días de diversión'},
+  {id:'raton',name:'Ratón',icon:'🐭',cost:60,xp_day:12,days:3,energy_cost:10,desc:'Le encanta perseguirlo'},
+  {id:'pluma',name:'Pluma',icon:'🪶',cost:80,xp_day:15,days:5,energy_cost:12,desc:'5 días de cacería'},
+  {id:'tunel',name:'Túnel',icon:'🕳️',cost:120,xp_day:18,days:7,energy_cost:8,desc:'Una semana de aventuras'},
+  {id:'hamaca',name:'Hamaca',icon:'🏖️',cost:200,xp_day:25,days:7,energy_cost:5,desc:'Relax tropical premium'}
+];
+var PET_ACCS=[
+  {id:'collar_flores',name:'Collar Flores',icon:'🌺',cost:80,desc:'Flores tropicales'},
+  {id:'lentes_sol',name:'Lentes de Sol',icon:'🕶️',cost:120,desc:'Estilo playero'},
+  {id:'bandana',name:'Bandana',icon:'🧣',cost:100,desc:'Estilo pirata'},
+  {id:'corona',name:'Corona',icon:'👑',cost:300,desc:'Para la reina'},
+  {id:'moño',name:'Moño',icon:'🎀',cost:60,desc:'Un toque elegante'},
+  {id:'collar_diamante',name:'Collar Diamante',icon:'💎',cost:500,desc:'Puro lujo'},
+  {id:'alas',name:'Alas Tropicales',icon:'🦋',cost:400,desc:'Alas de mariposa'},
+  {id:'sombrero',name:'Sombrero Playa',icon:'👒',cost:200,desc:'Para el sol'}
+];
+var PET_HABITATS=[
+  {id:'default',name:'Noche Estrellada',icon:'🌙',cost:0,desc:'El cielo nocturno'},
+  {id:'playa',name:'Playa Tropical',icon:'🏝️',cost:100,desc:'Arena y mar'},
+  {id:'jardin',name:'Jardín Florido',icon:'🌸',cost:150,desc:'Flores por todos lados'},
+  {id:'casa',name:'Casita Cozy',icon:'🏠',cost:200,desc:'Un hogar cálido'},
+  {id:'mansion',name:'Mansión Palmera',icon:'🏰',cost:400,desc:'Vida de lujo'},
+  {id:'arcoiris',name:'Arcoíris',icon:'🌈',cost:350,desc:'Colores mágicos'},
+  {id:'espacio',name:'Espacio',icon:'🚀',cost:500,desc:'Entre las estrellas'}
+];
+/* XP table: ~3x slower than v1. Egg hatches at level 5 */
+var PET_XP_TABLE=[0,30,70,120,180,260,360,480,620,780,960,1170,1400,1660,1950,2280,2650,3060,3520,4030,4600,5230,5930,6700,7550,8480,9500,10600,11800,13100,14500,16000,17600,19400,21400,23600,26000,28600,31400,34500,37800,41400,45300,49500,54000,59000,64400,70200,76500,83300];
 
-function getPetStage(lvl){if(lvl<3)return 0;if(lvl<10)return 1;if(lvl<20)return 2;if(lvl<30)return 3;return 4}
+function getPetStage(lvl){if(lvl<5)return 0;if(lvl<12)return 1;if(lvl<22)return 2;if(lvl<32)return 3;return 4}
 function getPetStageName(s){return['Huevo','Bebé','Joven','Adulta','Tropical'][s]}
-function xpForLevel(lvl){return PET_XP_TABLE[Math.min(lvl,PET_XP_TABLE.length-1)]||(10000+lvl*1500)}
-function coinsToCroquetas(c){if(c<=0)return 0;return Math.max(1,Math.round(Math.log(c+1)*3.5))}
-function getMood(pet){var h=pet.hambre||0,f=pet.felicidad||0;if(h<20)return'hungry';if(f<30)return'sad';if(f>70)return'happy';return'neutral'}
+function xpForLevel(lvl){return PET_XP_TABLE[Math.min(lvl,PET_XP_TABLE.length-1)]||(83300+(lvl-49)*5000)}
+function coinsToCroquetas(c){if(c<=0)return 0;return Math.max(1,Math.round(Math.log(c+1)*3.2))}
+function getMood(pet){var h=pet.hambre||0,f=pet.felicidad||0;if(h<20)return'hungry';if(f<25)return'sad';if(f>65&&h>50)return'happy';return'neutral'}
+function petGenderName(pet){var t=PET_TYPES[pet.tipo]||PET_TYPES.gato;return pet.genero==='macho'?t.nameM:t.name}
 
-function getPetSVG(type,stage,mood,size){
-  var s=size||100;var half=s/2;
-  if(stage===0)return petEggSVG(s);
-  var colors={gato:{body:'#f4a460',dark:'#d2883a',light:'#ffd9b3'},perro:{body:'#c4956a',dark:'#a07350',light:'#e8cdb5'},conejo:{body:'#e8ddd4',dark:'#c9b8a8',light:'#f5f0ec'}};
+function getPetSVG(type,stage,mood,size,gender,accs){
+  var s=size||120;var half=s/2;
+  if(stage===0)return petEggSVG(s,type);
+  var isFem=gender!=='macho';
+  var colors={gato:{body:'#f4a460',dark:'#d2883a',light:'#ffd9b3',nose:'#e88b7a'},perro:{body:'#c4956a',dark:'#a07350',light:'#e8cdb5',nose:'#4a3728'},conejo:{body:'#e8ddd4',dark:'#c9b8a8',light:'#f5f0ec',nose:'#ffb6c1'}};
   var c=colors[type]||colors.gato;
-  var eyeY=stage===1?half-14:half-18;var bodyY=stage===1?half+8:half+5;
-  var sc=stage===1?0.7:stage===2?0.85:1;
-  var mouthD=mood==='happy'?'M'+(half-6)+','+(eyeY+16)+' Q'+half+','+(eyeY+22)+' '+(half+6)+','+(eyeY+16):mood==='sad'?'M'+(half-5)+','+(eyeY+18)+' Q'+half+','+(eyeY+14)+' '+(half+5)+','+(eyeY+18):'M'+(half-4)+','+(eyeY+17)+' L'+(half+4)+','+(eyeY+17);
-  var eyeH=mood==='happy'?3:mood==='sad'?5:4;
-  var blinkAnim=mood!=='sad'?'style="animation:petBlink 4s infinite"':'';
-  var bodyAnim=mood==='happy'?'style="animation:petBounce 1s infinite"':mood==='sad'?'style="animation:petSad 2s infinite"':'style="animation:petBreathe 3s infinite"';
-
+  var sc=stage===1?0.65:stage===2?0.82:0.95;
+  var eyeY=half-12;var bodyY=half+10;
+  /* Mood expressions */
+  var mouthD=mood==='happy'?'M'+(half-7)+','+(eyeY+16)+' Q'+half+','+(eyeY+24)+' '+(half+7)+','+(eyeY+16):mood==='sad'?'M'+(half-5)+','+(eyeY+19)+' Q'+half+','+(eyeY+14)+' '+(half+5)+','+(eyeY+19):mood==='hungry'?'M'+(half-4)+','+(eyeY+17)+' Q'+half+','+(eyeY+20)+' '+(half+4)+','+(eyeY+17):'M'+(half-5)+','+(eyeY+17)+' L'+(half+5)+','+(eyeY+17);
+  var eyeH=mood==='happy'?2.5:mood==='sad'?5:4;
+  var blinkA=mood!=='sad'?'style="animation:petBlink 4s infinite"':'';
+  var bodyA=mood==='happy'?'style="animation:petBounce 1.2s infinite"':mood==='sad'?'style="animation:petSad 2.5s infinite"':mood==='hungry'?'style="animation:petSad 1.5s infinite"':'style="animation:petBreathe 3s infinite"';
   var svg='<svg width="'+s+'" height="'+s+'" viewBox="0 0 '+s+' '+s+'">';
-  svg+='<g transform="translate('+half+','+half+') scale('+sc+') translate(-'+half+',-'+half+')" '+bodyAnim+'>';
-
+  svg+='<g transform="translate('+half+','+half+') scale('+sc+') translate(-'+half+',-'+half+')" '+bodyA+'>';
   if(type==='gato'){
-    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+10)+'" rx="22" ry="18" fill="'+c.body+'"/>';
-    svg+='<circle cx="'+half+'" cy="'+eyeY+'" r="16" fill="'+c.body+'"/>';
-    svg+='<polygon points="'+(half-14)+','+(eyeY-8)+' '+(half-8)+','+(eyeY-22)+' '+(half-2)+','+(eyeY-8)+'" fill="'+c.dark+'"/>';
-    svg+='<polygon points="'+(half+2)+','+(eyeY-8)+' '+(half+8)+','+(eyeY-22)+' '+(half+14)+','+(eyeY-8)+'" fill="'+c.dark+'"/>';
-    svg+='<g '+blinkAnim+'><ellipse cx="'+(half-6)+'" cy="'+eyeY+'" rx="3" ry="'+eyeH+'" fill="#333"/><ellipse cx="'+(half+6)+'" cy="'+eyeY+'" rx="3" ry="'+eyeH+'" fill="#333"/></g>';
-    if(mood==='happy'){svg+='<circle cx="'+(half-5)+'" cy="'+eyeY+'" r="1.5" fill="#fff"/><circle cx="'+(half+7)+'" cy="'+eyeY+'" r="1.5" fill="#fff"/>';}
-    svg+='<ellipse cx="'+half+'" cy="'+(eyeY+12)+'" rx="2" ry="1.5" fill="'+c.dark+'"/>';
-    svg+='<path d="'+mouthD+'" stroke="'+c.dark+'" stroke-width="1.5" fill="none"/>';
-    svg+='<line x1="'+(half-18)+'" y1="'+(eyeY+10)+'" x2="'+(half-8)+'" y2="'+(eyeY+11)+'" stroke="'+c.dark+'" stroke-width=".8"/>';
-    svg+='<line x1="'+(half+8)+'" y1="'+(eyeY+11)+'" x2="'+(half+18)+'" y2="'+(eyeY+10)+'" stroke="'+c.dark+'" stroke-width=".8"/>';
-    svg+='<path d="M'+(half+18)+','+(bodyY+5)+' Q'+(half+32)+','+(bodyY-10)+' '+(half+26)+','+(bodyY-18)+'" stroke="'+c.body+'" stroke-width="4" fill="none" stroke-linecap="round" style="animation:petTail 2s infinite;transform-origin:'+(half+18)+'px '+(bodyY+5)+'px"/>';
+    /* Body */
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+8)+'" rx="24" ry="20" fill="'+c.body+'"/>';
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+22)+'" rx="12" ry="5" fill="'+c.dark+'" opacity=".2"/>';
+    /* Paws */
+    svg+='<ellipse cx="'+(half-12)+'" cy="'+(bodyY+24)+'" rx="5" ry="3" fill="'+c.light+'"/>';
+    svg+='<ellipse cx="'+(half+12)+'" cy="'+(bodyY+24)+'" rx="5" ry="3" fill="'+c.light+'"/>';
+    /* Head */
+    svg+='<circle cx="'+half+'" cy="'+eyeY+'" r="18" fill="'+c.body+'"/>';
+    svg+='<circle cx="'+half+'" cy="'+eyeY+'" r="14" fill="'+c.light+'" opacity=".15"/>';
+    /* Ears */
+    svg+='<polygon points="'+(half-16)+','+(eyeY-8)+' '+(half-10)+','+(eyeY-26)+' '+(half-2)+','+(eyeY-8)+'" fill="'+c.body+'"/>';
+    svg+='<polygon points="'+(half+2)+','+(eyeY-8)+' '+(half+10)+','+(eyeY-26)+' '+(half+16)+','+(eyeY-8)+'" fill="'+c.body+'"/>';
+    svg+='<polygon points="'+(half-14)+','+(eyeY-8)+' '+(half-10)+','+(eyeY-22)+' '+(half-4)+','+(eyeY-8)+'" fill="'+c.nose+'" opacity=".4"/>';
+    svg+='<polygon points="'+(half+4)+','+(eyeY-8)+' '+(half+10)+','+(eyeY-22)+' '+(half+14)+','+(eyeY-8)+'" fill="'+c.nose+'" opacity=".4"/>';
+    /* Eyes */
+    svg+='<g '+blinkA+'>';
+    svg+='<ellipse cx="'+(half-7)+'" cy="'+eyeY+'" rx="3.5" ry="'+eyeH+'" fill="#2d2d2d"/>';
+    svg+='<ellipse cx="'+(half+7)+'" cy="'+eyeY+'" rx="3.5" ry="'+eyeH+'" fill="#2d2d2d"/>';
+    svg+='</g>';
+    if(mood==='happy'||mood==='neutral'){svg+='<circle cx="'+(half-6)+'" cy="'+(eyeY-1)+'" r="1.5" fill="#fff"/><circle cx="'+(half+8)+'" cy="'+(eyeY-1)+'" r="1.5" fill="#fff"/>';}
+    /* Nose + mouth */
+    svg+='<ellipse cx="'+half+'" cy="'+(eyeY+10)+'" rx="2.5" ry="2" fill="'+c.nose+'"/>';
+    svg+='<path d="'+mouthD+'" stroke="'+c.dark+'" stroke-width="1.5" fill="none" stroke-linecap="round"/>';
+    /* Whiskers */
+    svg+='<line x1="'+(half-22)+'" y1="'+(eyeY+8)+'" x2="'+(half-10)+'" y2="'+(eyeY+10)+'" stroke="'+c.dark+'" stroke-width=".7" opacity=".5"/>';
+    svg+='<line x1="'+(half-22)+'" y1="'+(eyeY+12)+'" x2="'+(half-10)+'" y2="'+(eyeY+12)+'" stroke="'+c.dark+'" stroke-width=".7" opacity=".5"/>';
+    svg+='<line x1="'+(half+10)+'" y1="'+(eyeY+10)+'" x2="'+(half+22)+'" y2="'+(eyeY+8)+'" stroke="'+c.dark+'" stroke-width=".7" opacity=".5"/>';
+    svg+='<line x1="'+(half+10)+'" y1="'+(eyeY+12)+'" x2="'+(half+22)+'" y2="'+(eyeY+12)+'" stroke="'+c.dark+'" stroke-width=".7" opacity=".5"/>';
+    /* Tail */
+    svg+='<path d="M'+(half+20)+','+(bodyY+2)+' Q'+(half+34)+','+(bodyY-12)+' '+(half+28)+','+(bodyY-22)+'" stroke="'+c.body+'" stroke-width="4" fill="none" stroke-linecap="round" style="animation:petTail 2s infinite;transform-origin:'+(half+20)+'px '+(bodyY+2)+'px"/>';
+    /* Belly patch */
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+10)+'" rx="10" ry="8" fill="'+c.light+'" opacity=".3"/>';
   }else if(type==='perro'){
-    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+10)+'" rx="24" ry="18" fill="'+c.body+'"/>';
-    svg+='<circle cx="'+half+'" cy="'+eyeY+'" r="17" fill="'+c.body+'"/>';
-    svg+='<ellipse cx="'+(half-13)+'" cy="'+(eyeY-6)+'" rx="7" ry="12" fill="'+c.dark+'" transform="rotate(-15,'+(half-13)+','+(eyeY-6)+')"/>';
-    svg+='<ellipse cx="'+(half+13)+'" cy="'+(eyeY-6)+'" rx="7" ry="12" fill="'+c.dark+'" transform="rotate(15,'+(half+13)+','+(eyeY-6)+')"/>';
-    svg+='<g '+blinkAnim+'><circle cx="'+(half-6)+'" cy="'+eyeY+'" r="3.5" fill="#333"/><circle cx="'+(half+6)+'" cy="'+eyeY+'" r="3.5" fill="#333"/></g>';
-    if(mood==='happy'){svg+='<circle cx="'+(half-5)+'" cy="'+(eyeY-1)+'" r="1.5" fill="#fff"/><circle cx="'+(half+7)+'" cy="'+(eyeY-1)+'" r="1.5" fill="#fff"/>';}
-    svg+='<ellipse cx="'+half+'" cy="'+(eyeY+10)+'" rx="4" ry="3" fill="'+c.dark+'"/>';
-    svg+='<path d="'+mouthD+'" stroke="'+c.dark+'" stroke-width="1.5" fill="none"/>';
-    if(mood==='happy')svg+='<ellipse cx="'+half+'" cy="'+(eyeY+20)+'" rx="4" ry="2" fill="#ff7b9c"/>';
-    svg+='<path d="M'+(half+20)+','+(bodyY+5)+' Q'+(half+30)+','+(bodyY-5)+' '+(half+28)+','+(bodyY-15)+'" stroke="'+c.body+'" stroke-width="5" fill="none" stroke-linecap="round" style="animation:petTail 0.5s infinite;transform-origin:'+(half+20)+'px '+(bodyY+5)+'px"/>';
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+8)+'" rx="26" ry="20" fill="'+c.body+'"/>';
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+22)+'" rx="13" ry="5" fill="'+c.dark+'" opacity=".2"/>';
+    svg+='<ellipse cx="'+(half-14)+'" cy="'+(bodyY+24)+'" rx="5" ry="3" fill="'+c.light+'"/>';
+    svg+='<ellipse cx="'+(half+14)+'" cy="'+(bodyY+24)+'" rx="5" ry="3" fill="'+c.light+'"/>';
+    svg+='<circle cx="'+half+'" cy="'+eyeY+'" r="19" fill="'+c.body+'"/>';
+    /* Floppy ears */
+    svg+='<ellipse cx="'+(half-15)+'" cy="'+(eyeY-2)+'" rx="8" ry="14" fill="'+c.dark+'" transform="rotate(-20,'+(half-15)+','+(eyeY-2)+')"/>';
+    svg+='<ellipse cx="'+(half+15)+'" cy="'+(eyeY-2)+'" rx="8" ry="14" fill="'+c.dark+'" transform="rotate(20,'+(half+15)+','+(eyeY-2)+')"/>';
+    /* Face patch */
+    svg+='<circle cx="'+half+'" cy="'+(eyeY+4)+'" r="10" fill="'+c.light+'" opacity=".3"/>';
+    svg+='<g '+blinkA+'><circle cx="'+(half-7)+'" cy="'+eyeY+'" r="4" fill="#2d2d2d"/><circle cx="'+(half+7)+'" cy="'+eyeY+'" r="4" fill="#2d2d2d"/></g>';
+    if(mood==='happy'||mood==='neutral'){svg+='<circle cx="'+(half-5)+'" cy="'+(eyeY-1)+'" r="1.8" fill="#fff"/><circle cx="'+(half+9)+'" cy="'+(eyeY-1)+'" r="1.8" fill="#fff"/>';}
+    svg+='<ellipse cx="'+half+'" cy="'+(eyeY+9)+'" rx="5" ry="3.5" fill="'+c.nose+'"/>';
+    svg+='<path d="'+mouthD+'" stroke="'+c.dark+'" stroke-width="1.5" fill="none" stroke-linecap="round"/>';
+    if(mood==='happy')svg+='<ellipse cx="'+half+'" cy="'+(eyeY+22)+'" rx="5" ry="3" fill="#ff7b9c" opacity=".7"/>';
+    /* Tail */
+    svg+='<path d="M'+(half+22)+','+(bodyY)+' Q'+(half+34)+','+(bodyY-8)+' '+(half+30)+','+(bodyY-18)+'" stroke="'+c.body+'" stroke-width="5" fill="none" stroke-linecap="round" style="animation:petTail 0.4s infinite;transform-origin:'+(half+22)+'px '+(bodyY)+'px"/>';
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+10)+'" rx="12" ry="8" fill="'+c.light+'" opacity=".25"/>';
   }else{
-    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+8)+'" rx="20" ry="18" fill="'+c.body+'"/>';
-    svg+='<circle cx="'+half+'" cy="'+(eyeY+2)+'" r="16" fill="'+c.body+'"/>';
-    svg+='<ellipse cx="'+(half-6)+'" cy="'+(eyeY-24)+'" rx="5" ry="16" fill="'+c.light+'" transform="rotate(-8,'+(half-6)+','+(eyeY-24)+')"/>';
-    svg+='<ellipse cx="'+(half+6)+'" cy="'+(eyeY-24)+'" rx="5" ry="16" fill="'+c.light+'" transform="rotate(8,'+(half+6)+','+(eyeY-24)+')"/>';
-    svg+='<ellipse cx="'+(half-6)+'" cy="'+(eyeY-24)+'" rx="3" ry="12" fill="'+c.dark+'" opacity=".2" transform="rotate(-8,'+(half-6)+','+(eyeY-24)+')"/>';
-    svg+='<ellipse cx="'+(half+6)+'" cy="'+(eyeY-24)+'" rx="3" ry="12" fill="'+c.dark+'" opacity=".2" transform="rotate(8,'+(half+6)+','+(eyeY-24)+')"/>';
-    svg+='<g '+blinkAnim+'><circle cx="'+(half-6)+'" cy="'+(eyeY+2)+'" r="4" fill="#333"/><circle cx="'+(half+6)+'" cy="'+(eyeY+2)+'" r="4" fill="#333"/></g>';
-    if(mood==='happy'){svg+='<circle cx="'+(half-5)+'" cy="'+(eyeY+1)+'" r="1.8" fill="#fff"/><circle cx="'+(half+7)+'" cy="'+(eyeY+1)+'" r="1.8" fill="#fff"/>';}
-    svg+='<polygon points="'+half+','+(eyeY+10)+' '+(half-2)+','+(eyeY+8)+' '+(half+2)+','+(eyeY+8)+'" fill="#ffb6c1"/>';
-    svg+='<path d="'+mouthD+'" stroke="'+c.dark+'" stroke-width="1.2" fill="none"/>';
-    svg+='<circle cx="'+(half+16)+'" cy="'+(bodyY+14)+'" r="5" fill="'+c.light+'"/>';
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+6)+'" rx="22" ry="20" fill="'+c.body+'"/>';
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+20)+'" rx="11" ry="5" fill="'+c.dark+'" opacity=".15"/>';
+    svg+='<ellipse cx="'+(half-10)+'" cy="'+(bodyY+22)+'" rx="5" ry="3" fill="'+c.light+'"/>';
+    svg+='<ellipse cx="'+(half+10)+'" cy="'+(bodyY+22)+'" rx="5" ry="3" fill="'+c.light+'"/>';
+    svg+='<circle cx="'+half+'" cy="'+(eyeY+2)+'" r="18" fill="'+c.body+'"/>';
+    /* Long ears */
+    svg+='<ellipse cx="'+(half-7)+'" cy="'+(eyeY-28)+'" rx="6" ry="18" fill="'+c.body+'" transform="rotate(-10,'+(half-7)+','+(eyeY-28)+')"/>';
+    svg+='<ellipse cx="'+(half+7)+'" cy="'+(eyeY-28)+'" rx="6" ry="18" fill="'+c.body+'" transform="rotate(10,'+(half+7)+','+(eyeY-28)+')"/>';
+    svg+='<ellipse cx="'+(half-7)+'" cy="'+(eyeY-28)+'" rx="3.5" ry="14" fill="'+c.nose+'" opacity=".25" transform="rotate(-10,'+(half-7)+','+(eyeY-28)+')"/>';
+    svg+='<ellipse cx="'+(half+7)+'" cy="'+(eyeY-28)+'" rx="3.5" ry="14" fill="'+c.nose+'" opacity=".25" transform="rotate(10,'+(half+7)+','+(eyeY-28)+')"/>';
+    svg+='<g '+blinkA+'><circle cx="'+(half-7)+'" cy="'+(eyeY+2)+'" r="4.5" fill="#2d2d2d"/><circle cx="'+(half+7)+'" cy="'+(eyeY+2)+'" r="4.5" fill="#2d2d2d"/></g>';
+    if(mood==='happy'||mood==='neutral'){svg+='<circle cx="'+(half-5)+'" cy="'+(eyeY+1)+'" r="2" fill="#fff"/><circle cx="'+(half+9)+'" cy="'+(eyeY+1)+'" r="2" fill="#fff"/>';}
+    svg+='<polygon points="'+half+','+(eyeY+10)+' '+(half-3)+','+(eyeY+7)+' '+(half+3)+','+(eyeY+7)+'" fill="'+c.nose+'"/>';
+    svg+='<path d="'+mouthD+'" stroke="'+c.dark+'" stroke-width="1.2" fill="none" stroke-linecap="round"/>';
+    /* Fluffy tail */
+    svg+='<circle cx="'+(half+18)+'" cy="'+(bodyY+12)+'" r="6" fill="'+c.light+'"/>';
+    svg+='<ellipse cx="'+half+'" cy="'+(bodyY+8)+'" rx="10" ry="9" fill="'+c.light+'" opacity=".2"/>';
   }
-
-  /* Tropical accessories for stage 4+ */
-  if(stage>=4){
-    svg+='<ellipse cx="'+half+'" cy="'+(eyeY-14)+'" rx="20" ry="4" fill="#f59e0b" opacity=".9"/>';
-    svg+='<rect x="'+(half-18)+'" y="'+(eyeY-22)+'" width="36" height="10" rx="3" fill="#f59e0b"/>';
-    svg+='<circle cx="'+(half-8)+'" cy="'+(eyeY-18)+'" r="3" fill="#ef4444"/>';
-    svg+='<circle cx="'+(half+8)+'" cy="'+(eyeY-18)+'" r="3" fill="#3b82f6"/>';
-    svg+='<circle cx="'+half+'" cy="'+(eyeY-19)+'" r="2.5" fill="#22c55e"/>';
+  /* Gender marker */
+  if(isFem){
+    svg+='<line x1="'+(half-7)+'" y1="'+(eyeY-5)+'" x2="'+(half-4)+'" y2="'+(eyeY-3)+'" stroke="#2d2d2d" stroke-width=".8" stroke-linecap="round"/>';
+    svg+='<line x1="'+(half-4)+'" y1="'+(eyeY-6)+'" x2="'+(half-2)+'" y2="'+(eyeY-3)+'" stroke="#2d2d2d" stroke-width=".8" stroke-linecap="round"/>';
+    svg+='<line x1="'+(half+4)+'" y1="'+(eyeY-5)+'" x2="'+(half+7)+'" y2="'+(eyeY-3)+'" stroke="#2d2d2d" stroke-width=".8" stroke-linecap="round"/>';
+    svg+='<line x1="'+(half+5)+'" y1="'+(eyeY-6)+'" x2="'+(half+8)+'" y2="'+(eyeY-3)+'" stroke="#2d2d2d" stroke-width=".8" stroke-linecap="round"/>';
+    if(mood==='happy'){svg+='<circle cx="'+(half-14)+'" cy="'+(eyeY+6)+'" r="4" fill="#ff7b9c" opacity=".25"/><circle cx="'+(half+14)+'" cy="'+(eyeY+6)+'" r="4" fill="#ff7b9c" opacity=".25"/>';}
   }
-  if(stage>=3&&mood==='happy'){
-    svg+='<text x="'+(half+16)+'" y="'+(eyeY-18)+'" font-size="10" style="animation:petFloat 2s infinite">✨</text>';
+  /* Accessories */
+  accs=accs||[];
+  for(var a=0;a<accs.length;a++){
+    var ac=accs[a];
+    if(ac==='lentes_sol')svg+='<rect x="'+(half-14)+'" y="'+(eyeY-4)+'" width="10" height="7" rx="2" fill="#1a1a1a" opacity=".8"/><rect x="'+(half+4)+'" y="'+(eyeY-4)+'" width="10" height="7" rx="2" fill="#1a1a1a" opacity=".8"/><line x1="'+(half-4)+'" y1="'+(eyeY-1)+'" x2="'+(half+4)+'" y2="'+(eyeY-1)+'" stroke="#1a1a1a" stroke-width="1.5"/>';
+    if(ac==='corona')svg+='<polygon points="'+(half-10)+','+(eyeY-(type==='conejo'?42:24))+' '+(half-6)+','+(eyeY-(type==='conejo'?50:32))+' '+(half-2)+','+(eyeY-(type==='conejo'?44:26))+' '+(half+2)+','+(eyeY-(type==='conejo'?52:34))+' '+(half+6)+','+(eyeY-(type==='conejo'?44:26))+' '+(half+10)+','+(eyeY-(type==='conejo'?50:32))+' '+(half+14)+','+(eyeY-(type==='conejo'?42:24))+'" fill="#fbbf24" stroke="#d97706" stroke-width="1"/><circle cx="'+half+'" cy="'+(eyeY-(type==='conejo'?48:30))+'" r="2" fill="#ef4444"/>';
+    if(ac==='moño'){var bx=isFem?(half-14):(half+10);var by=eyeY-(type==='conejo'?20:16);svg+='<circle cx="'+bx+'" cy="'+by+'" r="4" fill="#ec4899"/><circle cx="'+(bx-4)+'" cy="'+(by-2)+'" r="3" fill="#f472b6"/><circle cx="'+(bx+4)+'" cy="'+(by-2)+'" r="3" fill="#f472b6"/>';}
+    if(ac==='collar_flores')svg+='<ellipse cx="'+half+'" cy="'+(eyeY+18)+'" rx="14" ry="3" fill="none" stroke="#22c55e" stroke-width="2"/><circle cx="'+(half-8)+'" cy="'+(eyeY+17)+'" r="3" fill="#ef4444"/><circle cx="'+half+'" cy="'+(eyeY+16)+'" r="3" fill="#fbbf24"/><circle cx="'+(half+8)+'" cy="'+(eyeY+17)+'" r="3" fill="#ec4899"/>';
+    if(ac==='sombrero')svg+='<ellipse cx="'+half+'" cy="'+(eyeY-(type==='conejo'?38:18))+'" rx="22" ry="5" fill="#f59e0b"/><rect x="'+(half-12)+'" y="'+(eyeY-(type==='conejo'?48:28))+'" width="24" height="12" rx="3" fill="#f59e0b"/><rect x="'+(half-10)+'" y="'+(eyeY-(type==='conejo'?40:20))+'" width="20" height="3" fill="#d97706"/>';
+    if(ac==='bandana')svg+='<path d="M'+(half-16)+','+(eyeY+14)+' Q'+half+','+(eyeY+20)+' '+(half+16)+','+(eyeY+14)+'" stroke="#ef4444" stroke-width="3" fill="none"/><polygon points="'+(half+14)+','+(eyeY+14)+' '+(half+22)+','+(eyeY+18)+' '+(half+20)+','+(eyeY+24)+'" fill="#ef4444"/>';
+    if(ac==='collar_diamante')svg+='<ellipse cx="'+half+'" cy="'+(eyeY+18)+'" rx="13" ry="2.5" fill="none" stroke="#60a5fa" stroke-width="2"/><polygon points="'+half+','+(eyeY+14)+' '+(half-3)+','+(eyeY+18)+' '+half+','+(eyeY+22)+' '+(half+3)+','+(eyeY+18)+'" fill="#60a5fa"/>';
+    if(ac==='alas'){svg+='<ellipse cx="'+(half-22)+'" cy="'+(bodyY-2)+'" rx="12" ry="16" fill="#c084fc" opacity=".5" transform="rotate(-15,'+(half-22)+','+(bodyY-2)+')"/>';svg+='<ellipse cx="'+(half+22)+'" cy="'+(bodyY-2)+'" rx="12" ry="16" fill="#c084fc" opacity=".5" transform="rotate(15,'+(half+22)+','+(bodyY-2)+')"/>';}
   }
-  if(mood==='hungry'){
-    svg+='<text x="'+(half+14)+'" y="'+(eyeY-8)+'" font-size="8">💧</text>';
+  /* Tropical stage extras */
+  if(stage>=4&&accs.indexOf('sombrero')===-1&&accs.indexOf('corona')===-1){
+    var hatY=eyeY-(type==='conejo'?40:22);
+    svg+='<ellipse cx="'+half+'" cy="'+(hatY+10)+'" rx="20" ry="4" fill="#f59e0b" opacity=".85"/>';
+    svg+='<rect x="'+(half-14)+'" y="'+(hatY)+'" width="28" height="12" rx="3" fill="#f59e0b"/>';
+    svg+='<circle cx="'+(half-6)+'" cy="'+(hatY+5)+'" r="2.5" fill="#ef4444"/>';
+    svg+='<circle cx="'+(half+6)+'" cy="'+(hatY+5)+'" r="2.5" fill="#3b82f6"/>';
+    svg+='<circle cx="'+half+'" cy="'+(hatY+4)+'" r="2" fill="#22c55e"/>';
   }
-
+  if(stage>=3&&mood==='happy'){svg+='<text x="'+(half+18)+'" y="'+(eyeY-20)+'" font-size="10" style="animation:petFloat 2s infinite">✨</text>';}
+  if(mood==='hungry'){svg+='<text x="'+(half+16)+'" y="'+(eyeY-6)+'" font-size="9">💧</text>';}
   svg+='</g></svg>';
   return svg;
 }
 
-function petEggSVG(s){
-  var half=s/2;
-  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 '+s+' '+s+'"><g style="animation:eggWobble 2s infinite;transform-origin:center center"><ellipse cx="'+half+'" cy="'+(half+5)+'" rx="20" ry="26" fill="#f5e6d3" stroke="#e8d5bf" stroke-width="2"/><path d="M'+(half-8)+','+(half-5)+' Q'+half+','+(half-12)+' '+(half+8)+','+(half-5)+'" stroke="#e8d5bf" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/><circle cx="'+(half-4)+'" cy="'+(half+2)+'" r="2" fill="#fbbf24" opacity=".5"/><circle cx="'+(half+5)+'" cy="'+(half-2)+'" r="1.5" fill="#ec4899" opacity=".4"/><text x="'+half+'" y="'+(half+28)+'" text-anchor="middle" font-size="8" fill="var(--txt3)">nivel 3 para nacer</text></g></svg>';
+function petEggSVG(s,type){
+  var half=s/2;var eggColor=type==='gato'?'#ffd9b3':type==='perro'?'#e8cdb5':'#f5f0ec';
+  var spotColor=type==='gato'?'#f4a460':type==='perro'?'#c4956a':'#e8ddd4';
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 '+s+' '+s+'"><g style="animation:eggWobble 2.5s infinite;transform-origin:center center"><ellipse cx="'+half+'" cy="'+(half+5)+'" rx="22" ry="28" fill="'+eggColor+'" stroke="'+spotColor+'" stroke-width="2"/><ellipse cx="'+(half-6)+'" cy="'+(half-4)+'" rx="4" ry="5" fill="'+spotColor+'" opacity=".3" transform="rotate(-15)"/><ellipse cx="'+(half+8)+'" cy="'+(half+2)+'" rx="3" ry="4" fill="'+spotColor+'" opacity=".25"/><circle cx="'+(half-3)+'" cy="'+(half+6)+'" r="2" fill="#fbbf24" opacity=".4"/><circle cx="'+(half+5)+'" cy="'+(half-2)+'" r="1.5" fill="#ec4899" opacity=".3"/><path d="M'+(half-8)+','+(half-6)+' Q'+half+','+(half-14)+' '+(half+8)+','+(half-6)+'" stroke="'+spotColor+'" stroke-width="1.5" fill="none" stroke-dasharray="3,3" opacity=".4"/></g><text x="'+half+'" y="'+(half+36)+'" text-anchor="middle" font-size="8" fill="var(--txt3)">nivel 5 para nacer 🐣</text></svg>';
 }
 
-function petBgSVG(habitat,s){
-  var w=s||200,h=160;
+function petBgSVG(habitat){
+  var w=200,h=160;
   var svg='<svg width="100%" height="100%" viewBox="0 0 '+w+' '+h+'">';
   if(habitat==='playa'){
-    svg+='<rect width="'+w+'" height="'+h+'" fill="#1a3a4a"/>';
-    svg+='<rect y="'+(h-40)+'" width="'+w+'" height="40" fill="#c9a05a" opacity=".4"/>';
-    svg+='<circle cx="'+(w-30)+'" cy="25" r="15" fill="#fbbf24" opacity=".3"/>';
-    svg+='<path d="M0,'+(h-40)+' Q'+(w/4)+','+(h-50)+' '+(w/2)+','+(h-40)+' T'+w+','+(h-40)+'" fill="#22d3ee" opacity=".15"/>';
+    svg+='<rect width="'+w+'" height="'+h+'" fill="#0c3547"/><rect y="'+(h-45)+'" width="'+w+'" height="45" fill="#c9a05a" opacity=".5"/><circle cx="'+(w-30)+'" cy="22" r="16" fill="#fbbf24" opacity=".25"/><path d="M0,'+(h-45)+' Q50,'+(h-55)+' 100,'+(h-45)+' T200,'+(h-45)+'" fill="#22d3ee" opacity=".15"/><path d="M0,'+(h-38)+' Q60,'+(h-44)+' 120,'+(h-38)+' T200,'+(h-38)+'" fill="#06b6d4" opacity=".1"/>';
+  }else if(habitat==='jardin'){
+    svg+='<rect width="'+w+'" height="'+h+'" fill="#0a2818"/><rect y="'+(h-35)+'" width="'+w+'" height="35" fill="#1a5e20" opacity=".4"/><circle cx="30" cy="'+(h-38)+'" r="4" fill="#ec4899" opacity=".5"/><circle cx="80" cy="'+(h-42)+'" r="3" fill="#fbbf24" opacity=".5"/><circle cx="140" cy="'+(h-36)+'" r="5" fill="#a855f7" opacity=".4"/><circle cx="170" cy="'+(h-40)+'" r="3" fill="#ef4444" opacity=".5"/><path d="M15,'+(h-35)+' Q15,'+(h-50)+' 25,'+(h-55)+'" stroke="#22c55e" stroke-width="2" fill="none" opacity=".4"/><path d="M165,'+(h-35)+' Q165,'+(h-48)+' 175,'+(h-52)+'" stroke="#22c55e" stroke-width="2" fill="none" opacity=".3"/>';
+  }else if(habitat==='casa'){
+    svg+='<rect width="'+w+'" height="'+h+'" fill="#1a1520"/><rect x="20" y="40" width="160" height="100" rx="6" fill="#2a2030" opacity=".5"/><rect x="30" y="'+(h-30)+'" width="140" height="10" rx="3" fill="#8b5e3c" opacity=".3"/><rect x="70" y="50" width="30" height="30" rx="2" fill="#1a3a5a" opacity=".3"/><rect x="110" y="50" width="30" height="30" rx="2" fill="#1a3a5a" opacity=".3"/><circle cx="85" cy="65" r="8" fill="#fbbf24" opacity=".08"/>';
+  }else if(habitat==='mansion'){
+    svg+='<rect width="'+w+'" height="'+h+'" fill="#1a1030"/><rect x="10" y="30" width="180" height="110" rx="8" fill="#2d1b69" opacity=".3"/><path d="M0,30 L100,5 L200,30" fill="#3b1d8e" opacity=".25"/><rect x="80" y="70" width="40" height="60" rx="4" fill="#c9a05a" opacity=".15"/><circle cx="100" cy="55" r="12" fill="#fbbf24" opacity=".06"/><rect x="15" y="'+(h-20)+'" width="170" height="3" fill="#c9a05a" opacity=".2"/>';
+  }else if(habitat==='arcoiris'){
+    svg+='<rect width="'+w+'" height="'+h+'" fill="#0f1729"/>';
+    var rc=['#ef4444','#f97316','#fbbf24','#22c55e','#3b82f6','#8b5cf6'];
+    for(var ri=0;ri<rc.length;ri++)svg+='<path d="M-20,'+(h-10)+' Q100,'+(20+ri*8)+' 220,'+(h-10)+'" stroke="'+rc[ri]+'" stroke-width="4" fill="none" opacity=".2"/>';
+  }else if(habitat==='espacio'){
+    svg+='<rect width="'+w+'" height="'+h+'" fill="#05051a"/>';
+    for(var si=0;si<15;si++){var sx=Math.round((si*37+11)%w);var sy=Math.round((si*23+7)%h);var sr=si%3===0?1.5:1;svg+='<circle cx="'+sx+'" cy="'+sy+'" r="'+sr+'" fill="#fff" opacity="'+(0.2+si%3*0.15)+'"/>';}
+    svg+='<circle cx="'+(w-35)+'" cy="30" r="12" fill="#334155" opacity=".4"/><circle cx="'+(w-38)+'" cy="27" r="3" fill="#475569" opacity=".3"/>';
   }else{
-    svg+='<rect width="'+w+'" height="'+h+'" fill="#1a1730"/>';
-    svg+='<circle cx="'+(w-25)+'" cy="20" r="8" fill="#fbbf24" opacity=".15"/>';
-    svg+='<circle cx="30" cy="30" r="1" fill="#fff" opacity=".3"/>';
-    svg+='<circle cx="80" cy="15" r="1" fill="#fff" opacity=".2"/>';
-    svg+='<circle cx="150" cy="25" r="1" fill="#fff" opacity=".25"/>';
+    svg+='<rect width="'+w+'" height="'+h+'" fill="#0d0b1a"/><circle cx="'+(w-25)+'" cy="20" r="10" fill="#fbbf24" opacity=".12"/>';
+    for(var di=0;di<8;di++){var dx=Math.round((di*47+15)%w);var dy=Math.round((di*29+5)%(h-20));svg+='<circle cx="'+dx+'" cy="'+dy+'" r="1" fill="#fff" opacity="'+(0.15+di%3*0.1)+'"/>';}
   }
   svg+='</svg>';
   return svg;
 }
 
 function renderPetCard(){
-  var area=document.getElementById('pet-card-area');
-  if(!area||!P)return;
+  var area=document.getElementById('pet-card-area');if(!area||!P)return;
   var pet=P.mascota;
-
-  if(!pet){
-    area.innerHTML='<div class="pet-card no-pet" onclick="openM(\'m-pet-select\');initPetSelect()"><div style="font-size:36px;margin-bottom:8px">🥚</div><div style="font-family:Fredoka,sans-serif;font-size:15px;font-weight:700;color:var(--gold)">Adopta tu mascota tropical</div><div style="font-size:11px;color:var(--txt2);margin-top:4px">Aliméntala con tus monedas y mírala crecer</div></div>';
-    return;
-  }
-
-  /* Daily decay */
+  if(!pet){area.innerHTML='<div class="pet-card no-pet" onclick="openM(\'m-pet-select\');initPetSelect()"><div style="font-size:36px;margin-bottom:8px">🥚</div><div style="font-family:Fredoka,sans-serif;font-size:15px;font-weight:700;color:var(--gold)">Adopta tu mascota tropical</div><div style="font-size:11px;color:var(--txt2);margin-top:4px">Aliméntala con tus monedas y mírala crecer</div></div>';return}
   petDailyUpdate(pet);
-
-  var stage=getPetStage(pet.nivel||1);
-  var mood=getMood(pet);
-  var lvl=pet.nivel||1;
-  var xp=pet.xp||0;
-  var nxt=xpForLevel(lvl);
-  var prev=xpForLevel(lvl-1);
-  var xpInLevel=xp-prev;
-  var xpNeeded=nxt-prev;
+  var stage=getPetStage(pet.nivel||1);var mood=getMood(pet);var lvl=pet.nivel||1;
+  var xp=pet.xp||0;var nxt=xpForLevel(lvl);var prev=xpForLevel(lvl-1);
+  var xpInLevel=xp-prev;var xpNeeded=nxt-prev;
   var xpPct=xpNeeded>0?Math.min(100,Math.round((xpInLevel/xpNeeded)*100)):0;
+  var playsLeft=3-(pet.juegos_hoy||0);if(pet.ultimo_juego!==new Date().toISOString().slice(0,10)){playsLeft=3}
 
   var h='<div class="pet-card">';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
-  h+='<div class="pet-svg">'+getPetSVG(pet.tipo||'gato',stage,mood,120)+'</div></div>';
+  h+='<div class="pet-svg">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[])+'</div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
-  h+='<div class="pet-level">Nivel '+lvl+' · '+(PET_TYPES[pet.tipo]||{}).name+'</div></div>';
+  h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+'</div></div>';
   h+='<div class="pet-croquetas">🦴 '+fmt(pet.croquetas||0)+'</div></div>';
   h+='<div class="pet-xp"><div class="pet-xp-bar"><div class="pet-xp-fill" style="width:'+xpPct+'%"></div></div>';
-  h+='<div class="pet-xp-txt"><span>XP '+fmt(xp)+'/'+fmt(nxt)+'</span><span>Nivel '+(lvl+1)+'</span></div></div>';
+  h+='<div class="pet-xp-txt"><span>XP '+fmt(xp)+'/'+fmt(nxt)+'</span><span>Nv.'+(lvl+1)+'</span></div></div>';
   h+='<div class="pet-stats">';
-  h+='<div class="pet-stat"><div class="pet-stat-lbl">😊 Felicidad</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+(pet.felicidad||0)+'%;background:'+(pet.felicidad>50?'var(--green)':'var(--red)')+'"></div></div></div>';
-  h+='<div class="pet-stat"><div class="pet-stat-lbl">🍽️ Hambre</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+(pet.hambre||0)+'%;background:'+(pet.hambre>40?'var(--gold)':'var(--red)')+'"></div></div></div>';
-  h+='<div class="pet-stat"><div class="pet-stat-lbl">⚡ Energía</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+(pet.energia||0)+'%;background:var(--cyan)"></div></div></div>';
-  h+='</div>';
-  h+='<div class="pet-actions">';
-  h+='<button class="pet-btn feed" onclick="openM(\'m-pet-feed\');renderFeedMenu()">🍽️ Alimentar</button>';
-  h+='<button class="pet-btn play" onclick="petPlay()"'+(((pet.energia||0)<10)?' disabled':'')+'>🎾 Jugar</button>';
+  h+='<div class="pet-stat"><div class="pet-stat-lbl">😊 Felicidad</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.felicidad||0)+'%;background:'+(pet.felicidad>50?'var(--green)':'var(--red)')+'"></div></div></div>';
+  h+='<div class="pet-stat"><div class="pet-stat-lbl">🍽️ Hambre</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.hambre||0)+'%;background:'+(pet.hambre>40?'var(--gold)':'var(--red)')+'"></div></div></div>';
+  h+='<div class="pet-stat"><div class="pet-stat-lbl">⚡ Energía</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.energia||0)+'%;background:var(--cyan)"></div></div></div>';
+  h+='</div><div class="pet-actions">';
+  h+='<button class="pet-btn feed" onclick="openM(\'m-pet-feed\');renderFeedMenu()">🍽️</button>';
+  h+='<button class="pet-btn play" onclick="petPlay()"'+(playsLeft<=0||(pet.energia||0)<10?' disabled':'')+'>🎾 '+playsLeft+'x</button>';
+  h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')">🛍️</button>';
   h+='</div></div>';
-
   area.innerHTML=h;
 }
 
@@ -2128,132 +2221,124 @@ function petDailyUpdate(pet){
   if(pet.ultimo_login===hoy)return;
   var diasSin=0;
   if(pet.ultimo_login){var last=new Date(pet.ultimo_login);var now=new Date(hoy);diasSin=Math.floor((now-last)/86400000)}
-  if(diasSin>0){
-    pet.hambre=Math.max(0,(pet.hambre||50)-diasSin*25);
-    pet.felicidad=Math.max(0,(pet.felicidad||50)-diasSin*15);
-    pet.energia=Math.min(100,(pet.energia||50)+diasSin*20);
-  }
-  /* Login bonus */
-  pet.felicidad=Math.min(100,(pet.felicidad||50)+5);
-  pet.xp=(pet.xp||0)+5;
+  if(diasSin>0){pet.hambre=Math.max(0,(pet.hambre||50)-diasSin*20);pet.felicidad=Math.max(0,(pet.felicidad||50)-diasSin*12);pet.energia=Math.min(100,(pet.energia||50)+diasSin*15)}
+  pet.felicidad=Math.min(100,(pet.felicidad||50)+3);pet.xp=(pet.xp||0)+3;
   pet.racha_dias=(diasSin<=1)?(pet.racha_dias||0)+1:1;
-  pet.ultimo_login=hoy;
-  checkPetLevelUp(pet);
-  savePet();
+  pet.ultimo_login=hoy;pet.juegos_hoy=0;pet.ultimo_juego=hoy;
+  /* Toy passive XP */
+  if(pet.juguete_activo&&pet.juguete_expira){if(hoy<=pet.juguete_expira){var toy=null;for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];if(toy){pet.xp+=toy.xp_day;pet.felicidad=Math.min(100,(pet.felicidad||0)+3)}}else{pet.juguete_activo=null;pet.juguete_expira=null}}
+  checkPetLevelUp(pet);savePet();
 }
 
 function checkPetLevelUp(pet){
-  var lvl=pet.nivel||1;
-  var needed=xpForLevel(lvl);
-  while(pet.xp>=needed&&lvl<50){
-    lvl++;needed=xpForLevel(lvl);
-    if(lvl===3)toast('🎉 ¡Tu '+(PET_TYPES[pet.tipo]||{}).name+' nació del huevo!');
-    else if(lvl===10)toast('🌟 ¡'+(pet.nombre||'Tu mascota')+' evolucionó a Joven!');
-    else if(lvl===20)toast('🔥 ¡'+(pet.nombre||'Tu mascota')+' evolucionó a Adulta!');
-    else if(lvl===30)toast('👑 ¡'+(pet.nombre||'Tu mascota')+' alcanzó nivel Tropical!');
-  }
-  pet.nivel=lvl;
+  var lvl=pet.nivel||1;var needed=xpForLevel(lvl);
+  while(pet.xp>=needed&&lvl<60){lvl++;needed=xpForLevel(lvl);
+    if(lvl===5)toast('🐣 ¡'+(pet.nombre||'Tu mascota')+' nació del huevo!');
+    else if(lvl===12)toast('🌟 ¡'+(pet.nombre)+' evolucionó a Joven!');
+    else if(lvl===22)toast('🔥 ¡'+(pet.nombre)+' evolucionó a Adulta!');
+    else if(lvl===32)toast('👑 ¡'+(pet.nombre)+' alcanzó nivel Tropical!');
+  }pet.nivel=lvl;
 }
 
+var selectedPetType=null,selectedPetGender='hembra';
 function initPetSelect(){
-  var grid=document.getElementById('pet-select-grid');
-  var h='';var types=['gato','perro','conejo'];
-  for(var i=0;i<types.length;i++){
-    var t=types[i];var info=PET_TYPES[t];
-    h+='<div class="pet-option" onclick="selectPetType(\''+t+'\',this)">';
-    h+=getPetSVG(t,2,'happy',70);
-    h+='<div class="pet-opt-name">'+info.emoji+' '+info.name+'</div>';
-    h+='<div class="pet-opt-desc">'+info.desc+'</div></div>';
-  }
-  grid.innerHTML=h;
-  document.getElementById('btn-adopt').disabled=true;
+  var grid=document.getElementById('pet-select-grid');var h='';var types=['gato','perro','conejo'];
+  for(var i=0;i<types.length;i++){var t=types[i];var info=PET_TYPES[t];h+='<div class="pet-option" onclick="selectPetType(\''+t+'\',this)">'+getPetSVG(t,2,'happy',75,selectedPetGender)+'<div class="pet-opt-name">'+info.emoji+' '+info.name+'</div><div class="pet-opt-desc">'+info.desc+'</div></div>';}
+  grid.innerHTML=h;selectedPetType=null;validateAdopt();
+  document.getElementById('pg-f').classList.add('sel');document.getElementById('pg-m').classList.remove('sel');
 }
-
-var selectedPetType=null;
-function selectPetType(t,el){
-  selectedPetType=t;
-  var opts=document.querySelectorAll('.pet-option');for(var i=0;i<opts.length;i++)opts[i].classList.remove('sel');
-  el.classList.add('sel');
-  document.getElementById('btn-adopt').disabled=!document.getElementById('pet-name-input').value.trim();
-  document.getElementById('pet-name-input').oninput=function(){document.getElementById('btn-adopt').disabled=!this.value.trim()||!selectedPetType};
-}
+function selectPetType(t,el){selectedPetType=t;var opts=document.querySelectorAll('.pet-option');for(var i=0;i<opts.length;i++)opts[i].classList.remove('sel');el.classList.add('sel');validateAdopt()}
+function selPetGender(g,el){selectedPetGender=g;document.getElementById('pg-f').classList.toggle('sel',g==='hembra');document.getElementById('pg-m').classList.toggle('sel',g==='macho');initPetSelect()}
+function validateAdopt(){var btn=document.getElementById('btn-adopt');if(btn)btn.disabled=!selectedPetType||!document.getElementById('pet-name-input').value.trim()}
 
 function adoptPet(){
-  var name=document.getElementById('pet-name-input').value.trim();
-  if(!name||!selectedPetType)return;
-  var pet={tipo:selectedPetType,nombre:name,nivel:1,xp:0,felicidad:80,hambre:60,energia:100,croquetas:10,croquetas_total:10,ultimo_login:new Date().toISOString().slice(0,10),racha_dias:1,accesorios:[],habitat:'default',nacimiento:new Date().toISOString().slice(0,10)};
-  P.mascota=pet;
-  savePet();
-  closeM('m-pet-select');
-  renderPetCard();
-  toast('🐾 ¡Adoptaste a '+name+'! Aliméntala registrando sesiones');
+  var name=document.getElementById('pet-name-input').value.trim();if(!name||!selectedPetType)return;
+  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10)};
+  P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();toast('🐾 ¡Adoptaste a '+name+'!');
 }
 
 function renderFeedMenu(){
   var pet=P.mascota;if(!pet)return;
   document.getElementById('feed-croquetas').textContent=fmt(pet.croquetas||0);
-  var grid=document.getElementById('feed-grid');
-  var hoy=new Date().toISOString().slice(0,10);
-  var fed=pet.comidas_hoy||{};
-  if(pet.ultima_comida!==hoy){fed={};pet.comidas_hoy={};pet.ultima_comida=hoy}
-  var h='';
-  for(var i=0;i<PET_FOOD.length;i++){
-    var f=PET_FOOD[i];
-    var bought=fed[f.id]||false;
-    var canBuy=(pet.croquetas||0)>=f.cost&&!bought;
+  var hoy=new Date().toISOString().slice(0,10);if(pet.ultima_comida!==hoy){pet.comidas_hoy={};pet.ultima_comida=hoy}
+  var fed=pet.comidas_hoy||{};var h='';
+  for(var i=0;i<PET_FOOD.length;i++){var f=PET_FOOD[i];var bought=fed[f.id]||false;var canBuy=(pet.croquetas||0)>=f.cost&&!bought;
     h+='<div class="feed-item'+(bought?' bought':'')+((!canBuy&&!bought)?' disabled':'')+'" onclick="'+(canBuy?'feedPet(\''+f.id+'\')':'')+'">';
-    h+='<div class="fi-icon">'+f.icon+'</div>';
-    h+='<div class="fi-name">'+f.name+'</div>';
-    h+='<div class="fi-cost">'+(bought?'✅ Dado':'🦴 '+f.cost)+'</div>';
-    h+='<div class="fi-xp">+'+(bought?'':f.xp+' XP')+'</div></div>';
-  }
-  grid.innerHTML=h;
+    h+='<div class="fi-icon">'+f.icon+'</div><div class="fi-name">'+f.name+'</div>';
+    h+='<div class="fi-cost">'+(bought?'✅':'🦴 '+f.cost)+'</div>';
+    h+='<div class="fi-xp">+'+(bought?'':f.xp+' XP · +'+f.happy+' 😊')+'</div></div>';
+  }h+='</div>';document.getElementById('feed-grid').innerHTML=h;
 }
 
 function feedPet(foodId){
   var pet=P.mascota;if(!pet)return;
   var food=null;for(var i=0;i<PET_FOOD.length;i++)if(PET_FOOD[i].id===foodId)food=PET_FOOD[i];
-  if(!food)return;
-  if((pet.croquetas||0)<food.cost){toast('🦴 No tienes suficientes croquetas');return}
-  pet.croquetas-=food.cost;
-  pet.hambre=Math.min(100,(pet.hambre||0)+food.hunger);
-  pet.felicidad=Math.min(100,(pet.felicidad||0)+8);
-  pet.xp=(pet.xp||0)+food.xp;
-  if(!pet.comidas_hoy)pet.comidas_hoy={};
-  pet.comidas_hoy[foodId]=true;
-  pet.ultima_comida=new Date().toISOString().slice(0,10);
-  checkPetLevelUp(pet);
-  savePet();
-  renderFeedMenu();
-  renderPetCard();
-  toast('🍽️ '+(pet.nombre||'Tu mascota')+' comió '+food.name+' (+'+food.xp+' XP)');
+  if(!food||(pet.croquetas||0)<food.cost)return;
+  pet.croquetas-=food.cost;pet.hambre=Math.min(100,(pet.hambre||0)+food.hunger);
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+food.happy);pet.xp=(pet.xp||0)+food.xp;
+  if(!pet.comidas_hoy)pet.comidas_hoy={};pet.comidas_hoy[foodId]=true;pet.ultima_comida=new Date().toISOString().slice(0,10);
+  checkPetLevelUp(pet);savePet();renderFeedMenu();renderPetCard();
+  toast('🍽️ '+(pet.nombre)+' comió '+food.name+' (+'+food.xp+' XP)');
 }
 
 function petPlay(){
   var pet=P.mascota;if(!pet)return;
-  if((pet.energia||0)<10){toast('⚡ Sin energía para jugar');return}
-  pet.energia=Math.max(0,(pet.energia||0)-20);
-  pet.felicidad=Math.min(100,(pet.felicidad||0)+15);
-  pet.xp=(pet.xp||0)+12;
-  checkPetLevelUp(pet);
-  savePet();
-  renderPetCard();
-  toast('🎾 ¡'+(pet.nombre||'Tu mascota')+' jugó! (+12 XP)');
+  var hoy=new Date().toISOString().slice(0,10);
+  if(pet.ultimo_juego!==hoy){pet.juegos_hoy=0;pet.ultimo_juego=hoy}
+  if((pet.juegos_hoy||0)>=3){toast('🎾 Ya jugaron 3 veces hoy');return}
+  if((pet.energia||0)<10){toast('⚡ Sin energía');return}
+  var xpGain=8;var toy=null;
+  if(pet.juguete_activo){for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];
+    if(toy){xpGain+=toy.xp_day;pet.energia=Math.max(0,(pet.energia||0)-toy.energy_cost)}else{pet.energia=Math.max(0,(pet.energia||0)-15)}
+  }else{pet.energia=Math.max(0,(pet.energia||0)-15)}
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+10);pet.xp=(pet.xp||0)+xpGain;pet.juegos_hoy=(pet.juegos_hoy||0)+1;
+  checkPetLevelUp(pet);savePet();renderPetCard();
+  toast('🎾 ¡'+(pet.nombre)+' jugó! (+'+xpGain+' XP)'+(toy?' con '+toy.name:''));
 }
 
-function awardCroquetas(monedas){
-  var pet=P.mascota;if(!pet||!monedas)return;
-  var croq=coinsToCroquetas(monedas);
-  pet.croquetas=(pet.croquetas||0)+croq;
-  pet.croquetas_total=(pet.croquetas_total||0)+croq;
-  pet.xp=(pet.xp||0)+5;/* bonus XP por registrar sesión */
-  checkPetLevelUp(pet);
-  savePet();
-  renderPetCard();
-  return croq;
+/* ===== SHOP ===== */
+var shopMode='accesorios';
+function shopTab(tab){
+  shopMode=tab;var tabs=['acc','toy','hab'];var names=['accesorios','juguetes','habitat'];
+  for(var i=0;i<tabs.length;i++){var btn=document.getElementById('st-'+tabs[i]);if(btn){btn.classList.toggle('a',names[i]===tab)}}
+  renderShop();
 }
+function renderShop(){
+  var pet=P.mascota;if(!pet)return;
+  document.getElementById('shop-croquetas').textContent=fmt(pet.croquetas||0);
+  var h='';var accs=pet.accesorios||[];
+  if(shopMode==='accesorios'){
+    for(var i=0;i<PET_ACCS.length;i++){var a=PET_ACCS[i];var owned=accs.indexOf(a.id)>-1;var canBuy=(pet.croquetas||0)>=a.cost&&!owned;
+      h+='<div class="feed-item'+(owned?' bought':'')+((!canBuy&&!owned)?' disabled':'')+'" onclick="'+(canBuy?'buyAcc(\''+a.id+'\')':owned?'togAcc(\''+a.id+'\')':'')+'">';
+      h+='<div class="fi-icon">'+a.icon+'</div><div class="fi-name">'+a.name+'</div>';
+      h+='<div class="fi-cost">'+(owned?'✅ Usar':'🦴 '+a.cost)+'</div>';
+      h+='<div class="fi-xp">'+a.desc+'</div></div>';
+    }
+  }else if(shopMode==='juguetes'){
+    for(var j=0;j<PET_TOYS.length;j++){var t=PET_TOYS[j];var isActive=pet.juguete_activo===t.id;var canBuyT=(pet.croquetas||0)>=t.cost&&!isActive;
+      h+='<div class="feed-item'+(isActive?' bought':'')+((!canBuyT&&!isActive)?' disabled':'')+'" onclick="'+(canBuyT?'buyToy(\''+t.id+'\')':'')+'">';
+      h+='<div class="fi-icon">'+t.icon+'</div><div class="fi-name">'+t.name+'</div>';
+      h+='<div class="fi-cost">'+(isActive?'✅ Activo':'🦴 '+t.cost)+'</div>';
+      h+='<div class="fi-xp">'+t.desc+(isActive?' · hasta '+(pet.juguete_expira||'?'):'')+'</div></div>';
+    }
+  }else{
+    for(var k=0;k<PET_HABITATS.length;k++){var hb=PET_HABITATS[k];var isCur=pet.habitat===hb.id;var canBuyH=(pet.croquetas||0)>=hb.cost&&!isCur;
+      h+='<div class="feed-item'+(isCur?' bought':'')+((!canBuyH&&!isCur&&hb.cost>0)?' disabled':'')+'" onclick="'+(canBuyH||hb.cost===0?'buyHabitat(\''+hb.id+'\','+hb.cost+')':'')+'">';
+      h+='<div class="fi-icon">'+hb.icon+'</div><div class="fi-name">'+hb.name+'</div>';
+      h+='<div class="fi-cost">'+(isCur?'✅ Actual':hb.cost===0?'Gratis':'🦴 '+hb.cost)+'</div>';
+      h+='<div class="fi-xp">'+hb.desc+'</div></div>';
+    }
+  }
+  document.getElementById('shop-grid').innerHTML=h;
+}
+function buyAcc(id){var pet=P.mascota;if(!pet)return;var a=null;for(var i=0;i<PET_ACCS.length;i++)if(PET_ACCS[i].id===id)a=PET_ACCS[i];if(!a||(pet.croquetas||0)<a.cost)return;pet.croquetas-=a.cost;if(!pet.accesorios)pet.accesorios=[];pet.accesorios.push(id);pet.xp=(pet.xp||0)+15;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎀 ¡'+a.name+' comprado!')}
+function togAcc(id){var pet=P.mascota;if(!pet||!pet.accesorios)return;var idx=pet.accesorios.indexOf(id);if(idx>-1)pet.accesorios.splice(idx,1);else pet.accesorios.push(id);savePet();renderPetCard();renderShop();toast(idx>-1?'Accesorio quitado':'Accesorio puesto')}
+function buyToy(id){var pet=P.mascota;if(!pet)return;var t=null;for(var i=0;i<PET_TOYS.length;i++)if(PET_TOYS[i].id===id)t=PET_TOYS[i];if(!t||(pet.croquetas||0)<t.cost)return;pet.croquetas-=t.cost;pet.juguete_activo=id;var exp=new Date();exp.setDate(exp.getDate()+t.days);pet.juguete_expira=exp.toISOString().slice(0,10);pet.xp=(pet.xp||0)+10;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎾 '+t.name+' activado por '+t.days+' días!')}
+function buyHabitat(id,cost){var pet=P.mascota;if(!pet)return;if(cost>0&&(pet.croquetas||0)<cost)return;if(cost>0)pet.croquetas-=cost;pet.habitat=id;pet.xp=(pet.xp||0)+20;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🏠 Hábitat cambiado!')}
 
+function awardCroquetas(monedas){var pet=P.mascota;if(!pet||!monedas)return 0;var croq=coinsToCroquetas(monedas);pet.croquetas=(pet.croquetas||0)+croq;pet.croquetas_total=(pet.croquetas_total||0)+croq;pet.xp=(pet.xp||0)+3;checkPetLevelUp(pet);savePet();renderPetCard();return croq}
 function savePet(){if(!P||!U)return;sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:{mascota:P.mascota},h:{'Prefer':'return=minimal'}}).catch(function(e){console.error('Pet save error:',e)})}
+
 
 /* ===== INSPIRACIÓN DEL DÍA ===== */
 function renderInspiration(){

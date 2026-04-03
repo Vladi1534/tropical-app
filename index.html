@@ -3002,53 +3002,111 @@ function buildBank(regs){
   }
 
   /* ========== PREGUNTAS DINÁMICAS DESDE REGLAMENTOS ========== */
-  if(regs.length>=4){
-    shuf(regs);
-    /* Tipo 1: "¿Cuál de estas es una regla REAL?" */
-    for(var ri=0;ri<Math.min(6,regs.length);ri++){
-      var realReg=regs[ri];
-      if(!realReg.contenido||realReg.contenido.length<20)continue;
-      var realText=realReg.contenido.substring(0,80);
-      var fakes=[];
-      for(var fi=0;fi<regs.length&&fakes.length<3;fi++){
-        if(fi!==ri&&regs[fi].contenido&&regs[fi].contenido.length>20)fakes.push(regs[fi].contenido.substring(0,80))
-      }
-      if(fakes.length>=3){
-        easyPool.push({cat:'📋 Reglamento',q:'¿Cuál de estas es una regla de la agencia?',opts:shuf([realText+'...',fakes[0]+'... (inventado)',fakes[1].split(' ').reverse().join(' ').substring(0,60)+'...','']),ans:realText+'...',ex:'La regla real es: '+realReg.titulo+'. Siempre consulta los reglamentos oficiales.'});
+  if(regs&&regs.length>0){
+    /* Filtrar: solo reglas para emisoras, no instrucciones del bot */
+    var botWords=['bot','tool','n8n','prompt','api','webhook','nodo','workflow','agent','gpt','contexto ia','supabase','json','endpoint','callback','trigger','código','variable','función','parsear'];
+    var emiRegs=[];
+    for(var rf=0;rf<regs.length;rf++){
+      var rTxt=((regs[rf].titulo||'')+(regs[rf].contenido||'')).toLowerCase();
+      var isBot=false;
+      for(var bw=0;bw<botWords.length;bw++){if(rTxt.indexOf(botWords[bw])>-1){isBot=true;break}}
+      if(!isBot&&regs[rf].contenido&&regs[rf].contenido.length>15)emiRegs.push(regs[rf]);
+    }
+    shuf(emiRegs);
+
+    /* Extraer números de los reglamentos para preguntas de datos */
+    function extractNumbers(text){
+      var nums=[];
+      var matches=text.match(/(\d[\d,.]*)\s*(horas?|días?|monedas?|minutos?|%|USD|usd|diamantes?|meses?)/gi);
+      if(matches){for(var mn=0;mn<matches.length;mn++){
+        var parts2=matches[mn].match(/(\d[\d,.]*)\s*(.+)/);
+        if(parts2){var val=parts2[1].replace(/,/g,'');var unit=parts2[2].trim().toLowerCase();if(parseInt(val)>0&&parseInt(val)<1000000)nums.push({val:parseInt(val),unit:unit,raw:matches[mn]})}
+      }}
+      return nums;
+    }
+
+    /* Extraer temas clave */
+    function extractTopic(titulo){
+      var t=(titulo||'').replace(/^(regla|norma|política|tutorial|guía|como|cómo)\s*(de|del|para|sobre|:)?\s*/i,'');
+      return t.charAt(0).toUpperCase()+t.slice(1);
+    }
+
+    /* Tipo 1: Preguntas numéricas (fácil/medio) */
+    for(var rn=0;rn<emiRegs.length&&rn<8;rn++){
+      var nums=extractNumbers(emiRegs[rn].contenido);
+      if(nums.length>0){
+        var dato=nums[Math.floor(Math.random()*nums.length)];
+        var topic=extractTopic(emiRegs[rn].titulo);
+        var wrongNums=[];
+        var base=dato.val;
+        var candidates=[base*2,Math.max(1,Math.round(base*0.5)),base+Math.ceil(base*0.7),Math.max(1,base-Math.ceil(base*0.3)),base*3,base+5,Math.max(1,base-2)];
+        for(var wn=0;wn<candidates.length&&wrongNums.length<3;wn++){
+          if(candidates[wn]!==base&&wrongNums.indexOf(candidates[wn])===-1)wrongNums.push(candidates[wn]);
+        }
+        if(wrongNums.length>=3){
+          var pool2=Math.random()>0.5?easyPool:medPool;
+          pool2.push({
+            cat:'📋 Reglas',
+            q:'Según las reglas de la agencia sobre "'+topic+'", ¿cuál es el dato correcto?',
+            opts:shuf([dato.val+' '+dato.unit,wrongNums[0]+' '+dato.unit,wrongNums[1]+' '+dato.unit,wrongNums[2]+' '+dato.unit]),
+            ans:dato.val+' '+dato.unit,
+            hint:'Piensa en lo que has aprendido de '+topic+'...',
+            ex:'El dato correcto es '+dato.raw+' según el reglamento de la agencia.'
+          });
+        }
       }
     }
-    /* Tipo 2: "¿Qué dice la regla sobre [titulo]?" (medio) */
-    for(var ri2=0;ri2<Math.min(5,regs.length);ri2++){
-      var reg2=regs[ri2];
-      if(!reg2.titulo||!reg2.contenido||reg2.contenido.length<30)continue;
-      var correctSummary=reg2.contenido.substring(0,70)+'...';
-      var wrongSummaries=[];
-      for(var fi2=0;fi2<regs.length&&wrongSummaries.length<3;fi2++){
-        if(fi2!==ri2&&regs[fi2].contenido&&regs[fi2].contenido.length>30)wrongSummaries.push(regs[fi2].contenido.substring(0,70)+'...')
-      }
-      if(wrongSummaries.length>=3){
-        medPool.push({cat:'📋 Reglamento',q:'¿Qué dice la regla "'+reg2.titulo+'"?',opts:shuf([correctSummary,wrongSummaries[0],wrongSummaries[1],wrongSummaries[2]]),ans:correctSummary,ex:'La regla "'+reg2.titulo+'" establece: '+reg2.contenido.substring(0,100)+'...'});
+
+    /* Tipo 2: ¿Sobre qué tema trata la agencia? (fácil) */
+    var realTopics=[];
+    for(var rt=0;rt<emiRegs.length;rt++){var tp=extractTopic(emiRegs[rt].titulo);if(tp.length>3&&tp.length<50)realTopics.push(tp)}
+    var fakeTopics=['Cómo hackear diamantes','Vender cuentas entre emisoras','Usar bots para simular viewers','Transmitir desde 2 cuentas','Compartir contraseñas de sala','Cobrar por fuera de la agencia'];
+    shuf(fakeTopics);shuf(realTopics);
+    for(var ft=0;ft<Math.min(4,realTopics.length);ft++){
+      easyPool.push({
+        cat:'📋 Reglas',
+        q:'¿Cuál de estos es un tema REAL de las reglas de Tropical?',
+        opts:shuf([realTopics[ft],fakeTopics[ft%fakeTopics.length],fakeTopics[(ft+1)%fakeTopics.length],fakeTopics[(ft+2)%fakeTopics.length]]),
+        ans:realTopics[ft],
+        hint:'Piensa en los temas que maneja la agencia...',
+        ex:'Sí, la agencia tiene reglas sobre "'+realTopics[ft]+'". Las otras opciones son inventadas.'
+      });
+    }
+
+    /* Tipo 3: Detectar prohibiciones y permisos (medio) */
+    var prohibWords=['prohibido','no se permite','sancion','baneo','bloqueo','multa','penalización','no debes','no puedes','nunca','está mal'];
+    var permitWords=['permitido','puedes','se permite','autorizado','aceptado','válido','está bien'];
+    for(var rp=0;rp<emiRegs.length&&rp<6;rp++){
+      var cont=emiRegs[rp].contenido.toLowerCase();
+      var esProhib=false,esPermit=false;
+      for(var pw=0;pw<prohibWords.length;pw++)if(cont.indexOf(prohibWords[pw])>-1){esProhib=true;break}
+      for(var pm=0;pm<permitWords.length;pm++)if(cont.indexOf(permitWords[pm])>-1){esPermit=true;break}
+      if(esProhib||esPermit){
+        var topicP=extractTopic(emiRegs[rp].titulo);
+        var correctAns=esProhib?'Tiene restricciones o prohibiciones':'Está permitido bajo ciertas condiciones';
+        var wrongAns=esProhib?['Está completamente permitido','No hay reglas al respecto','Depende del humor del admin']:['Está totalmente prohibido','Causa baneo inmediato','Solo los admins pueden hacerlo'];
+        medPool.push({
+          cat:'🛡️ Normas',
+          q:'Según las reglas de la agencia, el tema "'+topicP+'":',
+          opts:shuf([correctAns,wrongAns[0],wrongAns[1],wrongAns[2]]),
+          ans:correctAns,
+          ex:'El reglamento de "'+topicP+'" '+(esProhib?'incluye restricciones importantes':'indica que está permitido con condiciones')+'. Siempre consulta las reglas completas.'
+        });
       }
     }
-    /* Tipo 3: "¿A qué categoría pertenece esta regla?" (medio) */
-    var regCats={};
-    for(var rc=0;rc<regs.length;rc++){var cat2=regs[rc].categoria||'General';if(!regCats[cat2])regCats[cat2]=[];regCats[cat2].push(regs[rc])}
-    var catNames=Object.keys(regCats);
-    if(catNames.length>=3){
-      for(var ci=0;ci<Math.min(4,catNames.length);ci++){
-        var catRegs=regCats[catNames[ci]];
-        if(!catRegs||!catRegs.length)continue;
-        var sampleReg=catRegs[Math.floor(Math.random()*catRegs.length)];
-        var wrongCats=[];for(var cj=0;cj<catNames.length;cj++)if(cj!==ci)wrongCats.push(catNames[cj]);
-        shuf(wrongCats);
-        medPool.push({cat:'📋 Reglamento',q:'La regla "'+sampleReg.titulo+'" pertenece a la categoría:',opts:shuf([catNames[ci],wrongCats[0],wrongCats[1]||'Otro',wrongCats[2]||'Especial']),ans:catNames[ci],ex:'Esta regla es de categoría '+catNames[ci]+'.'});
-      }
-    }
-    /* Tipo 4: Verdadero o falso con datos del reglamento (fácil) */
-    for(var ri3=0;ri3<Math.min(4,regs.length);ri3++){
-      var reg3=regs[regs.length-1-ri3];
-      if(!reg3.titulo)continue;
-      easyPool.push({cat:'📋 Reglamento',q:'¿Existe una regla llamada "'+reg3.titulo+'"?',opts:['Sí, existe','No, es inventada','Solo para admins','Ya no aplica'],ans:'Sí, existe',hint:'Piensa en las reglas que has leído...',ex:'Sí, "'+reg3.titulo+'" es una regla oficial de la agencia.'});
+
+    /* Tipo 4: Escenarios basados en reglas (experto) */
+    for(var rs=0;rs<Math.min(4,emiRegs.length);rs++){
+      var regS=emiRegs[emiRegs.length-1-rs];
+      if(!regS.titulo||regS.contenido.length<30)continue;
+      var topicS=extractTopic(regS.titulo);
+      hardPool.push({
+        cat:'🎭 Situación',
+        q:'Una emisora nueva te pregunta sobre "'+topicS+'". ¿Qué le dices?',
+        opts:shuf(['Que consulte el reglamento oficial de la agencia','Que haga lo que quiera, no importa','Que le pregunte a otra emisora más antigua','Que ignore las reglas si le conviene']),
+        ans:'Que consulte el reglamento oficial de la agencia',
+        ex:'Siempre es mejor dirigir a las emisoras al reglamento oficial. La información de segunda mano puede estar desactualizada o ser incorrecta.'
+      });
     }
   }
 

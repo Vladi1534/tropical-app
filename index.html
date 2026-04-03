@@ -996,6 +996,12 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <img src="https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/public-web/tropical-logo.png" alt="Tropical">
   <span class="sl-text" id="sl-mode">Mi Carrera</span>
   <span style="flex:1"></span>
+  <div style="position:relative;display:inline-block" id="color-picker-wrap">
+    <button id="color-btn" onclick="toggleColorPicker()" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--txt2)">🎨</button>
+    <div id="color-dropdown" style="display:none;position:absolute;right:0;top:32px;background:var(--card);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:8px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:nowrap">
+      <div class="theme-picker" id="theme-picker"><div class="theme-dot td-tropical sel" onclick="setTheme('tropical',this)" title="Tropical" style="width:28px;height:28px"></div><div class="theme-dot td-rose" onclick="setTheme('rose',this)" title="Rose" style="width:28px;height:28px"></div><div class="theme-dot td-sunset" onclick="setTheme('sunset',this)" title="Sunset" style="width:28px;height:28px"></div><div class="theme-dot td-ocean" onclick="setTheme('ocean',this)" title="Ocean" style="width:28px;height:28px"></div><div class="theme-dot td-mint" onclick="setTheme('mint',this)" title="Mint" style="width:28px;height:28px"></div><div class="theme-dot td-cherry" onclick="setTheme('cherry',this)" title="Cherry" style="width:28px;height:28px"></div></div>
+    </div>
+  </div>
   <button id="theme-btn" onclick="toggleTheme()" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--txt2)">🌙</button>
 </div>
 <div id="ld"><div class="ld-p"><img src="https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/public-web/tropical-logo.png" alt=""></div><div class="ld-t">Cargando...</div></div>
@@ -1070,6 +1076,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <!-- NAV -->
 <div class="nav" id="nav">
   <button class="nt a" onclick="go('perfil')" id="tab-perfil"><span class="te">👤</span>Perfil</button>
+  <button class="nt" onclick="go('mascota')" id="tab-mascota"><span class="te">🐾</span>Mascota</button>
   <button class="nt" onclick="go('progreso')" id="tab-progreso"><span class="te">📊</span>Progreso</button>
   <button class="nt" onclick="go('calc')" id="tab-calc"><span class="te">🎯</span>Metas</button>
   <button class="nt" onclick="go('catalogo')" id="tab-catalogo"><span class="te">🎁</span>Catálogo</button>
@@ -1099,11 +1106,8 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
       <div class="si"><div class="sv" style="color:var(--cyan)"><span class="se">💪</span><span id="d-hours-real">0</span></div><div class="sl">H. Realizadas</div></div>
       <div class="si"><div class="sv" style="color:var(--gold)"><span class="se">🧠</span><span id="d-quiz-score">0</span></div><div class="sl">Quiz</div></div>
     </div>
-    <!-- PET CARD -->
-    <div id="pet-card-area"></div>
   </div>
   <div class="ea">
-    <div class="eg"><div class="el"><span class="le">🎨</span> Tema de tu perfil</div><div class="theme-picker" id="theme-picker"><div class="theme-dot td-tropical sel" onclick="setTheme('tropical',this)" title="Tropical"></div><div class="theme-dot td-rose" onclick="setTheme('rose',this)" title="Rose"></div><div class="theme-dot td-sunset" onclick="setTheme('sunset',this)" title="Sunset"></div><div class="theme-dot td-ocean" onclick="setTheme('ocean',this)" title="Ocean"></div><div class="theme-dot td-mint" onclick="setTheme('mint',this)" title="Mint"></div><div class="theme-dot td-cherry" onclick="setTheme('cherry',this)" title="Cherry"></div></div></div>
     <div class="eg"><div class="el"><span class="le">🆔</span> Tu ID de Buzzcast</div><input type="text" class="ti" id="f-bzid" placeholder="Ej: 12567517" oninput="autoSave('buzzcast_id')"></div>
     <div class="eg"><div class="el"><span class="le">🌍</span> Tu país</div><div class="cw" id="c-pais"><div class="ch" onclick="selChip('pais','VE',this)">🇻🇪 Venezuela</div><div class="ch" onclick="selChip('pais','CL',this)">🇨🇱 Chile</div><div class="ch" onclick="selChip('pais','CO',this)">🇨🇴 Colombia</div><div class="ch" onclick="selChip('pais','MX',this)">🇲🇽 México</div><div class="ch" onclick="selChip('pais','PE',this)">🇵🇪 Perú</div><div class="ch" onclick="selChip('pais','AR',this)">🇦🇷 Argentina</div><div class="ch" onclick="selChip('pais','EC',this)">🇪🇨 Ecuador</div><div class="ch" onclick="selChip('pais','US',this)">🇺🇸 USA</div></div></div>
     <div class="eg"><div class="el"><span class="le">📱</span> App donde transmites</div><div class="cw" id="c-app"><div class="ch" onclick="selChip('app','Buzzcast',this)">Buzzcast</div><div class="ch" style="opacity:.4;pointer-events:none">Superlive <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Bigo <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Hiti <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Salsa <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Hiyaa <span style="font-size:8px;color:var(--txt3)">pronto</span></div></div></div>
@@ -1158,6 +1162,11 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <div id="inspire-area" style="padding:0 16px"></div>
 
   </div>
+</div>
+
+<!-- ====== MASCOTA ====== -->
+<div class="sec" id="s-mascota">
+  <div id="pet-card-area"></div>
 </div>
 
 <!-- ====== LOGROS ====== -->
@@ -2872,8 +2881,9 @@ function closeCZ(e){if(e&&e.target&&e.target.closest&&e.target.closest('.cz-card
 /* ===== QUIZ ===== */
 function pickLvl(l,el){qzLvl=l;var lvls=document.querySelectorAll('.qz-lvl');for(var i=0;i<lvls.length;i++)lvls[i].classList.remove('sel');el.classList.add('sel')}
 
-function buildBank(){
+function buildBank(regs){
   var easy=[],med=[],hard=[];
+  regs=regs||[];
 
   /* ========== FÁCIL: reglas básicas + sala pública + regalos ========== */
   var easyPool=[
@@ -2991,27 +3001,106 @@ function buildBank(){
     medPool.push({cat:'💰 Salarios',q:'Si alcanzas '+fmt(s.m)+' monedas, ¿cuánto ganas en total?',opts:shuf(['$'+fmt(s.t)+' USD',wr2[0]+' USD',wr2[1]+' USD',wr2[2]+' USD']),ans:'$'+fmt(s.t)+' USD',ex:'Con '+fmt(s.m)+' monedas: $'+fmt(s.s)+' salario + $'+fmt(s.b)+' bono = $'+fmt(s.t)+'.'});
   }
 
-  /* ========== SELECCIONAR 10 PREGUNTAS ========== */
+  /* ========== PREGUNTAS DINÁMICAS DESDE REGLAMENTOS ========== */
+  if(regs.length>=4){
+    shuf(regs);
+    /* Tipo 1: "¿Cuál de estas es una regla REAL?" */
+    for(var ri=0;ri<Math.min(6,regs.length);ri++){
+      var realReg=regs[ri];
+      if(!realReg.contenido||realReg.contenido.length<20)continue;
+      var realText=realReg.contenido.substring(0,80);
+      var fakes=[];
+      for(var fi=0;fi<regs.length&&fakes.length<3;fi++){
+        if(fi!==ri&&regs[fi].contenido&&regs[fi].contenido.length>20)fakes.push(regs[fi].contenido.substring(0,80))
+      }
+      if(fakes.length>=3){
+        easyPool.push({cat:'📋 Reglamento',q:'¿Cuál de estas es una regla de la agencia?',opts:shuf([realText+'...',fakes[0]+'... (inventado)',fakes[1].split(' ').reverse().join(' ').substring(0,60)+'...','']),ans:realText+'...',ex:'La regla real es: '+realReg.titulo+'. Siempre consulta los reglamentos oficiales.'});
+      }
+    }
+    /* Tipo 2: "¿Qué dice la regla sobre [titulo]?" (medio) */
+    for(var ri2=0;ri2<Math.min(5,regs.length);ri2++){
+      var reg2=regs[ri2];
+      if(!reg2.titulo||!reg2.contenido||reg2.contenido.length<30)continue;
+      var correctSummary=reg2.contenido.substring(0,70)+'...';
+      var wrongSummaries=[];
+      for(var fi2=0;fi2<regs.length&&wrongSummaries.length<3;fi2++){
+        if(fi2!==ri2&&regs[fi2].contenido&&regs[fi2].contenido.length>30)wrongSummaries.push(regs[fi2].contenido.substring(0,70)+'...')
+      }
+      if(wrongSummaries.length>=3){
+        medPool.push({cat:'📋 Reglamento',q:'¿Qué dice la regla "'+reg2.titulo+'"?',opts:shuf([correctSummary,wrongSummaries[0],wrongSummaries[1],wrongSummaries[2]]),ans:correctSummary,ex:'La regla "'+reg2.titulo+'" establece: '+reg2.contenido.substring(0,100)+'...'});
+      }
+    }
+    /* Tipo 3: "¿A qué categoría pertenece esta regla?" (medio) */
+    var regCats={};
+    for(var rc=0;rc<regs.length;rc++){var cat2=regs[rc].categoria||'General';if(!regCats[cat2])regCats[cat2]=[];regCats[cat2].push(regs[rc])}
+    var catNames=Object.keys(regCats);
+    if(catNames.length>=3){
+      for(var ci=0;ci<Math.min(4,catNames.length);ci++){
+        var catRegs=regCats[catNames[ci]];
+        if(!catRegs||!catRegs.length)continue;
+        var sampleReg=catRegs[Math.floor(Math.random()*catRegs.length)];
+        var wrongCats=[];for(var cj=0;cj<catNames.length;cj++)if(cj!==ci)wrongCats.push(catNames[cj]);
+        shuf(wrongCats);
+        medPool.push({cat:'📋 Reglamento',q:'La regla "'+sampleReg.titulo+'" pertenece a la categoría:',opts:shuf([catNames[ci],wrongCats[0],wrongCats[1]||'Otro',wrongCats[2]||'Especial']),ans:catNames[ci],ex:'Esta regla es de categoría '+catNames[ci]+'.'});
+      }
+    }
+    /* Tipo 4: Verdadero o falso con datos del reglamento (fácil) */
+    for(var ri3=0;ri3<Math.min(4,regs.length);ri3++){
+      var reg3=regs[regs.length-1-ri3];
+      if(!reg3.titulo)continue;
+      easyPool.push({cat:'📋 Reglamento',q:'¿Existe una regla llamada "'+reg3.titulo+'"?',opts:['Sí, existe','No, es inventada','Solo para admins','Ya no aplica'],ans:'Sí, existe',hint:'Piensa en las reglas que has leído...',ex:'Sí, "'+reg3.titulo+'" es una regla oficial de la agencia.'});
+    }
+  }
+
+  /* ========== SELECCIONAR 10 PREGUNTAS (con variedad) ========== */
   var bank={facil:easyPool,medio:medPool,experto:hardPool};
   var pool=bank[qzLvl]||easyPool;
+  /* Add some questions from adjacent difficulty for variety */
+  var bonus=qzLvl==='facil'?medPool:qzLvl==='experto'?medPool:easyPool;
+  shuf(bonus);
+  for(var bx=0;bx<Math.min(3,bonus.length);bx++)pool.push(bonus[bx]);
+  /* Ensure category diversity: max 3 from same category */
   shuf(pool);
-  qzBank=pool.slice(0,10);
-  if(qzBank.length<10){var extra=bank[qzLvl==='facil'?'medio':'facil']||[];shuf(extra);for(var k=0;k<extra.length&&qzBank.length<10;k++)qzBank.push(extra[k])}
+  qzBank=[];var catCount={};
+  for(var px=0;px<pool.length&&qzBank.length<10;px++){
+    var pCat=pool[px].cat||'';
+    if(!catCount[pCat])catCount[pCat]=0;
+    if(catCount[pCat]<3){qzBank.push(pool[px]);catCount[pCat]++}
+  }
+  /* Fill remaining if needed */
+  if(qzBank.length<10){for(var fx=0;fx<pool.length&&qzBank.length<10;fx++){if(qzBank.indexOf(pool[fx])===-1)qzBank.push(pool[fx])}}
+  shuf(qzBank);
 }
 
 function shuf(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
 
 function startQuiz(){
-  buildBank();qzCur=0;qzOk=0;qzFail=0;qzScore=0;qzActive=true;qzStartTime=Date.now();
-  document.getElementById('qz-start').classList.add('hide');
-  document.getElementById('qz-game').classList.add('s');
-  document.getElementById('qz-result').style.display='none';
-  lockTabs(true);
-  renderQ();
+  /* Fetch reglamentos for dynamic questions */
+  document.getElementById('qz-start').querySelector('.bp').textContent='⏳ Generando preguntas...';
+  document.getElementById('qz-start').querySelector('.bp').disabled=true;
+  sbq('reglamentos?select=titulo,contenido&limit=100').then(function(r){return r.json()}).then(function(regs){
+    buildBank(regs||[]);
+    qzCur=0;qzOk=0;qzFail=0;qzScore=0;qzActive=true;qzStartTime=Date.now();
+    document.getElementById('qz-start').classList.add('hide');
+    document.getElementById('qz-game').classList.add('s');
+    document.getElementById('qz-result').style.display='none';
+    lockTabs(true);renderQ();
+    document.getElementById('qz-start').querySelector('.bp').textContent='🚀 Comenzar Quiz';
+    document.getElementById('qz-start').querySelector('.bp').disabled=false;
+  }).catch(function(){
+    buildBank([]);
+    qzCur=0;qzOk=0;qzFail=0;qzScore=0;qzActive=true;qzStartTime=Date.now();
+    document.getElementById('qz-start').classList.add('hide');
+    document.getElementById('qz-game').classList.add('s');
+    document.getElementById('qz-result').style.display='none';
+    lockTabs(true);renderQ();
+    document.getElementById('qz-start').querySelector('.bp').textContent='🚀 Comenzar Quiz';
+    document.getElementById('qz-start').querySelector('.bp').disabled=false;
+  });
 }
 
 function lockTabs(lock){
-  var tabs=['tab-perfil','tab-progreso','tab-calc','tab-catalogo','tab-logros'];
+  var tabs=['tab-perfil','tab-mascota','tab-progreso','tab-calc','tab-catalogo','tab-logros'];
   for(var i=0;i<tabs.length;i++){var t=document.getElementById(tabs[i]);if(lock)t.classList.add('locked');else t.classList.remove('locked')}
 }
 
@@ -3139,25 +3228,31 @@ function loadQuizRanking(){
     var stats={};
     for(var i=0;i<d.length;i++){
       var r2=d[i],eid=r2.emisora_id;
-      if(!stats[eid])stats[eid]={total:0,ok:0,fail:0,best:0,quizzes:0};
+      if(!stats[eid])stats[eid]={total:0,ok:0,fail:0,best:0,quizzes:0,bestLvl:'facil',lvls:{}};
       stats[eid].quizzes++;stats[eid].ok+=r2.correctas||0;stats[eid].fail+=r2.incorrectas||0;
       stats[eid].total+=(r2.correctas||0)+(r2.incorrectas||0);
-      if((r2.puntaje||0)>stats[eid].best)stats[eid].best=r2.puntaje;
+      var lvl=r2.nivel||'facil';if(!stats[eid].lvls[lvl])stats[eid].lvls[lvl]=0;stats[eid].lvls[lvl]++;
+      if((r2.puntaje||0)>stats[eid].best){stats[eid].best=r2.puntaje;stats[eid].bestLvl=lvl}
     }
     var arr=[];for(var k in stats)arr.push({id:k,s:stats[k]});
     arr.sort(function(a,b){return b.s.best-a.s.best});
     var myId=U?String(U.id):'';
     var medals=['🥇','🥈','🥉'];
+    var lvlIcons={facil:'🌱',medio:'🔥',experto:'👑'};
+    var lvlColors={facil:'var(--green)',medio:'var(--gold)',experto:'var(--pink)'};
     var h='<div style="display:flex;flex-direction:column;gap:5px">';
     for(var j=0;j<Math.min(10,arr.length);j++){
       var a=arr[j],isMe=String(a.id)===myId;
       var pct=a.s.total>0?Math.round((a.s.ok/a.s.total)*100):0;
       var medal=j<3?medals[j]:(j+1)+'.';
+      var lvlIcon=lvlIcons[a.s.bestLvl]||'🌱';
+      var lvlCol=lvlColors[a.s.bestLvl]||'var(--txt3)';
       h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:'+(isMe?'rgba(168,85,247,.1)':'var(--card2)')+';border:1px solid '+(isMe?'rgba(168,85,247,.25)':'transparent')+'">';
       h+='<span style="font-size:13px;min-width:22px;text-align:center">'+medal+'</span>';
       h+='<span style="font-size:11px;color:'+(isMe?'var(--pink)':'var(--txt2)')+'">Emisora '+(isMe?'(Tú)':'#'+(j+1))+'</span>';
+      h+='<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.06);color:'+lvlCol+'">'+lvlIcon+' '+a.s.bestLvl+'</span>';
       h+='<span style="flex:1"></span>';
-      h+='<span style="font-size:9px;color:var(--txt3)">'+a.s.quizzes+' quiz · '+pct+'%</span>';
+      h+='<span style="font-size:9px;color:var(--txt3)">'+a.s.quizzes+'x · '+pct+'%</span>';
       h+='<span style="font-size:12px;font-weight:700;color:var(--gold);min-width:36px;text-align:right">'+a.s.best+'</span>';
       h+='</div>';
     }
@@ -3168,11 +3263,14 @@ function loadQuizRanking(){
         for(var m2=0;m2<arr.length;m2++){
           if(String(arr[m2].id)===myId){
             var ma=arr[m2],mpct=ma.s.total>0?Math.round((ma.s.ok/ma.s.total)*100):0;
+            var mli=lvlIcons[ma.s.bestLvl]||'🌱';
             h+='<div style="text-align:center;font-size:9px;color:var(--txt3);margin:3px 0">···</div>';
             h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)">';
             h+='<span style="font-size:12px;min-width:22px;text-align:center">'+(m2+1)+'.</span>';
-            h+='<span style="font-size:11px;color:var(--pink)">Tú</span><span style="flex:1"></span>';
-            h+='<span style="font-size:9px;color:var(--txt3)">'+ma.s.quizzes+' quiz · '+mpct+'%</span>';
+            h+='<span style="font-size:11px;color:var(--pink)">Tú</span>';
+            h+='<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.06);color:'+lvlColors[ma.s.bestLvl]+'">'+mli+' '+ma.s.bestLvl+'</span>';
+            h+='<span style="flex:1"></span>';
+            h+='<span style="font-size:9px;color:var(--txt3)">'+ma.s.quizzes+'x · '+mpct+'%</span>';
             h+='<span style="font-size:12px;font-weight:700;color:var(--gold);min-width:36px;text-align:right">'+ma.s.best+'</span></div>';
             break;
           }
@@ -3208,10 +3306,11 @@ function go(t){
   if(qzActive&&t!=='quiz'){toast('🔒 Completa el quiz primero');return}
   var ts=document.querySelectorAll('#nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
   var ss=document.querySelectorAll('#app-emisora .sec');for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
-  var mp={perfil:0,progreso:1,calc:2,catalogo:3,logros:4,quiz:5};
+  var mp={perfil:0,mascota:1,progreso:2,calc:3,catalogo:4,logros:5,quiz:6};
   if(mp[t]!==undefined)ts[mp[t]].classList.add('a');
   var s=document.getElementById('s-'+t);if(s)s.classList.add('a');
   if(ts[mp[t]])ts[mp[t]].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  if(t==='mascota')renderPetCard();
   if(t==='logros')renderBadges();
   if(t==='quiz')loadQuizRanking();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -3222,6 +3321,9 @@ function fSalC(c){var r={m:0,s:0,b:0,t:0};for(var i=0;i<SAL.length;i++)if(c>=SAL
 function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('s');setTimeout(function(){e.classList.remove('s')},1500)}
 
 /* init() called by startEmisoraMode, not auto */
+
+function toggleColorPicker(){var dd=document.getElementById('color-dropdown');dd.style.display=dd.style.display==='none'?'flex':'none'}
+document.addEventListener('click',function(e){if(!e.target.closest('#color-picker-wrap')){var dd=document.getElementById('color-dropdown');if(dd)dd.style.display='none'}});
 
 function toggleTheme(){
   var isLight=document.body.classList.toggle('theme-light');

@@ -1062,7 +1062,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <div id="m-pet-feed" class="modal"><div class="mbox">
   <div class="mtt">🍽️ Alimentar mascota <button class="m-close" onclick="closeM('m-pet-feed')">✕</button></div>
-  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Tus croquetas: </span><span style="font-family:'Fredoka',sans-serif;font-size:18px;color:var(--gold)" id="feed-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🦴</span></div>
+  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Tus croquetas: </span><span style="font-family:'Fredoka',sans-serif;font-size:18px;color:var(--gold)" id="feed-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🐾</span></div>
   <div class="feed-grid" id="feed-grid"></div>
   <div style="font-size:9px;color:var(--txt3);text-align:center;margin-top:8px;line-height:1.4">Registra sesiones para ganar croquetas</div>
   <button class="bs" onclick="closeM('m-pet-feed')">Cerrar</button>
@@ -1070,7 +1070,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <div id="m-pet-shop" class="modal"><div class="mbox">
   <div class="mtt">🛍️ Tienda tropical <button class="m-close" onclick="closeM('m-pet-shop')">✕</button></div>
-  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Croquetas: </span><span style="font-family:'Fredoka',sans-serif;font-size:16px;color:var(--gold)" id="shop-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🦴</span></div>
+  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Croquetas: </span><span style="font-family:'Fredoka',sans-serif;font-size:16px;color:var(--gold)" id="shop-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🐾</span></div>
   <div style="display:flex;gap:0;margin-bottom:12px;background:var(--card2);border-radius:25px;padding:3px">
     <button class="cmt-btn a" onclick="shopTab('accesorios')" id="st-acc">🎀 Accesorios</button>
     <button class="cmt-btn" onclick="shopTab('juguetes')" id="st-toy">🎾 Juguetes</button>
@@ -1093,6 +1093,9 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bp" onclick="nextTutorialStep()" id="tut-next" style="flex:2">Siguiente →</button>
   </div>
 </div></div>
+
+<!-- TAB TUTORIAL OVERLAY -->
+<div id="m-tab-tutorial" class="modal"><div class="mbox" style="max-width:340px" id="tab-tut-content"></div></div>
 
 <!-- NAV -->
 <div class="nav" id="nav">
@@ -2029,13 +2032,33 @@ var PET_TYPES={
   perro:{name:'Perrita',nameM:'Perrito',desc:'Fiel y juguetona',emoji:'🐶'},
   conejo:{name:'Conejita',nameM:'Conejito',desc:'Tierna y saltarina',emoji:'🐰'}
 };
-var PET_FOOD=[
-  {id:'desayuno',name:'Desayuno',icon:'🥣',cost:5,xp:8,hunger:25,happy:3},
-  {id:'almuerzo',name:'Almuerzo',icon:'🍗',cost:8,xp:12,hunger:35,happy:5},
-  {id:'cena',name:'Cena',icon:'🥗',cost:12,xp:18,hunger:40,happy:7},
-  {id:'postre',name:'Postre',icon:'🍰',cost:15,xp:10,hunger:10,happy:20},
-  {id:'snack',name:'Snack',icon:'🍪',cost:3,xp:4,hunger:12,happy:4}
-];
+/* Species-specific food: each pet type eats what's natural for them */
+var PET_FOOD_BY_TYPE={
+  gato:[
+    {id:'desayuno',name:'Atún',icon:'🐟',cost:5,xp:8,hunger:25,happy:3},
+    {id:'almuerzo',name:'Pescado',icon:'🐠',cost:8,xp:12,hunger:35,happy:5},
+    {id:'cena',name:'Sushi',icon:'🍣',cost:12,xp:18,hunger:40,happy:7},
+    {id:'postre',name:'Leche',icon:'🥛',cost:15,xp:10,hunger:10,happy:20},
+    {id:'snack',name:'Premio',icon:'🍪',cost:3,xp:4,hunger:12,happy:4}
+  ],
+  perro:[
+    {id:'desayuno',name:'Galletas',icon:'🦴',cost:5,xp:8,hunger:25,happy:3},
+    {id:'almuerzo',name:'Carne',icon:'🥩',cost:8,xp:12,hunger:35,happy:5},
+    {id:'cena',name:'Costilla',icon:'🍖',cost:12,xp:18,hunger:40,happy:7},
+    {id:'postre',name:'Pollo',icon:'🍗',cost:15,xp:10,hunger:10,happy:20},
+    {id:'snack',name:'Treat',icon:'🍪',cost:3,xp:4,hunger:12,happy:4}
+  ],
+  conejo:[
+    {id:'desayuno',name:'Zanahoria',icon:'🥕',cost:5,xp:8,hunger:25,happy:3},
+    {id:'almuerzo',name:'Lechuga',icon:'🥬',cost:8,xp:12,hunger:35,happy:5},
+    {id:'cena',name:'Hierba',icon:'🌿',cost:12,xp:18,hunger:40,happy:7},
+    {id:'postre',name:'Fresa',icon:'🍓',cost:15,xp:10,hunger:10,happy:20},
+    {id:'snack',name:'Heno',icon:'🌾',cost:3,xp:4,hunger:12,happy:4}
+  ]
+};
+function getPetFood(type){return PET_FOOD_BY_TYPE[type]||PET_FOOD_BY_TYPE.gato}
+/* Backwards compatibility - default food list */
+var PET_FOOD=PET_FOOD_BY_TYPE.gato;
 var PET_TOYS=[
   {id:'pelota',name:'Pelota',icon:'🎾',cost:40,xp_day:8,days:3,energy_cost:15,desc:'3 días de diversión'},
   {id:'raton',name:'Ratón',icon:'🐭',cost:60,xp_day:12,days:3,energy_cost:10,desc:'Le encanta perseguirlo'},
@@ -2214,8 +2237,8 @@ function getPetSVG(type,stage,mood,size,gender,accs,col){
   var bodyA=mood==='happy'?'animation:petBounce 1.2s infinite':mood==='sleeping'?'animation:petSleep 3s infinite':mood==='sad'?'animation:petSad 2.5s infinite':mood==='hungry'?'animation:petHungryShake 1.5s infinite':mood==='content'?'animation:petBreathe 3.5s infinite':'animation:petBreathe 3s infinite;animation-delay:'+Math.random().toFixed(1)+'s';
   svg+='<g transform="translate('+h+','+h+') scale('+sc+') translate(-'+h+',-'+h+')" style="'+bodyA+'">';
 
-  var headY=h-6;var ey=headY+10;var by=h+16;
-  var noseY=type==='gato'?(ey+11):type==='perro'?(ey+10):(ey+9);
+  var headY=h-6;var ey=headY+3;var by=h+16;
+  var noseY=type==='gato'?(ey+7):type==='perro'?(ey+7):(ey+6);
 
   /* Shadow under body */
   svg+='<ellipse cx="'+h+'" cy="'+(by+24)+'" rx="20" ry="5" fill="#000" opacity=".08"/>';
@@ -2308,8 +2331,8 @@ function getPetSVG(type,stage,mood,size,gender,accs,col){
   svg+=getPetPatternSVG(type,cc,h,headY,by);
 
   /* ===== EYES (shared, detailed) ===== */
-  var eyeSpread=type==='conejo'?8:7;
-  var eyeR=type==='conejo'?4.5:type==='perro'?4:3.5;
+  var eyeSpread=type==='conejo'?6:5;
+  var eyeR=type==='conejo'?5.5:type==='perro'?5:4.5;
   var isSleeping=mood==='sleeping';
   if(isSleeping){
     /* Closed eyes - curved lines */
@@ -2495,7 +2518,7 @@ function renderPetCard(){
   h+='<div class="pet-svg">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
   h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood)+'</div></div>';
-  h+='<div class="pet-croquetas">🦴 '+fmt(pet.croquetas||0)+'</div></div>';
+  h+='<div class="pet-croquetas">🐾 '+fmt(pet.croquetas||0)+'</div></div>';
   h+='<div class="pet-xp"><div class="pet-xp-bar"><div class="pet-xp-fill" style="width:'+xpPct+'%"></div></div>';
   h+='<div class="pet-xp-txt"><span>XP '+fmt(xp)+'/'+fmt(nxt)+'</span><span>Nv.'+(lvl+1)+'</span></div></div>';
   h+='<div class="pet-stats">';
@@ -2526,7 +2549,7 @@ function renderPetCard(){
     content:['🤖 "'+nombreP+' está tranquila y contenta, buen trabajo"','🤖 "Todo va bien con '+nombreP+'"'],
     neutral:['🤖 "'+nombreP+' te observa esperando algo..."','🤖 "¿Le darás de comer a '+nombreP+'?"'],
     sad:['🤖 "'+nombreP+' está triste, dale cariño 💙"','🤖 "Necesita que la consientas, aliméntala"'],
-    hungry:['🤖 "¡'+nombreP+' tiene hambre! Dale de comer 🦴"','🤖 "Escucho sus tripas, ¡alimentala!"'],
+    hungry:['🤖 "¡'+nombreP+' tiene hambre! Dale de comer 🐾"','🤖 "Escucho sus tripas, ¡alimentala!"'],
     sleeping:['🤖 "Shh... '+nombreP+' está durmiendo 💤"','🤖 "Déjala descansar, volverá pronto"']
   };
   var msgs=moodMsgs[mood]||moodMsgs.neutral;var randMsg=msgs[Math.floor(Date.now()/60000)%msgs.length];
@@ -2538,11 +2561,6 @@ function renderPetCard(){
   h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')" title="Tienda tropical">🛍️ Tienda</button>';
   h+='</div></div>';
   area.innerHTML=h;
-
-  /* Auto-start tutorial on first visit */
-  if(pet.tutorial_step===0||(pet.tutorial_step===undefined&&pet.nacimiento)){
-    setTimeout(function(){if(pet.tutorial_step===0||pet.tutorial_step===undefined)startPetTutorial()},500);
-  }
 }
 
 function petDailyUpdate(pet){
@@ -2601,8 +2619,8 @@ function adoptPet(){
   P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();
   var rareMsg=colores.rare?' ¡Color raro: '+colores.rare+'! ✨':'';
   toast('🐾 ¡Adoptaste a '+name+'!'+rareMsg);
-  /* Start tutorial automatically after short delay */
-  setTimeout(function(){startPetTutorial()},800);
+  /* Auto-start interactive tutorial after they see their new pet */
+  setTimeout(function(){if(P.mascota&&(P.mascota.tutorial_step===0||P.mascota.tutorial_step===undefined))startPetTutorial()},1500);
 }
 
 function renderFeedMenu(){
@@ -2610,23 +2628,25 @@ function renderFeedMenu(){
   document.getElementById('feed-croquetas').textContent=fmt(pet.croquetas||0);
   var hoy=new Date().toISOString().slice(0,10);if(pet.ultima_comida!==hoy){pet.comidas_hoy={};pet.ultima_comida=hoy}
   var fed=pet.comidas_hoy||{};var h='';
-  for(var i=0;i<PET_FOOD.length;i++){var f=PET_FOOD[i];var bought=fed[f.id]||false;var canBuy=(pet.croquetas||0)>=f.cost&&!bought;
+  var foods=getPetFood(pet.tipo||'gato');
+  for(var i=0;i<foods.length;i++){var f=foods[i];var bought=fed[f.id]||false;var canBuy=(pet.croquetas||0)>=f.cost&&!bought;
     h+='<div class="feed-item'+(bought?' bought':'')+((!canBuy&&!bought)?' disabled':'')+'" onclick="'+(canBuy?'feedPet(\''+f.id+'\')':'')+'">';
     h+='<div class="fi-icon">'+f.icon+'</div><div class="fi-name">'+f.name+'</div>';
-    h+='<div class="fi-cost">'+(bought?'✅':'🦴 '+f.cost)+'</div>';
+    h+='<div class="fi-cost">'+(bought?'✅':'🐾 '+f.cost)+'</div>';
     h+='<div class="fi-xp">+'+(bought?'':f.xp+' XP · +'+f.happy+' 😊')+'</div></div>';
   }h+='</div>';document.getElementById('feed-grid').innerHTML=h;
 }
 
 function feedPet(foodId){
   var pet=P.mascota;if(!pet)return;
-  var food=null;for(var i=0;i<PET_FOOD.length;i++)if(PET_FOOD[i].id===foodId)food=PET_FOOD[i];
+  var foods=getPetFood(pet.tipo||'gato');
+  var food=null;for(var i=0;i<foods.length;i++)if(foods[i].id===foodId)food=foods[i];
   if(!food||(pet.croquetas||0)<food.cost)return;
   pet.croquetas-=food.cost;pet.hambre=Math.min(100,(pet.hambre||0)+food.hunger);
   pet.felicidad=Math.min(100,(pet.felicidad||0)+food.happy);pet.xp=(pet.xp||0)+food.xp;
   if(!pet.comidas_hoy)pet.comidas_hoy={};pet.comidas_hoy[foodId]=true;pet.ultima_comida=new Date().toISOString().slice(0,10);
   checkPetLevelUp(pet);savePet();renderFeedMenu();renderPetCard();
-  toast('🍽️ '+(pet.nombre)+' comió '+food.name+' (+'+food.xp+' XP)');
+  toast(food.icon+' '+(pet.nombre)+' comió '+food.name+' (+'+food.xp+' XP)');
 }
 
 function petPlay(){
@@ -2660,21 +2680,21 @@ function renderShop(){
     for(var i=0;i<PET_ACCS.length;i++){var a=PET_ACCS[i];var owned=accs.indexOf(a.id)>-1;var canBuy=(pet.croquetas||0)>=a.cost&&!owned;
       h+='<div class="feed-item'+(owned?' bought':'')+((!canBuy&&!owned)?' disabled':'')+'" onclick="'+(canBuy?'buyAcc(\''+a.id+'\')':owned?'togAcc(\''+a.id+'\')':'')+'">';
       h+='<div class="fi-icon">'+a.icon+'</div><div class="fi-name">'+a.name+'</div>';
-      h+='<div class="fi-cost">'+(owned?'✅ Usar':'🦴 '+a.cost)+'</div>';
+      h+='<div class="fi-cost">'+(owned?'✅ Usar':'🐾 '+a.cost)+'</div>';
       h+='<div class="fi-xp">'+a.desc+'</div></div>';
     }
   }else if(shopMode==='juguetes'){
     for(var j=0;j<PET_TOYS.length;j++){var t=PET_TOYS[j];var isActive=pet.juguete_activo===t.id;var canBuyT=(pet.croquetas||0)>=t.cost&&!isActive;
       h+='<div class="feed-item'+(isActive?' bought':'')+((!canBuyT&&!isActive)?' disabled':'')+'" onclick="'+(canBuyT?'buyToy(\''+t.id+'\')':'')+'">';
       h+='<div class="fi-icon">'+t.icon+'</div><div class="fi-name">'+t.name+'</div>';
-      h+='<div class="fi-cost">'+(isActive?'✅ Activo':'🦴 '+t.cost)+'</div>';
+      h+='<div class="fi-cost">'+(isActive?'✅ Activo':'🐾 '+t.cost)+'</div>';
       h+='<div class="fi-xp">'+t.desc+(isActive?' · hasta '+(pet.juguete_expira||'?'):'')+'</div></div>';
     }
   }else{
     for(var k=0;k<PET_HABITATS.length;k++){var hb=PET_HABITATS[k];var isCur=pet.habitat===hb.id;var canBuyH=(pet.croquetas||0)>=hb.cost&&!isCur;
       h+='<div class="feed-item'+(isCur?' bought':'')+((!canBuyH&&!isCur&&hb.cost>0)?' disabled':'')+'" onclick="'+(canBuyH||hb.cost===0?'buyHabitat(\''+hb.id+'\','+hb.cost+')':'')+'">';
       h+='<div class="fi-icon">'+hb.icon+'</div><div class="fi-name">'+hb.name+'</div>';
-      h+='<div class="fi-cost">'+(isCur?'✅ Actual':hb.cost===0?'Gratis':'🦴 '+hb.cost)+'</div>';
+      h+='<div class="fi-cost">'+(isCur?'✅ Actual':hb.cost===0?'Gratis':'🐾 '+hb.cost)+'</div>';
       h+='<div class="fi-xp">'+hb.desc+'</div></div>';
     }
   }
@@ -2689,19 +2709,28 @@ function awardCroquetas(monedas){var pet=P.mascota;if(!pet||!monedas)return 0;va
 function savePet(){if(!P||!U)return;sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:{mascota:P.mascota},h:{'Prefer':'return=minimal'}}).catch(function(e){console.error('Pet save error:',e)})}
 
 /* ===== PET TUTORIAL ===== */
-var PET_TUTORIAL=[
-  {title:'¡Hola mi querida! 🤖',content:'Soy TropicalBot y te voy a presentar a tu nueva compañera. Ella vivirá contigo mientras transmites y crecerá gracias a tu dedicación.<br><br>¿Lista para conocerla?'},
-  {title:'Tu mascota está feliz 😊',content:'Mira cómo se ve contenta. Cada vez que entres a la app va a recibirte con alegría y ganarás XP solo por visitarla.<br><br>¡Nunca la abandones mucho tiempo!'},
-  {title:'Sus 3 necesidades',content:'Tiene 3 barras importantes:<br><br>😊 <strong>Felicidad</strong> — sube con comida y juguetes<br>🍽️ <strong>Hambre</strong> — sube al darle de comer<br>⚡ <strong>Energía</strong> — baja al jugar, se recupera sola (+10 por hora)'},
-  {title:'Experiencia y niveles ⭐',content:'La barra dorada de abajo es su <strong>experiencia</strong>. Cada acción le da XP:<br><br>• Alimentar: 8-20 XP<br>• Jugar: 8-25 XP<br>• Entrar cada día: 3 XP<br>• Comprar accesorios: 15 XP<br><br>Subirá de nivel y evolucionará con el tiempo.'},
-  {title:'Alimentar 🍽️',content:'Este botón abre el menú de comida. Necesitas <strong>croquetas</strong> 🦴 para alimentarla.<br><br>¿De dónde salen las croquetas? De <strong>registrar tus sesiones</strong> en Progreso. Mientras más monedas hagas, más croquetas ganas.<br><br>Hay 5 tipos de comida con diferentes precios y beneficios.'},
-  {title:'Jugar 🎾',content:'Jugar le da <strong>mucha XP</strong> y sube su felicidad, pero gasta energía.<br><br>Puedes jugar hasta <strong>3 veces por día</strong>. Si se queda sin energía, necesita descansar un rato (unas horas) antes de volver a jugar.<br><br>Puedes comprar juguetes en la tienda que dan XP extra pasivamente.'},
-  {title:'Tienda tropical 🛍️',content:'En la tienda puedes comprar:<br><br>🎀 <strong>Accesorios</strong> — collares, coronas, lentes<br>🎾 <strong>Juguetes</strong> — dan XP diario mientras estén activos<br>🏠 <strong>Hábitats</strong> — cambia su fondo (playa, jardín, mansión, espacio)<br><br>Todo con croquetas. ¡Mientras más activa seas, más puedes comprar!'},
-  {title:'¡Lista para empezar! 🤖',content:'Recuerda:<br><br>• Entra cada día para no perder felicidad<br>• Registra tus sesiones para ganar croquetas<br>• Juega y aliméntala para subir de nivel<br>• Cuando llegue a nivel 5 romperá el huevo 🐣<br><br>Tu mascota nunca muere, pero se pone triste si la abandonas. ¡Cuídala y disfrútala!'}
-];
+function getPetTutorialSteps(pet){
+  var n=pet.nombre||'tu mascota';
+  var tipo=pet.tipo||'gato';
+  var tipoNombre=tipo==='gato'?'gatita':tipo==='perro'?'perrita':'conejita';
+  var foods=getPetFood(tipo);
+  var foodIcons=foods.map(function(f){return f.icon}).join(' ');
+  return[
+    {title:'¡Hola mi querida! 🌴',content:'¡Bienvenida al mundo de las mascotas tropicales! 🎉<br><br>Soy <strong>TropicalBot</strong> y voy a presentarte a tu nueva compañera. Te prometo que vas a amarla tanto como ella te ama a ti.<br><br>¿Lista para conocer todos los secretos? 💫'},
+    {title:'¡Saluda a '+n+'! '+(pet.genero==='macho'?'♂':'♀'),content:'Mira qué <strong>'+(pet.genero==='macho'?'lindo':'linda')+'</strong> está '+n+' 😍<br><br>Es '+(pet.genero==='macho'?'un':'una')+' '+tipoNombre+' única — sus colores y pelaje fueron generados solo para ti. Nunca habrá otra mascota igual.<br><br>Cada vez que entres a esta pestaña '+n+' te recibirá feliz y ganarás XP solo por visitarla 💕'},
+    {title:'Sus 3 necesidades 💝',content:'Como toda buena compañera, '+n+' tiene 3 cositas que cuidar:<br><br>😊 <strong>Felicidad</strong> — sube al jugar y alimentar<br>🍽️ <strong>Hambre</strong> — sube al darle comida<br>⚡ <strong>Energía</strong> — baja al jugar, vuelve sola (+10 cada hora)<br><br>Si la abandonas las barras bajan... pero <strong>nunca muere</strong>. Solo se pone tristona 🥺'},
+    {title:'Subir de nivel ⭐',content:'Esa <strong>barra dorada</strong> que viste arriba es su experiencia (XP). Cada acción suma:<br><br>🍽️ Comer · +8 a +20 XP<br>🎾 Jugar · +8 a +25 XP<br>📅 Visita diaria · +3 XP<br>🛍️ Comprar accesorios · +15 XP<br><br>Al subir de nivel, <strong>'+n+' evolucionará</strong> 🥚 → 🐣 → ✨ ¡Es lo más bonito de cuidarla!'},
+    {title:'Su comida favorita 🍽️',content:n+' es '+(pet.genero==='macho'?'un':'una')+' '+tipoNombre+', así que come cositas especiales para '+(pet.genero==='macho'?'él':'ella')+':<br><br><div style="text-align:center;font-size:26px;letter-spacing:6px;margin:10px 0">'+foodIcons+'</div>Para alimentarla necesitas <strong>puntitos 🐾</strong> que se ganan al <strong>registrar tus sesiones</strong> en la pestaña de Progreso. Mientras más monedas hagas, más puntitos ganas.'},
+    {title:'¡A jugar! 🎾',content:'Jugar con '+n+' le da <strong>la mayor cantidad de XP</strong> y la pone feliz, pero gasta su energía.<br><br>Puedes jugar <strong>hasta 3 veces al día</strong>. Si se queda sin energía, déjala descansar — recupera +10 cada hora.<br><br>Tip pro 🌟: en la <strong>tienda</strong> hay juguetes que dan XP extra todos los días que estén activos.'},
+    {title:'Tienda tropical 🛍️',content:'En la tienda puedes mimar a '+n+' con:<br><br>🎀 <strong>Accesorios</strong> — collares, coronas, lentes, sombreros<br>🎾 <strong>Juguetes</strong> — pelota, ratón, hamaca, túnel<br>🏠 <strong>Hábitats</strong> — playa, jardín, mansión, espacio 🚀<br><br>Todo se compra con puntitos 🐾. ¡Mientras más activa seas, más puede tener '+n+'!'},
+    {title:'¡Listas para empezar! 🌴✨',content:'Ya lo sabes todo mi querida 💕<br><br>Recuerda:<br>📅 Entra cada día<br>📝 Registra tus sesiones<br>🍽️ Aliméntala y juega para subir de nivel<br>🥚 Al nivel 5 romperá el huevo<br><br><strong>¡Como recompensa por completar el tutorial te regalo:</strong><div style="text-align:center;font-size:18px;color:var(--gold);margin-top:10px;font-family:Fredoka,sans-serif;line-height:1.6">+50 🐾 puntitos<br>+20 😊 felicidad para '+n+'</div>'}
+  ];
+}
+var PET_TUTORIAL=[];
 function startPetTutorial(){
   if(!P||!P.mascota)return;
   P.mascota.tutorial_step=P.mascota.tutorial_step||0;
+  PET_TUTORIAL=getPetTutorialSteps(P.mascota);
   renderTutorialStep();
   openM('m-pet-tutorial');
 }
@@ -2710,23 +2739,24 @@ function renderTutorialStep(){
   var idx=pet.tutorial_step||0;
   if(idx<0||idx>=PET_TUTORIAL.length){closeM('m-pet-tutorial');return}
   var step=PET_TUTORIAL[idx];
-  /* Personalize with pet data */
-  var title=step.title;
-  var content=step.content;
-  if(idx===1){title='Conoce a '+(pet.nombre||'tu mascota');content='Mira a <strong>'+(pet.nombre||'tu nueva amiga')+'</strong>. Cada vez que entres te recibirá con alegría y ganarás XP solo por visitarla.<br><br>¡Nunca la abandones mucho tiempo!'}
-  document.getElementById('tut-title').textContent=title;
-  document.getElementById('tut-content').innerHTML=content;
+  document.getElementById('tut-title').textContent=step.title;
+  document.getElementById('tut-content').innerHTML=step.content;
   document.getElementById('tut-step-count').textContent='Paso '+(idx+1)+' de '+PET_TUTORIAL.length;
-  document.getElementById('tut-next').textContent=idx===PET_TUTORIAL.length-1?'¡Comenzar! 🌴':'Siguiente →';
+  document.getElementById('tut-next').textContent=idx===PET_TUTORIAL.length-1?'¡Reclamar recompensa! 🎁':'Siguiente →';
 }
 function nextTutorialStep(){
   var pet=P.mascota;if(!pet)return;
   pet.tutorial_step=(pet.tutorial_step||0)+1;
   if(pet.tutorial_step>=PET_TUTORIAL.length){
     pet.tutorial_step=-1;
+    /* Reward for completing tutorial */
+    pet.croquetas=(pet.croquetas||0)+50;
+    pet.croquetas_total=(pet.croquetas_total||0)+50;
+    pet.felicidad=Math.min(100,(pet.felicidad||0)+20);
     savePet();
     closeM('m-pet-tutorial');
-    toast('🌴 ¡Tutorial completado! Disfruta a '+(pet.nombre||'tu mascota'));
+    renderPetCard();
+    toast('🎁 +50 🐾 puntitos · +20 felicidad para '+(pet.nombre||'tu mascota'));
     return;
   }
   savePet();
@@ -3181,7 +3211,7 @@ function regSession(){
     if(P.contrato_tipo==='antigua'&&hr<1){
       extraMsg=' · '+Math.round(hr*60)+' min (suma para el día)';
     }
-    toast('✓ Sesión registrada'+(croq?' · +'+croq+' 🦴':'')+extraMsg);
+    toast('✓ Sesión registrada'+(croq?' · +'+croq+' 🐾':'')+extraMsg);
   }).catch(function(e){console.error('Session save error:',e);btn.disabled=false;btn.textContent='+ Registrar sesión';alert('Error: '+e.message)});
 }
 
@@ -3841,6 +3871,75 @@ function restoreTheme(){
 
 /* ===== SAVE & NAV ===== */
 function save(d){sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:d,h:{'Prefer':'return=minimal'}}).then(function(){toast('✓ Guardado')}).catch(function(e){console.error(e)})}
+/* ===== TAB TUTORIALS ===== */
+var TAB_TUTORIALS={
+  perfil:{
+    icon:'👤',
+    title:'¡Tu perfil personal!',
+    msg:'Aquí está tu identidad como emisora 🌴<br><br>Edita tu <strong>foto, portada, bio</strong> y datos. Mientras más completo, mejor te conocerá TropicalBot y mejores consejos te dará.<br><br>Toca el ícono 🎨 arriba para cambiar el color del tema.'
+  },
+  mascota:{
+    icon:'🐾',
+    title:'¡Tu mascota tropical!',
+    msg:'Esta es la pestaña más divertida 🎉<br><br>Aquí adoptas y cuidas a tu compañera virtual. Crece contigo mientras transmites: cada sesión te da puntos para alimentarla.<br><br>Cuando adoptes, te explicaré paso a paso cómo cuidarla.'
+  },
+  progreso:{
+    icon:'📊',
+    title:'¡Registra tu progreso!',
+    msg:'Aquí registras tus sesiones de transmisión cada día 📝<br><br>Anota las <strong>monedas</strong> que ganaste y la <strong>duración</strong> (horas y minutos). Eso alimenta toda la app y te da puntos para tu mascota.<br><br>También ves tu historial completo del mes.'
+  },
+  calc:{
+    icon:'🎯',
+    title:'¡Tus metas y salarios!',
+    msg:'Aquí ves tu <strong>meta de monedas del mes</strong> y cuánto te falta 💰<br><br>También está la <strong>tabla de salarios</strong> completa: cuánto ganarías al alcanzar cada nivel.<br><br>Calcula tus ingresos en USD según tu progreso.'
+  },
+  catalogo:{
+    icon:'🎁',
+    title:'¡Catálogo de regalos!',
+    msg:'Todos los regalos de Buzzcast con sus <strong>nombres, precios y diamantes</strong> 💎<br><br>Marca tus favoritos para que TropicalBot te recomiende dinámicas con ellos.<br><br>Filtra por precio y busca lo que necesites.'
+  },
+  logros:{
+    icon:'🏅',
+    title:'¡Tus logros!',
+    msg:'57 logros divididos en 8 categorías 🏆<br><br>Desbloquéalos transmitiendo, ganando monedas, completando quizzes y cuidando tu mascota.<br><br>El logro siguiente se resalta en dorado para que sepas qué buscar.'
+  },
+  quiz:{
+    icon:'🧠',
+    title:'¡Quiz tropical!',
+    msg:'Pon a prueba lo que sabes sobre las <strong>reglas, salarios y estrategias</strong> de la agencia 📝<br><br>3 niveles: 🌱 Fácil, 🔥 Medio, 👑 Experto.<br><br>Compite en el ranking anónimo y mejora tu mejor puntaje.'
+  }
+};
+function visitedTabs(){try{return JSON.parse(window.localStorage.getItem('tropical-visited-tabs')||'{}')}catch(e){return{}}}
+function markTabVisited(t){try{var v=visitedTabs();v[t]=1;window.localStorage.setItem('tropical-visited-tabs',JSON.stringify(v))}catch(e){}}
+function checkTabTutorial(t){
+  var v=visitedTabs();
+  if(v[t])return false;
+  var tut=TAB_TUTORIALS[t];if(!tut)return false;
+  markTabVisited(t);
+  setTimeout(function(){showTabTutorial(t,tut)},400);
+  return true;
+}
+function showTabTutorial(tabId,tut){
+  var bg='rgba(168,85,247,.08)';var border='rgba(168,85,247,.25)';
+  /* Reuse pet tutorial modal styling */
+  var content='<div style="text-align:center;padding:8px 0">'+
+    '<div style="font-size:48px;margin-bottom:4px">'+tut.icon+'</div>'+
+    '<div style="font-family:\'Fredoka\',sans-serif;font-size:17px;color:var(--gold);font-weight:700">'+tut.title+'</div>'+
+    '<div style="font-size:9px;color:var(--txt3);margin-top:2px">🌴 TropicalBot te explica</div>'+
+    '</div>'+
+    '<div style="background:'+bg+';border-radius:12px;padding:14px;margin:10px 0;border:1px solid '+border+';font-size:13px;color:var(--txt);line-height:1.6">'+tut.msg+'</div>'+
+    '<button class="bp" onclick="closeTabTutorial(\''+tabId+'\')" style="width:100%">¡Entendido! 🌴</button>';
+  document.getElementById('tab-tut-content').innerHTML=content;
+  openM('m-tab-tutorial');
+}
+function closeTabTutorial(tabId){
+  closeM('m-tab-tutorial');
+  /* If mascota tab AND has pet AND pet tutorial not done, start interactive pet tutorial */
+  if(tabId==='mascota'&&P&&P.mascota&&(P.mascota.tutorial_step===0||P.mascota.tutorial_step===undefined)){
+    setTimeout(function(){startPetTutorial()},300);
+  }
+}
+
 function go(t){
   if(qzActive&&t!=='quiz'){toast('🔒 Completa el quiz primero');return}
   var ts=document.querySelectorAll('#nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
@@ -3853,6 +3952,8 @@ function go(t){
   if(t==='logros')renderBadges();
   if(t==='quiz')loadQuizRanking();
   window.scrollTo({top:0,behavior:'smooth'});
+  /* Show tab tutorial on first visit (only for emisora mode and onboarding done) */
+  if(P&&P.onboarding_completo)checkTabTutorial(t);
 }
 function fmt(n){if(n==null)return'0';return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,',')}
 function fSal(m){for(var i=0;i<SAL.length;i++)if(SAL[i].m===m)return SAL[i];var c=SAL[0];for(var j=0;j<SAL.length;j++)if(SAL[j].m<=m)c=SAL[j];return c}

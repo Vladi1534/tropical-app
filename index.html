@@ -2522,12 +2522,12 @@ function renderPetCard(){
   /* Mood message (TropicalBot voice) */
   var nombreP=pet.nombre||'tu mascota';
   var moodMsgs={
-    happy:['🌴 TropicalBot: "¡Mira cómo '+nombreP+' rebota de felicidad!"','🌴 "'+nombreP+' está radiante, bien hecho mi querida"'],
-    content:['🌴 "'+nombreP+' está tranquila y contenta, buen trabajo"','🌴 "Todo va bien con '+nombreP+'"'],
-    neutral:['🌴 "'+nombreP+' te observa esperando algo..."','🌴 "¿Le darás de comer a '+nombreP+'?"'],
-    sad:['🌴 "'+nombreP+' está triste, dale cariño 💙"','🌴 "Necesita que la consientas, aliméntala"'],
-    hungry:['🌴 "¡'+nombreP+' tiene hambre! Dale de comer 🦴"','🌴 "Escucho sus tripas, ¡alimentala!"'],
-    sleeping:['🌴 "Shh... '+nombreP+' está durmiendo 💤"','🌴 "Déjala descansar, volverá pronto"']
+    happy:['🤖 TropicalBot: "¡Mira cómo '+nombreP+' rebota de felicidad!"','🤖 "'+nombreP+' está radiante, bien hecho mi querida"'],
+    content:['🤖 "'+nombreP+' está tranquila y contenta, buen trabajo"','🤖 "Todo va bien con '+nombreP+'"'],
+    neutral:['🤖 "'+nombreP+' te observa esperando algo..."','🤖 "¿Le darás de comer a '+nombreP+'?"'],
+    sad:['🤖 "'+nombreP+' está triste, dale cariño 💙"','🤖 "Necesita que la consientas, aliméntala"'],
+    hungry:['🤖 "¡'+nombreP+' tiene hambre! Dale de comer 🦴"','🤖 "Escucho sus tripas, ¡alimentala!"'],
+    sleeping:['🤖 "Shh... '+nombreP+' está durmiendo 💤"','🤖 "Déjala descansar, volverá pronto"']
   };
   var msgs=moodMsgs[mood]||moodMsgs.neutral;var randMsg=msgs[Math.floor(Date.now()/60000)%msgs.length];
   h+='<div style="text-align:center;padding:4px 14px 8px;font-size:10px;color:var(--txt3);font-style:italic;line-height:1.4">'+randMsg+'</div>';
@@ -2690,14 +2690,14 @@ function savePet(){if(!P||!U)return;sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',
 
 /* ===== PET TUTORIAL ===== */
 var PET_TUTORIAL=[
-  {title:'¡Hola mi querida! 🌴',content:'Soy TropicalBot y te voy a presentar a tu nueva compañera. Ella vivirá contigo mientras transmites y crecerá gracias a tu dedicación.<br><br>¿Lista para conocerla?'},
+  {title:'¡Hola mi querida! 🤖',content:'Soy TropicalBot y te voy a presentar a tu nueva compañera. Ella vivirá contigo mientras transmites y crecerá gracias a tu dedicación.<br><br>¿Lista para conocerla?'},
   {title:'Tu mascota está feliz 😊',content:'Mira cómo se ve contenta. Cada vez que entres a la app va a recibirte con alegría y ganarás XP solo por visitarla.<br><br>¡Nunca la abandones mucho tiempo!'},
   {title:'Sus 3 necesidades',content:'Tiene 3 barras importantes:<br><br>😊 <strong>Felicidad</strong> — sube con comida y juguetes<br>🍽️ <strong>Hambre</strong> — sube al darle de comer<br>⚡ <strong>Energía</strong> — baja al jugar, se recupera sola (+10 por hora)'},
   {title:'Experiencia y niveles ⭐',content:'La barra dorada de abajo es su <strong>experiencia</strong>. Cada acción le da XP:<br><br>• Alimentar: 8-20 XP<br>• Jugar: 8-25 XP<br>• Entrar cada día: 3 XP<br>• Comprar accesorios: 15 XP<br><br>Subirá de nivel y evolucionará con el tiempo.'},
   {title:'Alimentar 🍽️',content:'Este botón abre el menú de comida. Necesitas <strong>croquetas</strong> 🦴 para alimentarla.<br><br>¿De dónde salen las croquetas? De <strong>registrar tus sesiones</strong> en Progreso. Mientras más monedas hagas, más croquetas ganas.<br><br>Hay 5 tipos de comida con diferentes precios y beneficios.'},
   {title:'Jugar 🎾',content:'Jugar le da <strong>mucha XP</strong> y sube su felicidad, pero gasta energía.<br><br>Puedes jugar hasta <strong>3 veces por día</strong>. Si se queda sin energía, necesita descansar un rato (unas horas) antes de volver a jugar.<br><br>Puedes comprar juguetes en la tienda que dan XP extra pasivamente.'},
   {title:'Tienda tropical 🛍️',content:'En la tienda puedes comprar:<br><br>🎀 <strong>Accesorios</strong> — collares, coronas, lentes<br>🎾 <strong>Juguetes</strong> — dan XP diario mientras estén activos<br>🏠 <strong>Hábitats</strong> — cambia su fondo (playa, jardín, mansión, espacio)<br><br>Todo con croquetas. ¡Mientras más activa seas, más puedes comprar!'},
-  {title:'¡Lista para empezar! 🌴',content:'Recuerda:<br><br>• Entra cada día para no perder felicidad<br>• Registra tus sesiones para ganar croquetas<br>• Juega y aliméntala para subir de nivel<br>• Cuando llegue a nivel 5 romperá el huevo 🐣<br><br>Tu mascota nunca muere, pero se pone triste si la abandonas. ¡Cuídala y disfrútala!'}
+  {title:'¡Lista para empezar! 🤖',content:'Recuerda:<br><br>• Entra cada día para no perder felicidad<br>• Registra tus sesiones para ganar croquetas<br>• Juega y aliméntala para subir de nivel<br>• Cuando llegue a nivel 5 romperá el huevo 🐣<br><br>Tu mascota nunca muere, pero se pone triste si la abandonas. ¡Cuídala y disfrútala!'}
 ];
 function startPetTutorial(){
   if(!P||!P.mascota)return;

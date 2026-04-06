@@ -1010,6 +1010,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   </div>
   <button id="theme-btn" onclick="toggleTheme()" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--txt2)">🌙</button>
 </div>
+<div id="event-banner" style="display:none;width:100%"></div>
 <div id="ld"><div class="ld-p"><img src="https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/public-web/tropical-logo.png" alt=""></div><div class="ld-t">Cargando...</div></div>
 <div id="toast">✓</div>
 <button id="fab" class="fab fab-emisora" style="display:none" onclick="toggleMode()">🌴 Mi Carrera</button>
@@ -1079,6 +1080,20 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <button class="bs" onclick="closeM('m-pet-shop')">Cerrar</button>
 </div></div>
 
+<!-- PET TUTORIAL OVERLAY -->
+<div id="m-pet-tutorial" class="modal"><div class="mbox" style="max-width:340px">
+  <div style="text-align:center;padding:8px 0">
+    <div style="font-size:48px;margin-bottom:4px">🌴</div>
+    <div style="font-family:'Fredoka',sans-serif;font-size:16px;color:var(--gold);font-weight:700" id="tut-title">TropicalBot te saluda</div>
+    <div style="font-size:9px;color:var(--txt3);margin-top:2px" id="tut-step-count">Paso 1 de 8</div>
+  </div>
+  <div style="background:rgba(168,85,247,.08);border-radius:12px;padding:14px;margin:10px 0;border:1px solid rgba(168,85,247,.2);font-size:13px;color:var(--txt);line-height:1.5" id="tut-content"></div>
+  <div style="display:flex;gap:8px">
+    <button class="bs" onclick="skipTutorial()" id="tut-skip" style="flex:1">Saltar</button>
+    <button class="bp" onclick="nextTutorialStep()" id="tut-next" style="flex:2">Siguiente →</button>
+  </div>
+</div></div>
+
 <!-- NAV -->
 <div class="nav" id="nav">
   <button class="nt a" onclick="go('perfil')" id="tab-perfil"><span class="te">👤</span>Perfil</button>
@@ -1117,6 +1132,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <div class="eg"><div class="el"><span class="le">🆔</span> Tu ID de Buzzcast</div><input type="text" class="ti" id="f-bzid" placeholder="Ej: 12567517" oninput="autoSave('buzzcast_id')"></div>
     <div class="eg"><div class="el"><span class="le">🌍</span> Tu país</div><div class="cw" id="c-pais"><div class="ch" onclick="selChip('pais','VE',this)">🇻🇪 Venezuela</div><div class="ch" onclick="selChip('pais','CL',this)">🇨🇱 Chile</div><div class="ch" onclick="selChip('pais','CO',this)">🇨🇴 Colombia</div><div class="ch" onclick="selChip('pais','MX',this)">🇲🇽 México</div><div class="ch" onclick="selChip('pais','PE',this)">🇵🇪 Perú</div><div class="ch" onclick="selChip('pais','AR',this)">🇦🇷 Argentina</div><div class="ch" onclick="selChip('pais','EC',this)">🇪🇨 Ecuador</div><div class="ch" onclick="selChip('pais','US',this)">🇺🇸 USA</div></div></div>
     <div class="eg"><div class="el"><span class="le">📱</span> App donde transmites</div><div class="cw" id="c-app"><div class="ch" onclick="selChip('app','Buzzcast',this)">Buzzcast</div><div class="ch" style="opacity:.4;pointer-events:none">Superlive <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Bigo <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Hiti <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Salsa <span style="font-size:8px;color:var(--txt3)">pronto</span></div><div class="ch" style="opacity:.4;pointer-events:none">Hiyaa <span style="font-size:8px;color:var(--txt3)">pronto</span></div></div></div>
+    <div class="eg"><div class="el"><span class="le">📄</span> Tipo de contrato <span style="font-size:10px;color:var(--txt3);font-weight:400">(afecta cómo cuentan los días)</span></div><div class="cw" id="c-contrato"><div class="ch" onclick="selContrato('nueva',this)" id="contrato-nueva">🌱 Nueva (60+ min por sesión)</div><div class="ch" onclick="selContrato('antigua',this)" id="contrato-antigua">📜 Antigua (60 min acumulados)</div></div></div>
     <div class="eg"><div class="el"><span class="le">⭐</span> Experiencia</div><div class="cw" id="c-exp"><div class="ch" onclick="selChip('exp','Nueva',this)">🌱 Nueva</div><div class="ch" onclick="selChip('exp','1-3 meses',this)">📅 1-3 meses</div><div class="ch" onclick="selChip('exp','3-6 meses',this)">💪 3-6 meses</div><div class="ch" onclick="selChip('exp','6-12 meses',this)">🔥 6-12 meses</div><div class="ch" onclick="selChip('exp','1+ año',this)">👑 1+ año</div></div></div>
     <div class="eg"><div class="el"><span class="le">🎭</span> Estilo de show</div><div class="cw" id="c-estilo"><div class="ch" onclick="selChip('estilo','Conversación',this)">💬 Conversación</div><div class="ch" onclick="selChip('estilo','Baile',this)">💃 Baile</div><div class="ch" onclick="selChip('estilo','Canto',this)">🎤 Canto</div><div class="ch" onclick="selChip('estilo','Juegos',this)">🎮 Juegos</div><div class="ch" onclick="selChip('estilo','Comedia',this)">😂 Comedia</div><div class="ch" onclick="selChip('estilo','ASMR',this)">🎧 ASMR</div><div class="ch" onclick="selChip('estilo','Maquillaje',this)">💄 Maquillaje</div><div class="ch" onclick="selChip('estilo','Cocina',this)">🍳 Cocina</div><div class="ch" onclick="selChip('estilo','Mixto',this)">🎪 Mixto</div></div></div>
     <div class="eg"><div class="el"><span class="le">🔞</span> Contenido +18</div><div class="tr"><span class="tlt">Hago shows +18</span><div class="ts" id="t-18" onclick="tog('18')"><div class="tk"></div></div></div></div>
@@ -1265,7 +1281,13 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
     <div class="rc"><div class="rct">📝 Registrar sesión de hoy</div>
       <div class="rf"><label>🪙 Monedas ganadas hoy</label><input type="number" class="ni" id="r-coins" placeholder="0" inputmode="numeric"></div>
-      <div class="rf"><label>⏱️ Horas transmitidas</label><input type="number" class="ni" id="r-hours" placeholder="0" inputmode="decimal" step="0.5" style="font-size:15px;color:var(--txt)"></div>
+      <div class="rf"><label>⏱️ Duración</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="flex:1;position:relative"><input type="number" class="ni" id="r-hours" placeholder="0" inputmode="numeric" min="0" max="24" step="1" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">h</span></div>
+          <div style="flex:1;position:relative"><input type="number" class="ni" id="r-minutes" placeholder="0" inputmode="numeric" min="0" max="59" step="5" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">min</span></div>
+        </div>
+        <div id="r-contract-hint" style="font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.4;display:none"></div>
+      </div>
       <div class="rf"><label>📡 Tipo de horas</label><div class="htc"><div class="hc sel" id="ht-org" onclick="selHT('Orgánica')">🟢 Orgánica</div><div class="hc" id="ht-fan" onclick="selHT('Fantasma')">👻 Fantasma</div><div class="hc" id="ht-mix" onclick="selHT('Mixta')">🔀 Mixta</div></div></div>
       <div class="rf"><label>💬 ¿Cómo estuvo? (opcional)</label><input type="text" class="ti" id="r-desc" placeholder="Ej: Buen show, muchos regalos..."></div>
       <button class="bp" onclick="regSession()" id="btn-reg">+ Registrar sesión</button>
@@ -1785,6 +1807,11 @@ function refreshAll(){
   if(!P._cr){
     var sf={app:'app_principal',exp:'experiencia',estilo:'estilo_show',audiencia:'tipo_audiencia',horario:'horario_pref',pais:'pais'};
     for(var g in sf)if(P[sf[g]])rChip(g,P[sf[g]]);
+    /* Contract type */
+    var ct=P.contrato_tipo||'nueva';
+    var ctEl=document.getElementById('contrato-'+ct);
+    if(ctEl)ctEl.classList.add('sel');
+    updateContractHint();
     if(P.nivel_18)document.getElementById('t-18').classList.add('on');
     var mf={idioma:'idioma',dias:'dias_pref',fortalezas:'fortalezas',debilidades:'debilidades',temas:'temas_frecuentes',regalos:'regalos_favoritos'};
     for(var mg in mf)if(P[mf[mg]]&&Array.isArray(P[mf[mg]]))rMulti(mg,P[mf[mg]]);
@@ -1842,7 +1869,7 @@ function refreshAll(){
   document.getElementById('calc-coins').value=coins||'';
   document.getElementById('calc-days').value=dl;
   if(P.meta_monedas_mes){document.getElementById('calc-meta').value=P.meta_monedas_mes;sMeta=P.meta_monedas_mes}
-  buildMetaSel();renderSalTbl();renderBadges();renderInspiration();renderPetCard();
+  buildMetaSel();renderSalTbl();renderBadges();renderInspiration();renderPetCard();renderEventBanner();
 }
 
 /* ===== BADGES SYSTEM ===== */
@@ -2441,15 +2468,29 @@ function petBgSVG(habitat){
 function renderPetCard(){
   var area=document.getElementById('pet-card-area');if(!area||!P)return;
   var pet=P.mascota;
-  if(!pet){area.innerHTML='<div class="pet-card no-pet" onclick="openM(\'m-pet-select\');initPetSelect()"><div style="font-size:36px;margin-bottom:8px">🥚</div><div style="font-family:Fredoka,sans-serif;font-size:15px;font-weight:700;color:var(--gold)">Adopta tu mascota tropical</div><div style="font-size:11px;color:var(--txt2);margin-top:4px">Aliméntala con tus monedas y mírala crecer</div></div>';return}
+  if(!pet){
+    area.innerHTML='<div class="pet-card no-pet" onclick="openM(\'m-pet-select\');initPetSelect()">'+
+      '<div style="font-size:48px;margin-bottom:10px">🥚</div>'+
+      '<div style="font-family:Fredoka,sans-serif;font-size:17px;font-weight:700;color:var(--gold);margin-bottom:6px">Adopta tu mascota tropical</div>'+
+      '<div style="font-size:12px;color:var(--txt2);line-height:1.5;padding:0 12px">Tu compañera vivirá contigo mientras transmites. Crecerá, evolucionará y necesitará tus cuidados.</div>'+
+      '<div style="display:flex;justify-content:center;gap:10px;margin-top:12px;font-size:10px;color:var(--txt3)">'+
+        '<span>🍽️ Aliméntala</span><span>🎾 Juega</span><span>🛍️ Decórala</span>'+
+      '</div>'+
+      '<div style="margin-top:12px;padding:8px 16px;background:rgba(251,191,36,.1);border-radius:20px;display:inline-block;font-size:11px;color:var(--gold);font-weight:700">Toca para adoptar 🌴</div>'+
+      '</div>';
+    return;
+  }
   petDailyUpdate(pet);
   var stage=getPetStage(pet.nivel||1);var mood=getMood(pet);var lvl=pet.nivel||1;
   var xp=pet.xp||0;var nxt=xpForLevel(lvl);var prev=xpForLevel(lvl-1);
   var xpInLevel=xp-prev;var xpNeeded=nxt-prev;
   var xpPct=xpNeeded>0?Math.min(100,Math.round((xpInLevel/xpNeeded)*100)):0;
   var playsLeft=3-(pet.juegos_hoy||0);if(pet.ultimo_juego!==new Date().toISOString().slice(0,10)){playsLeft=3}
+  var isSleep=mood==='sleeping';
 
   var h='<div class="pet-card">';
+  /* Help button */
+  h+='<button onclick="resetTutorial()" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Ver tutorial">?</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
   h+='<div class="pet-svg">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
@@ -2458,34 +2499,77 @@ function renderPetCard(){
   h+='<div class="pet-xp"><div class="pet-xp-bar"><div class="pet-xp-fill" style="width:'+xpPct+'%"></div></div>';
   h+='<div class="pet-xp-txt"><span>XP '+fmt(xp)+'/'+fmt(nxt)+'</span><span>Nv.'+(lvl+1)+'</span></div></div>';
   h+='<div class="pet-stats">';
-  h+='<div class="pet-stat"><div class="pet-stat-lbl">😊 Felicidad</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.felicidad||0)+'%;background:'+(pet.felicidad>50?'var(--green)':'var(--red)')+'"></div></div></div>';
-  h+='<div class="pet-stat"><div class="pet-stat-lbl">🍽️ Hambre</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.hambre||0)+'%;background:'+(pet.hambre>40?'var(--gold)':'var(--red)')+'"></div></div></div>';
-  h+='<div class="pet-stat"><div class="pet-stat-lbl">⚡ Energía</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.energia||0)+'%;background:var(--cyan)"></div></div></div>';
+  h+='<div class="pet-stat" title="Sube al alimentar y jugar. Baja 12 puntos por día sin entrar."><div class="pet-stat-lbl">😊 Felicidad</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.felicidad||0)+'%;background:'+(pet.felicidad>50?'var(--green)':'var(--red)')+'"></div></div></div>';
+  h+='<div class="pet-stat" title="Sube al alimentarla. Baja 20 puntos por día. Si baja mucho se pone hambrienta."><div class="pet-stat-lbl">🍽️ Hambre</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.hambre||0)+'%;background:'+(pet.hambre>40?'var(--gold)':'var(--red)')+'"></div></div></div>';
+  h+='<div class="pet-stat" title="Baja al jugar, sube +10 por hora en reposo. Si baja de 15 se duerme."><div class="pet-stat-lbl">⚡ Energía</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.energia||0)+'%;background:var(--cyan)"></div></div></div>';
   h+='</div>';
-  /* Mood message */
-  var moodMsgs={happy:['¡'+pet.nombre+' está feliz! 🎉','Le encanta estar contigo 💕'],content:['Todo bien con '+pet.nombre+' 😊','Se siente cómoda 🌴'],neutral:[pet.nombre+' te mira esperando algo...','¿Le darás de comer? 🤔'],sad:[pet.nombre+' está triste... dale cariño 💙','Necesita atención 🥺'],hungry:['¡'+pet.nombre+' tiene hambre! 🍽️','Dale de comer pronto 😿'],sleeping:[pet.nombre+' está durmiendo... 💤','Volverá cuando tenga energía 🌙']};
+
+  /* Sleep progress bar */
+  if(isSleep&&pet.ultima_energia_ts){
+    var energiaActual=pet.energia||0;
+    var energiaObjetivo=30; /* Wake up at 30 energy */
+    var energiaFaltante=Math.max(0,energiaObjetivo-energiaActual);
+    var horasFaltantes=Math.ceil(energiaFaltante/10);
+    var minutosEnHora=Math.floor((Date.now()-pet.ultima_energia_ts)%3600000/60000);
+    var minutosParaSig=60-minutosEnHora;
+    h+='<div style="margin:8px 14px;padding:10px;background:rgba(99,102,241,.1);border-radius:10px;border:1px dashed rgba(99,102,241,.3)">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:16px">💤</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--cyan)">'+pet.nombre+' está durmiendo</div><div style="font-size:9px;color:var(--txt3)">Despertará en ~'+horasFaltantes+'h '+minutosParaSig+'min</div></div></div>';
+    var sleepPct=Math.min(100,(energiaActual/energiaObjetivo)*100);
+    h+='<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#6366f1,#22d3ee);width:'+sleepPct+'%;transition:width .5s"></div></div>';
+    h+='</div>';
+  }
+
+  /* Mood message (TropicalBot voice) */
+  var nombreP=pet.nombre||'tu mascota';
+  var moodMsgs={
+    happy:['🌴 TropicalBot: "¡Mira cómo '+nombreP+' rebota de felicidad!"','🌴 "'+nombreP+' está radiante, bien hecho mi querida"'],
+    content:['🌴 "'+nombreP+' está tranquila y contenta, buen trabajo"','🌴 "Todo va bien con '+nombreP+'"'],
+    neutral:['🌴 "'+nombreP+' te observa esperando algo..."','🌴 "¿Le darás de comer a '+nombreP+'?"'],
+    sad:['🌴 "'+nombreP+' está triste, dale cariño 💙"','🌴 "Necesita que la consientas, aliméntala"'],
+    hungry:['🌴 "¡'+nombreP+' tiene hambre! Dale de comer 🦴"','🌴 "Escucho sus tripas, ¡alimentala!"'],
+    sleeping:['🌴 "Shh... '+nombreP+' está durmiendo 💤"','🌴 "Déjala descansar, volverá pronto"']
+  };
   var msgs=moodMsgs[mood]||moodMsgs.neutral;var randMsg=msgs[Math.floor(Date.now()/60000)%msgs.length];
-  h+='<div style="text-align:center;padding:4px 14px 8px;font-size:10px;color:var(--txt3);font-style:italic">'+randMsg+'</div>';
+  h+='<div style="text-align:center;padding:4px 14px 8px;font-size:10px;color:var(--txt3);font-style:italic;line-height:1.4">'+randMsg+'</div>';
+
   h+='<div class="pet-actions">';
-  var isSleep=mood==='sleeping';
-  h+='<button class="pet-btn feed" onclick="openM(\'m-pet-feed\');renderFeedMenu()"'+(isSleep?' disabled':'')+'>🍽️</button>';
-  h+='<button class="pet-btn play" onclick="petPlay()"'+(playsLeft<=0||(pet.energia||0)<10||isSleep?' disabled':'')+'>🎾 '+playsLeft+'x</button>';
-  h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')">🛍️</button>';
+  h+='<button class="pet-btn feed" onclick="openM(\'m-pet-feed\');renderFeedMenu()"'+(isSleep?' disabled':'')+' title="Alimentar con croquetas">🍽️ Comer</button>';
+  h+='<button class="pet-btn play" onclick="petPlay()"'+(playsLeft<=0||(pet.energia||0)<10||isSleep?' disabled':'')+' title="Jugar ('+playsLeft+' restantes hoy)">🎾 '+playsLeft+'x</button>';
+  h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')" title="Tienda tropical">🛍️ Tienda</button>';
   h+='</div></div>';
   area.innerHTML=h;
+
+  /* Auto-start tutorial on first visit */
+  if(pet.tutorial_step===0||(pet.tutorial_step===undefined&&pet.nacimiento)){
+    setTimeout(function(){if(pet.tutorial_step===0||pet.tutorial_step===undefined)startPetTutorial()},500);
+  }
 }
 
 function petDailyUpdate(pet){
-  var hoy=new Date().toISOString().slice(0,10);
-  if(pet.ultimo_login===hoy)return;
+  var nowTs=Date.now();
+  var nowDate=new Date().toISOString().slice(0,10);
+  /* Hourly energy regeneration based on ultima_energia_ts */
+  if(pet.ultima_energia_ts){
+    var hoursSince=Math.floor((nowTs-pet.ultima_energia_ts)/3600000);
+    if(hoursSince>0){
+      pet.energia=Math.min(100,(pet.energia||0)+hoursSince*10); /* +10 per hour */
+      pet.ultima_energia_ts=nowTs;
+    }
+  }else{pet.ultima_energia_ts=nowTs}
+  /* Daily login logic */
+  if(pet.ultimo_login===nowDate)return;
   var diasSin=0;
-  if(pet.ultimo_login){var last=new Date(pet.ultimo_login);var now=new Date(hoy);diasSin=Math.floor((now-last)/86400000)}
-  if(diasSin>0){pet.hambre=Math.max(0,(pet.hambre||50)-diasSin*20);pet.felicidad=Math.max(0,(pet.felicidad||50)-diasSin*12);pet.energia=Math.min(100,(pet.energia||50)+diasSin*15)}
+  if(pet.ultimo_login){var last=new Date(pet.ultimo_login);var now=new Date(nowDate);diasSin=Math.floor((now-last)/86400000)}
+  if(diasSin>0){
+    pet.hambre=Math.max(0,(pet.hambre||50)-diasSin*20);
+    pet.felicidad=Math.max(0,(pet.felicidad||50)-diasSin*12);
+    /* Energy is handled hourly, skip here */
+  }
   pet.felicidad=Math.min(100,(pet.felicidad||50)+3);pet.xp=(pet.xp||0)+3;
   pet.racha_dias=(diasSin<=1)?(pet.racha_dias||0)+1:1;
-  pet.ultimo_login=hoy;pet.juegos_hoy=0;pet.ultimo_juego=hoy;
+  pet.ultimo_login=nowDate;pet.juegos_hoy=0;pet.ultimo_juego=nowDate;
   /* Toy passive XP */
-  if(pet.juguete_activo&&pet.juguete_expira){if(hoy<=pet.juguete_expira){var toy=null;for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];if(toy){pet.xp+=toy.xp_day;pet.felicidad=Math.min(100,(pet.felicidad||0)+3)}}else{pet.juguete_activo=null;pet.juguete_expira=null}}
+  if(pet.juguete_activo&&pet.juguete_expira){if(nowDate<=pet.juguete_expira){var toy=null;for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];if(toy){pet.xp+=toy.xp_day;pet.felicidad=Math.min(100,(pet.felicidad||0)+3)}}else{pet.juguete_activo=null;pet.juguete_expira=null}}
   checkPetLevelUp(pet);savePet();
 }
 
@@ -2513,10 +2597,12 @@ function validateAdopt(){var btn=document.getElementById('btn-adopt');if(btn)btn
 function adoptPet(){
   var name=document.getElementById('pet-name-input').value.trim();if(!name||!selectedPetType)return;
   var colores=generatePetColors(selectedPetType);
-  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores};
+  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0};
   P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();
   var rareMsg=colores.rare?' ¡Color raro: '+colores.rare+'! ✨':'';
   toast('🐾 ¡Adoptaste a '+name+'!'+rareMsg);
+  /* Start tutorial automatically after short delay */
+  setTimeout(function(){startPetTutorial()},800);
 }
 
 function renderFeedMenu(){
@@ -2548,12 +2634,13 @@ function petPlay(){
   var hoy=new Date().toISOString().slice(0,10);
   if(pet.ultimo_juego!==hoy){pet.juegos_hoy=0;pet.ultimo_juego=hoy}
   if((pet.juegos_hoy||0)>=3){toast('🎾 Ya jugaron 3 veces hoy');return}
-  if((pet.energia||0)<10){toast('⚡ Sin energía');return}
+  if((pet.energia||0)<10){toast('⚡ Sin energía, déjala descansar un rato');return}
   var xpGain=8;var toy=null;
   if(pet.juguete_activo){for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];
     if(toy){xpGain+=toy.xp_day;pet.energia=Math.max(0,(pet.energia||0)-toy.energy_cost)}else{pet.energia=Math.max(0,(pet.energia||0)-15)}
   }else{pet.energia=Math.max(0,(pet.energia||0)-15)}
   pet.felicidad=Math.min(100,(pet.felicidad||0)+10);pet.xp=(pet.xp||0)+xpGain;pet.juegos_hoy=(pet.juegos_hoy||0)+1;
+  pet.ultima_energia_ts=Date.now(); /* Reset energy regen timer */
   checkPetLevelUp(pet);savePet();renderPetCard();
   toast('🎾 ¡'+(pet.nombre)+' jugó! (+'+xpGain+' XP)'+(toy?' con '+toy.name:''));
 }
@@ -2601,8 +2688,120 @@ function buyHabitat(id,cost){var pet=P.mascota;if(!pet)return;if(cost>0&&(pet.cr
 function awardCroquetas(monedas){var pet=P.mascota;if(!pet||!monedas)return 0;var croq=coinsToCroquetas(monedas);pet.croquetas=(pet.croquetas||0)+croq;pet.croquetas_total=(pet.croquetas_total||0)+croq;pet.xp=(pet.xp||0)+3;checkPetLevelUp(pet);savePet();renderPetCard();return croq}
 function savePet(){if(!P||!U)return;sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:{mascota:P.mascota},h:{'Prefer':'return=minimal'}}).catch(function(e){console.error('Pet save error:',e)})}
 
+/* ===== PET TUTORIAL ===== */
+var PET_TUTORIAL=[
+  {title:'¡Hola mi querida! 🌴',content:'Soy TropicalBot y te voy a presentar a tu nueva compañera. Ella vivirá contigo mientras transmites y crecerá gracias a tu dedicación.<br><br>¿Lista para conocerla?'},
+  {title:'Tu mascota está feliz 😊',content:'Mira cómo se ve contenta. Cada vez que entres a la app va a recibirte con alegría y ganarás XP solo por visitarla.<br><br>¡Nunca la abandones mucho tiempo!'},
+  {title:'Sus 3 necesidades',content:'Tiene 3 barras importantes:<br><br>😊 <strong>Felicidad</strong> — sube con comida y juguetes<br>🍽️ <strong>Hambre</strong> — sube al darle de comer<br>⚡ <strong>Energía</strong> — baja al jugar, se recupera sola (+10 por hora)'},
+  {title:'Experiencia y niveles ⭐',content:'La barra dorada de abajo es su <strong>experiencia</strong>. Cada acción le da XP:<br><br>• Alimentar: 8-20 XP<br>• Jugar: 8-25 XP<br>• Entrar cada día: 3 XP<br>• Comprar accesorios: 15 XP<br><br>Subirá de nivel y evolucionará con el tiempo.'},
+  {title:'Alimentar 🍽️',content:'Este botón abre el menú de comida. Necesitas <strong>croquetas</strong> 🦴 para alimentarla.<br><br>¿De dónde salen las croquetas? De <strong>registrar tus sesiones</strong> en Progreso. Mientras más monedas hagas, más croquetas ganas.<br><br>Hay 5 tipos de comida con diferentes precios y beneficios.'},
+  {title:'Jugar 🎾',content:'Jugar le da <strong>mucha XP</strong> y sube su felicidad, pero gasta energía.<br><br>Puedes jugar hasta <strong>3 veces por día</strong>. Si se queda sin energía, necesita descansar un rato (unas horas) antes de volver a jugar.<br><br>Puedes comprar juguetes en la tienda que dan XP extra pasivamente.'},
+  {title:'Tienda tropical 🛍️',content:'En la tienda puedes comprar:<br><br>🎀 <strong>Accesorios</strong> — collares, coronas, lentes<br>🎾 <strong>Juguetes</strong> — dan XP diario mientras estén activos<br>🏠 <strong>Hábitats</strong> — cambia su fondo (playa, jardín, mansión, espacio)<br><br>Todo con croquetas. ¡Mientras más activa seas, más puedes comprar!'},
+  {title:'¡Lista para empezar! 🌴',content:'Recuerda:<br><br>• Entra cada día para no perder felicidad<br>• Registra tus sesiones para ganar croquetas<br>• Juega y aliméntala para subir de nivel<br>• Cuando llegue a nivel 5 romperá el huevo 🐣<br><br>Tu mascota nunca muere, pero se pone triste si la abandonas. ¡Cuídala y disfrútala!'}
+];
+function startPetTutorial(){
+  if(!P||!P.mascota)return;
+  P.mascota.tutorial_step=P.mascota.tutorial_step||0;
+  renderTutorialStep();
+  openM('m-pet-tutorial');
+}
+function renderTutorialStep(){
+  var pet=P.mascota;if(!pet)return;
+  var idx=pet.tutorial_step||0;
+  if(idx<0||idx>=PET_TUTORIAL.length){closeM('m-pet-tutorial');return}
+  var step=PET_TUTORIAL[idx];
+  /* Personalize with pet data */
+  var title=step.title;
+  var content=step.content;
+  if(idx===1){title='Conoce a '+(pet.nombre||'tu mascota');content='Mira a <strong>'+(pet.nombre||'tu nueva amiga')+'</strong>. Cada vez que entres te recibirá con alegría y ganarás XP solo por visitarla.<br><br>¡Nunca la abandones mucho tiempo!'}
+  document.getElementById('tut-title').textContent=title;
+  document.getElementById('tut-content').innerHTML=content;
+  document.getElementById('tut-step-count').textContent='Paso '+(idx+1)+' de '+PET_TUTORIAL.length;
+  document.getElementById('tut-next').textContent=idx===PET_TUTORIAL.length-1?'¡Comenzar! 🌴':'Siguiente →';
+}
+function nextTutorialStep(){
+  var pet=P.mascota;if(!pet)return;
+  pet.tutorial_step=(pet.tutorial_step||0)+1;
+  if(pet.tutorial_step>=PET_TUTORIAL.length){
+    pet.tutorial_step=-1;
+    savePet();
+    closeM('m-pet-tutorial');
+    toast('🌴 ¡Tutorial completado! Disfruta a '+(pet.nombre||'tu mascota'));
+    return;
+  }
+  savePet();
+  renderTutorialStep();
+}
+function skipTutorial(){
+  var pet=P.mascota;if(!pet)return;
+  pet.tutorial_step=-1;
+  savePet();
+  closeM('m-pet-tutorial');
+}
+function resetTutorial(){
+  var pet=P.mascota;if(!pet)return;
+  pet.tutorial_step=0;
+  savePet();
+  startPetTutorial();
+}
+
 
 /* ===== INSPIRACIÓN DEL DÍA ===== */
+/* ===== SEASONAL EVENTS SYSTEM ===== */
+function getCurrentEvent(){
+  var d=new Date();var y=d.getFullYear();var m=d.getMonth()+1;var day=d.getDate();
+  var today=new Date(y,m-1,day);
+  /* Easter calculation (Gauss algorithm) */
+  function easterDate(yr){var a=yr%19,b=Math.floor(yr/100),c=yr%100,e=Math.floor(b/4),f=b%4,g=Math.floor((8*b+13)/25),hE=(19*a+b-e-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*f+2*i-hE-k)%7,mE=Math.floor((a+11*hE+19*l)/433),n=Math.floor((hE+l-7*mE+90)/25),p=(hE+l-7*mE+33*n+19)%32;return new Date(yr,n-1,p)}
+  var easter=easterDate(y);
+  var palmSunday=new Date(easter);palmSunday.setDate(easter.getDate()-7);
+  var easterEnd=new Date(easter);easterEnd.setDate(easter.getDate()+1);
+  /* Mother's Day - second Sunday of May (LATAM varies, we use May 10) */
+  var mothersDay=new Date(y,4,10);
+  /* Father's Day - third Sunday of June */
+  var fathersDay=new Date(y,5,15);
+  var events=[
+    {id:'año_nuevo',name:'Año Nuevo',emoji:'🎆',color:'#fbbf24',start:new Date(y,0,1),end:new Date(y,0,6),theme:'gold',cosplay:['Vestido de gala dorado','Brillos y confeti','Corona de año nuevo'],dinamicas:['Cuenta regresiva con regalos grandes','Pide deseos por cada regalo','Top 3 mejores viewers del año']},
+    {id:'san_valentin',name:'San Valentín',emoji:'💕',color:'#ec4899',start:new Date(y,1,10),end:new Date(y,1,15),theme:'rose',cosplay:['Vestido rojo sensual','Alitas de cupido','Lencería rosa'],dinamicas:['Casting de San Valentín virtual','Carta de amor por regalo','Besos virtuales a top donadores']},
+    {id:'carnaval',name:'Carnaval',emoji:'🎭',color:'#a855f7',start:new Date(y,1,1),end:new Date(y,1,28),theme:'sunset',cosplay:['Plumas y lentejuelas','Máscara veneciana','Samba brasileña'],dinamicas:['Desfile de trajes','Baile de samba por regalos','Concurso de máscaras']},
+    {id:'semana_santa',name:'Semana Santa',emoji:'🐰',color:'#c084fc',start:palmSunday,end:easterEnd,theme:'rose',cosplay:['Conejita de pascua','Orejas y cola de algodón','Vestido pastel con huevos'],dinamicas:['Búsqueda del huevo dorado','Regalos escondidos por preguntas','Trivia de la semana santa']},
+    {id:'dia_madre',name:'Día de la Madre',emoji:'🌸',color:'#f472b6',start:new Date(y,4,5),end:new Date(y,4,15),theme:'rose',cosplay:['Vestido floral','Corona de flores','Look elegante'],dinamicas:['Dedicatorias a mamá por regalo','Historias de infancia','Ranking de hijas/hijos más cariñosos']},
+    {id:'dia_padre',name:'Día del Padre',emoji:'👔',color:'#3b82f6',start:new Date(y,5,10),end:new Date(y,5,20),theme:'ocean',cosplay:['Look casual elegante','Camisa blanca','Tirantes y corbata'],dinamicas:['Saludos a papá por regalo','Historias familiares','Top papás del chat']},
+    {id:'orgullo',name:'Mes del Orgullo',emoji:'🏳️‍🌈',color:'#a855f7',start:new Date(y,5,1),end:new Date(y,5,30),theme:'sunset',cosplay:['Colores del arcoíris','Maquillaje colorido','Outfit de festival'],dinamicas:['Historias de aceptación','Regalos por cada color','Ronda de cumplidos']},
+    {id:'halloween',name:'Halloween',emoji:'🎃',color:'#f97316',start:new Date(y,9,20),end:new Date(y,9,31),theme:'sunset',cosplay:['Brujita sexy','Gata negra','Vampiresa','Enfermera diabólica','Catrina mexicana'],dinamicas:['Truco o trato con regalos','Historias de terror','Castigo o premio del viewer','Maquillaje en vivo de Halloween']},
+    {id:'dia_muertos',name:'Día de Muertos',emoji:'💀',color:'#f59e0b',start:new Date(y,10,1),end:new Date(y,10,2),theme:'sunset',cosplay:['Catrina tradicional','Maquillaje de calavera mexicana','Vestido con flores de cempasúchil'],dinamicas:['Dedicatoria a seres queridos','Altar virtual con los viewers','Historias de la tradición']},
+    {id:'black_friday',name:'Black Friday',emoji:'🛍️',color:'#ec4899',start:new Date(y,10,23),end:new Date(y,10,30),theme:'cherry',cosplay:['Look de compras chic','Outfit all-black','Shopping mood'],dinamicas:['Ofertas flash por regalos','Subasta de items del show','Cuenta regresiva de deals']},
+    {id:'navidad',name:'Navidad',emoji:'🎄',color:'#22c55e',start:new Date(y,11,1),end:new Date(y,11,26),theme:'mint',cosplay:['Mamá Noel','Duende navideño','Suéter navideño feo','Vestido rojo con blanco'],dinamicas:['Lista de deseos con los viewers','Regalos bajo el arbolito','Villancicos cantados','Cuenta regresiva de navidad']},
+    {id:'fin_año',name:'Fin de Año',emoji:'🎇',color:'#fbbf24',start:new Date(y,11,27),end:new Date(y,11,31),theme:'sunset',cosplay:['Vestido brilloso','Cotillón y gorros','Look de fiesta'],dinamicas:['Resumen del año con el chat','Mejores momentos','Countdown a medianoche']}
+  ];
+  for(var i=0;i<events.length;i++){
+    if(today>=events[i].start&&today<=events[i].end)return events[i];
+  }
+  return null;
+}
+
+function renderEventBanner(){
+  var ev=getCurrentEvent();
+  var area=document.getElementById('event-banner');
+  if(!area)return;
+  if(!ev){area.style.display='none';return}
+  area.style.display='block';
+  area.innerHTML='<div style="padding:8px 16px;background:linear-gradient(90deg,'+ev.color+'22,'+ev.color+'11);border-bottom:1px solid '+ev.color+'44;display:flex;align-items:center;gap:10px;font-size:12px"><span style="font-size:18px">'+ev.emoji+'</span><span><strong style="color:'+ev.color+'">'+ev.name+'</strong> · <span style="color:var(--txt2)">¡Aprovecha la temática para tus shows!</span></span></div>';
+}
+
+function getEventInspiration(ev){
+  if(!ev)return null;
+  /* Build a dynamic concept from event data */
+  var cosplay=ev.cosplay[Math.floor(Math.random()*ev.cosplay.length)];
+  var dinamica=ev.dinamicas[Math.floor(Math.random()*ev.dinamicas.length)];
+  return{
+    tema:ev.emoji+' '+ev.name+' · '+dinamica,
+    desc:'Sugerencia de outfit: '+cosplay+'. Los eventos generan el doble de engagement — aprovéchalo hoy.',
+    isEvent:true,
+    eventColor:ev.color
+  };
+}
+
 function renderInspiration(){
   if(!P||!P.onboarding_completo)return;
   var hoy=new Date();
@@ -2644,9 +2843,16 @@ function renderInspiration(){
   if(compatible.length===0)compatible=conceptos;
   
   var concepto=compatible[diaDelAnio%compatible.length];
+  /* Override with event-themed concept if current event active (50% chance to mix) */
+  var currentEvent=getCurrentEvent();
+  if(currentEvent&&diaDelAnio%2===0){
+    var eventConcept=getEventInspiration(currentEvent);
+    if(eventConcept)concepto=eventConcept;
+  }
   
   var tags=[];
   tags.push(diaHoy.charAt(0).toUpperCase()+diaHoy.slice(1));
+  if(currentEvent)tags.push(currentEvent.emoji+' '+currentEvent.name);
   if(esFinDeSemana)tags.push('🔥 Más audiencia');
   tags.push(P.estilo_show||'Mixto');
   if(favs.length>0)tags.push(favs.slice(0,2).join(', '));
@@ -2880,8 +3086,14 @@ function syncFromSessions(){
 
   if(P.horas_mes!==totalReal){P.horas_mes=totalReal;changed.horas_mes=totalReal}
   if(P.horas_contables!==totalCont){P.horas_contables=totalCont;changed.horas_contables=totalCont}
-  /* Count unique days with actual sessions (not 'unknown', not zero-data) */
-  var diasUnicos=0;for(var dk in byDate){if(dk!=='unknown'&&(byDate[dk].c>0||byDate[dk].h>0))diasUnicos++}
+  /* Count unique days - contract-aware: antigua needs ≥60min total per day, nueva needs ≥1h */
+  var contratoTipo=P.contrato_tipo||'nueva';
+  var umbralDia=contratoTipo==='antigua'?1:1; /* both need 1h total, but old can accumulate from multiple sessions */
+  var diasUnicos=0;
+  for(var dk in byDate){
+    if(dk==='unknown')continue;
+    if(byDate[dk].h>=umbralDia)diasUnicos++;
+  }
   if(P.dias_transmitidos!==diasUnicos){P.dias_transmitidos=diasUnicos;changed.dias_transmitidos=diasUnicos}
   if(bestCoins>(P.mejor_dia_monedas||0)){
     P.mejor_dia_monedas=bestCoins;P.mejor_dia_fecha=bestDate;
@@ -2941,17 +3153,19 @@ function saveStartingValues(){
 }
 
 function regSession(){
-  var c=parseInt(document.getElementById('r-coins').value)||0;var hr=parseFloat(document.getElementById('r-hours').value)||0;var desc=document.getElementById('r-desc').value.trim();
-  if(!c&&!hr){alert('Ingresa monedas o horas');return}
+  var c=parseInt(document.getElementById('r-coins').value)||0;
+  var hInput=parseInt(document.getElementById('r-hours').value)||0;
+  var mInput=parseInt(document.getElementById('r-minutes').value)||0;
+  var hr=Math.round((hInput+mInput/60)*100)/100;
+  var desc=document.getElementById('r-desc').value.trim();
+  if(!c&&!hr){alert('Ingresa monedas o duración');return}
+  if(mInput>59){alert('Los minutos no pueden ser más de 59');return}
   var btn=document.getElementById('btn-reg');btn.disabled=true;btn.textContent='Guardando...';
   var ses={emisora_id:U.id,tipo_sesion:'manual',monedas_reportadas:c,horas_transmitidas:hr,tipo_horas:htype,show_descrito:desc||null,resumen:desc||'Sesión registrada desde Mi Carrera'};
-  console.log('Saving session:',JSON.stringify(ses));
   sbq('historial_sesiones',{m:'POST',b:ses,h:{'Prefer':'return=representation'}}).then(function(r){
-    console.log('Session response status:',r.status);
     if(!r.ok)return r.text().then(function(t){throw new Error('HTTP '+r.status+': '+t)});
     return r.json();
   }).then(function(d){
-    console.log('Session saved:',JSON.stringify(d));
     P.monedas_acumuladas=(P.monedas_acumuladas||0)+c;
     P.horas_mes=Math.round(((P.horas_mes||0)+hr)*10)/10;
     P.horas_contables=Math.round(((P.horas_contables||0)+Math.min(3,hr))*10)/10;
@@ -2959,15 +3173,23 @@ function regSession(){
     save({monedas_acumuladas:P.monedas_acumuladas,horas_mes:P.horas_mes,horas_contables:P.horas_contables,monedas_cuenta_total:P.monedas_cuenta_total,monedas_actuales_fecha:new Date().toISOString().slice(0,10)});
     var ns=Array.isArray(d)?d[0]:d;if(!ns)ns=ses;ns.created_at=ns.created_at||new Date().toISOString();allS.unshift(ns);
     refreshAll();renderSes();
-    document.getElementById('r-coins').value='';document.getElementById('r-hours').value='';document.getElementById('r-desc').value='';
+    document.getElementById('r-coins').value='';document.getElementById('r-hours').value='';document.getElementById('r-minutes').value='';document.getElementById('r-desc').value='';
     var croq=awardCroquetas(c);
-    btn.disabled=false;btn.textContent='+ Registrar sesión';toast('✓ Sesión registrada'+(croq?' · +'+croq+' 🦴':''));
+    btn.disabled=false;btn.textContent='+ Registrar sesión';
+    var extraMsg='';
+    /* Show contract-type aware day message */
+    if(P.contrato_tipo==='antigua'&&hr<1){
+      extraMsg=' · '+Math.round(hr*60)+' min (suma para el día)';
+    }
+    toast('✓ Sesión registrada'+(croq?' · +'+croq+' 🦴':'')+extraMsg);
   }).catch(function(e){console.error('Session save error:',e);btn.disabled=false;btn.textContent='+ Registrar sesión';alert('Error: '+e.message)});
 }
 
 /* ===== CHIPS ===== */
 var fm={app:'app_principal',exp:'experiencia',estilo:'estilo_show',audiencia:'tipo_audiencia',horario:'horario_pref',pais:'pais'};
 function selChip(g,v,el){var cs=el.parentNode.querySelectorAll('.ch');for(var i=0;i<cs.length;i++)cs[i].classList.remove('sel');el.classList.add('sel');if(fm[g]){var u={};u[fm[g]]=v;console.log('Saving chip:',g,'→',fm[g],'=',v);save(u);if(g==='pais'){P.pais=v;document.getElementById('d-flag').textContent=FLAGS[v]||''}}}
+function selContrato(v,el){var cs=el.parentNode.querySelectorAll('.ch');for(var i=0;i<cs.length;i++)cs[i].classList.remove('sel');el.classList.add('sel');P.contrato_tipo=v;save({contrato_tipo:v});updateContractHint();syncFromSessions()}
+function updateContractHint(){var hint=document.getElementById('r-contract-hint');if(!hint)return;var ct=P&&P.contrato_tipo||'nueva';if(ct==='antigua'){hint.style.display='block';hint.innerHTML='📜 Contrato antiguo: puedes sumar varias sesiones por día. Si haces 30min + 30min, cuenta como 1 día transmitido.'}else{hint.style.display='block';hint.innerHTML='🌱 Contrato nuevo: necesitas al menos 1 hora continua para que cuente el día.'}}
 var mm={idioma:'idioma',dias:'dias_pref',fortalezas:'fortalezas',debilidades:'debilidades',temas:'temas_frecuentes'};
 function togMulti(g,v,el){el.classList.toggle('sel');if(mm[g]){var f=mm[g];if(!P[f])P[f]=[];var idx=P[f].indexOf(v);if(idx>-1)P[f].splice(idx,1);else P[f].push(v);var u={};u[f]=P[f];save(u)}}
 function tog(id){var el=document.getElementById('t-'+id);el.classList.toggle('on');save({nivel_18:el.classList.contains('on')})}

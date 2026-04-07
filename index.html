@@ -2481,9 +2481,10 @@ function petEggSVG(s,type,_pid,col){
 
 function petBgSVG(habitat){
   /* Returns img tag pointing to Supabase Storage diorama background */
+  /* PET_BG_VERSION: bump this number when you replace background images to bust browser cache */
   var validHabitats=['default','playa','jardin','casa','mansion','arcoiris','espacio'];
   var hb=validHabitats.indexOf(habitat)>=0?habitat:'default';
-  var url='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-backgrounds/'+hb+'.jpg';
+  var url='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-backgrounds/'+hb+'.jpg?v=2';
   return '<img src="'+url+'" alt="" loading="eager" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none">';
 }
 

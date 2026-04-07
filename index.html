@@ -1211,29 +1211,38 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <div class="sec" id="s-progreso">
   <div class="ps">
     <div class="mh"><div class="mt-title">📊 Mi Progreso</div><div class="mt-sub" id="mo-label">—</div></div>
-    <div id="month-nav" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px">
-      <select id="sel-month" onchange="navMonthDirect()" style="padding:8px 12px;border-radius:8px;background:var(--card2);color:var(--txt);border:1px solid rgba(168,85,247,.15);font-size:13px;font-family:'Nunito',sans-serif;outline:none;cursor:pointer">
-        <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-        <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-        <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-        <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-      </select>
-      <select id="sel-year" onchange="navMonthDirect()" style="padding:8px 12px;border-radius:8px;background:var(--card2);color:var(--txt);border:1px solid rgba(168,85,247,.15);font-size:13px;font-family:'Nunito',sans-serif;outline:none;cursor:pointer"></select>
-      <button onclick="navMonthDirect(true)" style="padding:8px 14px;border-radius:8px;background:var(--grad-b);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">Hoy</button>
-    </div>
     <div id="history-banner" style="display:none;text-align:center;padding:6px;font-size:10px;color:var(--cyan);background:rgba(34,211,238,.06);border-radius:8px;margin:0 16px 8px">📂 Viendo historial</div>
+
+    <!-- 1. SESSION FORM — main action, at top -->
+    <div class="rc" style="border-color:rgba(251,191,36,.25);background:linear-gradient(180deg,rgba(251,191,36,.04),rgba(168,85,247,.02))">
+      <div class="rct" style="color:var(--gold);font-size:15px">✨ ¿Cómo te fue hoy?</div>
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:10px;line-height:1.4">Registra tu sesión para sumar al mes y ganar puntitos para tu mascota 🐾</div>
+      <div class="rf"><label>🪙 Monedas ganadas</label><input type="number" class="ni" id="r-coins" placeholder="0" inputmode="numeric"></div>
+      <div class="rf"><label>⏱️ Duración</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="flex:1;position:relative"><input type="number" class="ni" id="r-hours" placeholder="0" inputmode="numeric" min="0" max="24" step="1" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">h</span></div>
+          <div style="flex:1;position:relative"><input type="number" class="ni" id="r-minutes" placeholder="0" inputmode="numeric" min="0" max="59" step="5" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">min</span></div>
+        </div>
+        <div id="r-contract-hint" style="font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.4;display:none"></div>
+      </div>
+      <div class="rf"><label>📡 Tipo de horas</label><div class="htc"><div class="hc sel" id="ht-org" onclick="selHT('Orgánica')">🟢 Orgánica</div><div class="hc" id="ht-fan" onclick="selHT('Fantasma')">👻 Fantasma</div><div class="hc" id="ht-mix" onclick="selHT('Mixta')">🔀 Mixta</div></div></div>
+      <div class="rf"><label>💬 ¿Cómo estuvo? (opcional)</label><input type="text" class="ti" id="r-desc" placeholder="Ej: Buen show, muchos regalos..."></div>
+      <button class="bp" onclick="regSession()" id="btn-reg">+ Registrar sesión</button>
+    </div>
+
+    <!-- 2. Coins overview -->
     <div class="dp-coins">
       <div class="dp-box tot" onclick="openM('m-coins')"><div class="dp-label">🪙 Total en mi cuenta</div><div class="dp-val pk" id="p-coins-total">0</div><div class="dp-hint">Toca para actualizar</div></div>
       <div class="dp-box mes"><div class="dp-label">🪙 Ganadas este mes</div><div class="dp-val gd" id="p-coins-month">0</div><div class="dp-hint">Suma de tus sesiones</div></div>
     </div>
     <div class="nsn"><strong>📢 ¿Eres nueva?</strong> Las metas de <strong>1,000</strong> y <strong>5,000</strong> son solo para tu <strong>primer mes</strong>. Desde el segundo, la mínima es <strong>10,000</strong>. 🌱</div>
 
-    <!-- UNIFIED GOAL CARD -->
+    <!-- 3. Goal card -->
     <div class="gc cur" id="g-unified" style="display:none">
       <div id="g-uni-content"></div>
     </div>
 
-    <!-- HOURS BREAKDOWN -->
+    <!-- 4. Hours card -->
     <div class="gc" id="hours-card" style="border-color:rgba(34,211,238,.2)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:13px;font-weight:700;color:#fff">⏱️ Mis Horas del Mes</div>
@@ -1259,7 +1268,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
       <div class="pbw"><div class="pbf" id="h-bar" style="width:0%;background:linear-gradient(135deg,var(--pink),var(--cyan))"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:3px"><span style="font-size:10px;color:var(--txt3)" id="h-pct">0%</span><span style="font-size:10px;color:var(--txt3)" id="h-hint"></span></div>
       <div style="font-size:10px;color:var(--txt3);margin-top:8px;line-height:1.4;padding:6px 8px;background:rgba(34,211,238,.06);border-radius:6px">📋 <strong>Contables:</strong> máx 3h/día para el bono (necesitas 40). <strong>Realizadas:</strong> todas tus horas, sin límite. <strong>Días:</strong> tus horas contables ÷ 3.</div>
-      
+
       <!-- GHOST HOURS RISK METER -->
       <div id="ghost-risk" style="display:none;margin-top:10px;padding:10px;border-radius:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -1276,7 +1285,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
       </div>
     </div>
 
-    <!-- Starting hours for mid-month joiners -->
+    <!-- 5. Starting hours for mid-month joiners -->
     <div class="rc" id="starting-values-card" style="display:none">
       <div class="rct">⏱️ Horas que ya llevas este mes</div>
       <div style="font-size:11px;color:var(--txt2);margin-bottom:10px;line-height:1.4">Si ya llevas horas transmitidas este mes que no has registrado aquí, agrégalas para que tu progreso sea preciso.</div>
@@ -1284,24 +1293,27 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
       <button class="bp" onclick="saveStartingValues()" style="background:linear-gradient(135deg,var(--purple-mid),var(--purple))">💾 Guardar horas iniciales</button>
     </div>
 
-    <div class="rc"><div class="rct">📝 Registrar sesión de hoy</div>
-      <div class="rf"><label>🪙 Monedas ganadas hoy</label><input type="number" class="ni" id="r-coins" placeholder="0" inputmode="numeric"></div>
-      <div class="rf"><label>⏱️ Duración</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <div style="flex:1;position:relative"><input type="number" class="ni" id="r-hours" placeholder="0" inputmode="numeric" min="0" max="24" step="1" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">h</span></div>
-          <div style="flex:1;position:relative"><input type="number" class="ni" id="r-minutes" placeholder="0" inputmode="numeric" min="0" max="59" step="5" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">min</span></div>
-        </div>
-        <div id="r-contract-hint" style="font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.4;display:none"></div>
-      </div>
-      <div class="rf"><label>📡 Tipo de horas</label><div class="htc"><div class="hc sel" id="ht-org" onclick="selHT('Orgánica')">🟢 Orgánica</div><div class="hc" id="ht-fan" onclick="selHT('Fantasma')">👻 Fantasma</div><div class="hc" id="ht-mix" onclick="selHT('Mixta')">🔀 Mixta</div></div></div>
-      <div class="rf"><label>💬 ¿Cómo estuvo? (opcional)</label><input type="text" class="ti" id="r-desc" placeholder="Ej: Buen show, muchos regalos..."></div>
-      <button class="bp" onclick="regSession()" id="btn-reg">+ Registrar sesión</button>
-    </div>
+    <!-- 6. History -->
     <div class="sht">📋 Historial del mes</div>
     <div id="ses-list"><div style="text-align:center;color:var(--txt3);font-size:12px;padding:20px">Sin sesiones aún</div></div>
     <div id="ses-expand" style="display:none"><button class="expand-btn" onclick="expandHist()">Ver más ▼</button></div>
-    
-    <!-- Corregir datos del mes -->
+
+    <!-- 7. Month navigation (moved to bottom) -->
+    <div style="margin-top:18px;padding-top:14px;border-top:1px dashed rgba(168,85,247,.12)">
+      <div style="font-size:10px;color:var(--txt3);text-align:center;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">🗓️ Ver otro mes</div>
+      <div id="month-nav" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px">
+        <select id="sel-month" onchange="navMonthDirect()" style="padding:8px 12px;border-radius:8px;background:var(--card2);color:var(--txt);border:1px solid rgba(168,85,247,.15);font-size:13px;font-family:'Nunito',sans-serif;outline:none;cursor:pointer">
+          <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+          <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+          <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+          <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+        </select>
+        <select id="sel-year" onchange="navMonthDirect()" style="padding:8px 12px;border-radius:8px;background:var(--card2);color:var(--txt);border:1px solid rgba(168,85,247,.15);font-size:13px;font-family:'Nunito',sans-serif;outline:none;cursor:pointer"></select>
+        <button onclick="navMonthDirect(true)" style="padding:8px 14px;border-radius:8px;background:var(--grad-b);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">Hoy</button>
+      </div>
+    </div>
+
+    <!-- 8. Correct data button -->
     <div style="margin-top:14px;text-align:center">
       <button class="expand-btn" onclick="openM('m-corregir')" style="color:var(--pink);border-color:rgba(236,72,153,.2)">✏️ ¿Datos incorrectos? Corregir valores del mes</button>
     </div>
@@ -2773,7 +2785,7 @@ function getPetTutorialSteps(pet){
     {title:'Su comida favorita 🍽️',content:n+' es '+(pet.genero==='macho'?'un':'una')+' '+tipoNombre+', así que come cositas especiales para '+(pet.genero==='macho'?'él':'ella')+':<br><br><div style="text-align:center;font-size:26px;letter-spacing:6px;margin:10px 0">'+foodIcons+'</div>Para alimentarla necesitas <strong>puntitos 🐾</strong> que se ganan al <strong>registrar tus sesiones</strong> en la pestaña de Progreso. Mientras más monedas hagas, más puntitos ganas.'},
     {title:'¡A jugar! 🎾',content:'Jugar con '+n+' le da <strong>la mayor cantidad de XP</strong> y la pone feliz, pero gasta su energía.<br><br>Puedes jugar <strong>hasta 3 veces al día</strong>. Si se queda sin energía, déjala descansar — recupera +10 cada hora.<br><br>Tip pro 🌟: en la <strong>tienda</strong> hay juguetes que dan XP extra todos los días que estén activos.'},
     {title:'Tienda tropical 🛍️',content:'En la tienda puedes mimar a '+n+' con:<br><br>🎀 <strong>Accesorios</strong> — collares, coronas, lentes, sombreros<br>🎾 <strong>Juguetes</strong> — pelota, ratón, hamaca, túnel<br>🏠 <strong>Hábitats</strong> — playa, jardín, mansión, espacio 🚀<br><br>Todo se compra con puntitos 🐾. ¡Mientras más activa seas, más puede tener '+n+'!'},
-    {title:'¡Listas para empezar! 🌴✨',content:'Ya lo sabes todo mi querida 💕<br><br>Recuerda:<br>📅 Entra cada día<br>📝 Registra tus sesiones<br>🍽️ Aliméntala y juega para subir de nivel<br>🌟 Al nivel 8, 18 y 28 evolucionará<br><br><strong>¡Como recompensa por completar el tutorial te regalo:</strong><div style="text-align:center;font-size:18px;color:var(--gold);margin-top:10px;font-family:Fredoka,sans-serif;line-height:1.6">+50 🐾 puntitos<br>+20 😊 felicidad para '+n+'</div>'}
+    {title:'¡Listas para empezar! 🌴✨',content:'Ya lo sabes todo mi querida 💕<br><br>Recuerda:<br>📅 Entra cada día<br>📝 Registra tus sesiones<br>🍽️ Aliméntala y juega para subir de nivel<br>🌟 Al nivel 8, 18 y 28 evolucionará<br><br>'+(pet.tutorial_reward_given?'<div style="text-align:center;font-size:13px;color:var(--txt2);margin-top:10px;font-style:italic">Ya recibiste tu recompensa, pero puedes repasar el tutorial las veces que quieras 🌴</div>':'<strong>¡Como recompensa por completar el tutorial te regalo:</strong><div style="text-align:center;font-size:18px;color:var(--gold);margin-top:10px;font-family:Fredoka,sans-serif;line-height:1.6">+50 🐾 puntitos<br>+20 😊 felicidad para '+n+'</div>')}
   ];
 }
 var PET_TUTORIAL=[];
@@ -2792,21 +2804,28 @@ function renderTutorialStep(){
   document.getElementById('tut-title').textContent=step.title;
   document.getElementById('tut-content').innerHTML=step.content;
   document.getElementById('tut-step-count').textContent='Paso '+(idx+1)+' de '+PET_TUTORIAL.length;
-  document.getElementById('tut-next').textContent=idx===PET_TUTORIAL.length-1?'¡Reclamar recompensa! 🎁':'Siguiente →';
+  var pet2=P&&P.mascota;
+  var lastBtn=(pet2&&pet2.tutorial_reward_given)?'¡Listo! 🌴':'¡Reclamar recompensa! 🎁';
+  document.getElementById('tut-next').textContent=idx===PET_TUTORIAL.length-1?lastBtn:'Siguiente →';
 }
 function nextTutorialStep(){
   var pet=P.mascota;if(!pet)return;
   pet.tutorial_step=(pet.tutorial_step||0)+1;
   if(pet.tutorial_step>=PET_TUTORIAL.length){
     pet.tutorial_step=-1;
-    /* Reward for completing tutorial */
-    pet.croquetas=(pet.croquetas||0)+50;
-    pet.croquetas_total=(pet.croquetas_total||0)+50;
-    pet.felicidad=Math.min(100,(pet.felicidad||0)+20);
+    /* Reward ONLY the first time */
+    if(!pet.tutorial_reward_given){
+      pet.croquetas=(pet.croquetas||0)+50;
+      pet.croquetas_total=(pet.croquetas_total||0)+50;
+      pet.felicidad=Math.min(100,(pet.felicidad||0)+20);
+      pet.tutorial_reward_given=true;
+      toast('🎁 +50 🐾 puntitos · +20 felicidad para '+(pet.nombre||'tu mascota'));
+    }else{
+      toast('✅ Tutorial completado');
+    }
     savePet();
     closeM('m-pet-tutorial');
     renderPetCard();
-    toast('🎁 +50 🐾 puntitos · +20 felicidad para '+(pet.nombre||'tu mascota'));
     return;
   }
   savePet();
@@ -3926,7 +3945,7 @@ var TAB_TUTORIALS={
   perfil:{
     icon:'👤',
     title:'¡Tu perfil personal!',
-    msg:'Aquí está tu identidad como emisora 🌴<br><br>Edita tu <strong>foto, portada, bio</strong> y datos. Mientras más completo, mejor te conocerá TropicalBot y mejores consejos te dará.<br><br>Toca el ícono 🎨 arriba para cambiar el color del tema.'
+    msg:'Aquí está tu identidad como emisora 🌴<br><br>Edita tu <strong>foto, portada, bio</strong> y datos personales. Mientras más completo, mejor te conocerá TropicalBot y mejores consejos te dará.<br><br>Aquí también verás tu <strong>💡 Inspiración del día</strong> con ideas frescas para tus shows según tu estilo y los eventos del calendario.<br><br>Toca el ícono 🎨 arriba para cambiar el color del tema.'
   },
   mascota:{
     icon:'🐾',
@@ -3935,8 +3954,8 @@ var TAB_TUTORIALS={
   },
   progreso:{
     icon:'📊',
-    title:'¡Registra tu progreso!',
-    msg:'Aquí registras tus sesiones de transmisión cada día 📝<br><br>Anota las <strong>monedas</strong> que ganaste y la <strong>duración</strong> (horas y minutos). Eso alimenta toda la app y te da puntos para tu mascota.<br><br>También ves tu historial completo del mes.'
+    title:'¡Aquí registras tus sesiones!',
+    msg:'Esta es la pestaña <strong>más importante</strong> 📝<br><br>Cada vez que hagas un live, ven aquí y usa el formulario dorado de arriba para registrar:<br><br>🪙 Las <strong>monedas</strong> que ganaste<br>⏱️ Las <strong>horas y minutos</strong> transmitidos<br>📡 El <strong>tipo de horas</strong> (orgánica/fantasma)<br><br>Cada sesión que registres te da <strong>puntitos 🐾</strong> para tu mascota. ¡No olvides hacerlo todos los días!'
   },
   calc:{
     icon:'🎯',

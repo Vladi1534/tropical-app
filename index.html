@@ -836,6 +836,12 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
 .pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
+.pet-bowl{position:absolute;right:12%;bottom:8%;width:80px;height:40px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.pet-bowl:active{transform:scale(.92)}
+.pet-bowl::after{content:'';position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.18),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
+.pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
+@keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
+.bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .pet-walker{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
 .pet-shadow{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:75px;height:14px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 40%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
 @keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1)}50%{transform:translateX(-50%) scale(.95,.85)}}
@@ -1077,10 +1083,11 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 </div></div>
 
 <div id="m-pet-shop" class="modal"><div class="mbox">
-  <div class="mtt">🛍️ Tienda tropical <button class="m-close" onclick="closeM('m-pet-shop')">✕</button></div>
-  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Croquetas: </span><span style="font-family:'Fredoka',sans-serif;font-size:16px;color:var(--gold)" id="shop-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🐾</span></div>
-  <div style="display:flex;gap:0;margin-bottom:12px;background:var(--card2);border-radius:25px;padding:3px">
-    <button class="cmt-btn a" onclick="shopTab('accesorios')" id="st-acc">🎀 Accesorios</button>
+  <div class="mtt">🛍️ Tropi Shop <button class="m-close" onclick="closeM('m-pet-shop')">✕</button></div>
+  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Puntitos: </span><span style="font-family:'Fredoka',sans-serif;font-size:16px;color:var(--gold)" id="shop-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🐾</span></div>
+  <div style="display:flex;gap:0;margin-bottom:12px;background:var(--card2);border-radius:25px;padding:3px;flex-wrap:wrap">
+    <button class="cmt-btn a" onclick="shopTab('comida')" id="st-food">🍱 Comida</button>
+    <button class="cmt-btn" onclick="shopTab('accesorios')" id="st-acc">🎀 Accs</button>
     <button class="cmt-btn" onclick="shopTab('juguetes')" id="st-toy">🎾 Juguetes</button>
     <button class="cmt-btn" onclick="shopTab('habitat')" id="st-hab">🏠 Hábitat</button>
   </div>
@@ -1100,6 +1107,22 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="skipTutorial()" id="tut-skip" style="flex:1">Saltar</button>
     <button class="bp" onclick="nextTutorialStep()" id="tut-next" style="flex:2">Siguiente →</button>
   </div>
+</div></div>
+
+<!-- TUTORIAL V2 — Aparece una sola vez tras la migración -->
+<div id="m-tutorial-v2" class="modal"><div class="mbox" style="max-width:340px">
+  <div style="text-align:center;padding:10px 0">
+    <div style="font-size:48px;margin-bottom:4px">🎉</div>
+    <div style="font-family:'Fredoka',sans-serif;font-size:18px;color:var(--gold);font-weight:700">¡Sistema renovado!</div>
+    <div style="font-size:10px;color:var(--txt3);margin-top:4px">Conoce los cambios</div>
+  </div>
+  <div style="background:rgba(168,85,247,.08);border-radius:12px;padding:14px;margin:10px 0;border:1px solid rgba(168,85,247,.2);font-size:12px;color:var(--txt);line-height:1.6">
+    <div style="display:flex;align-items:start;gap:10px;margin-bottom:10px"><span style="font-size:22px">🍽️</span><div><strong style="color:var(--gold)">Plato interactivo</strong><br>Toca el plato del cuarto para alimentar a tu mascota. La comida se compra en Tropi Shop y se acumula en tu inventario.</div></div>
+    <div style="display:flex;align-items:start;gap:10px;margin-bottom:10px"><span style="font-size:22px">🎁</span><div><strong style="color:var(--gold)">Regalo de bienvenida</strong><br>Te dimos <strong>5 unidades de comida básica</strong> + <strong>50 puntitos extra</strong> para que pruebes el nuevo sistema.</div></div>
+    <div style="display:flex;align-items:start;gap:10px;margin-bottom:10px"><span style="font-size:22px">🐾</span><div><strong style="color:var(--gold)">Sesiones más rentables</strong><br>Ahora ganás el doble de puntitos cuando registrás sesiones, más bonus por horas transmitidas.</div></div>
+    <div style="display:flex;align-items:start;gap:10px"><span style="font-size:22px">🌟</span><div><strong style="color:var(--gold)">Comidas con tier</strong><br>Hay 4 comidas por mascota: básica, estándar y dos premium. Cada una rellena diferentes stats.</div></div>
+  </div>
+  <button class="bp" onclick="closeTutorialV2()" style="width:100%">¡Entendido! 🌴</button>
 </div></div>
 
 <!-- TAB TUTORIAL OVERLAY -->
@@ -2131,30 +2154,35 @@ var PET_TYPES={
   conejo:{name:'Conejita',nameM:'Conejito',desc:'Tierna y saltarina',emoji:'🐰'}
 };
 /* Species-specific food: each pet type eats what's natural for them */
+/* ===== PET FOODS V2 — Tiered + Specialized (consumibles del inventario) =====
+   Tier system: basic (relleno), standard (relleno), premium-felicidad, premium-completo
+   Cada comida da: hambre, felicidad, energía y XP
+   La emisora COMPRA estas comidas en Tropi Shop, las acumula en pet.inventario_comida,
+   y las usa tocando el plato del cuarto. */
 var PET_FOOD_BY_TYPE={
   gato:[
-    {id:'desayuno',name:'Atún',icon:'🐟',cost:5,xp:8,hunger:25,happy:3},
-    {id:'almuerzo',name:'Pescado',icon:'🐠',cost:8,xp:12,hunger:35,happy:5},
-    {id:'cena',name:'Sushi',icon:'🍣',cost:12,xp:18,hunger:40,happy:7},
-    {id:'postre',name:'Leche',icon:'🥛',cost:15,xp:10,hunger:10,happy:20},
-    {id:'snack',name:'Premio',icon:'🍪',cost:3,xp:4,hunger:12,happy:4}
+    {id:'leche',name:'Leche',icon:'🥛',tier:'basic',cost:5,hunger:20,happy:5,energy:5,xp:5,desc:'Tibia y nutritiva'},
+    {id:'atun',name:'Atún',icon:'🐟',tier:'standard',cost:12,hunger:40,happy:10,energy:5,xp:10,desc:'Su comida favorita del día a día'},
+    {id:'sushi',name:'Sushi',icon:'🍣',tier:'premium',cost:25,hunger:30,happy:35,energy:5,xp:15,desc:'¡La pone súper feliz!'},
+    {id:'salmon',name:'Salmón',icon:'🐠',tier:'premium-plus',cost:40,hunger:60,happy:25,energy:20,xp:25,desc:'Banquete completo'}
   ],
   perro:[
-    {id:'desayuno',name:'Galletas',icon:'🦴',cost:5,xp:8,hunger:25,happy:3},
-    {id:'almuerzo',name:'Carne',icon:'🥩',cost:8,xp:12,hunger:35,happy:5},
-    {id:'cena',name:'Costilla',icon:'🍖',cost:12,xp:18,hunger:40,happy:7},
-    {id:'postre',name:'Pollo',icon:'🍗',cost:15,xp:10,hunger:10,happy:20},
-    {id:'snack',name:'Treat',icon:'🍪',cost:3,xp:4,hunger:12,happy:4}
+    {id:'galletas',name:'Galletas',icon:'🍪',tier:'basic',cost:5,hunger:20,happy:5,energy:5,xp:5,desc:'Snack del día'},
+    {id:'hueso',name:'Hueso',icon:'🦴',tier:'standard',cost:12,hunger:40,happy:10,energy:5,xp:10,desc:'Su clásico favorito'},
+    {id:'carne',name:'Carne',icon:'🥩',tier:'premium',cost:25,hunger:30,happy:35,energy:5,xp:15,desc:'¡Lo pone súper feliz!'},
+    {id:'pollo',name:'Pollo',icon:'🍗',tier:'premium-plus',cost:40,hunger:60,happy:25,energy:20,xp:25,desc:'Banquete completo'}
   ],
   conejo:[
-    {id:'desayuno',name:'Zanahoria',icon:'🥕',cost:5,xp:8,hunger:25,happy:3},
-    {id:'almuerzo',name:'Lechuga',icon:'🥬',cost:8,xp:12,hunger:35,happy:5},
-    {id:'cena',name:'Hierba',icon:'🌿',cost:12,xp:18,hunger:40,happy:7},
-    {id:'postre',name:'Fresa',icon:'🍓',cost:15,xp:10,hunger:10,happy:20},
-    {id:'snack',name:'Heno',icon:'🌾',cost:3,xp:4,hunger:12,happy:4}
+    {id:'heno',name:'Heno',icon:'🌾',tier:'basic',cost:5,hunger:20,happy:5,energy:5,xp:5,desc:'Su base alimentaria'},
+    {id:'zanahoria',name:'Zanahoria',icon:'🥕',tier:'standard',cost:12,hunger:40,happy:10,energy:5,xp:10,desc:'Crujiente y dulce'},
+    {id:'lechuga',name:'Lechuga',icon:'🥬',tier:'premium',cost:25,hunger:30,happy:35,energy:5,xp:15,desc:'¡La pone súper feliz!'},
+    {id:'flores',name:'Flores',icon:'🌸',tier:'premium-plus',cost:40,hunger:60,happy:25,energy:20,xp:25,desc:'Banquete completo'}
   ]
 };
 function getPetFood(type){return PET_FOOD_BY_TYPE[type]||PET_FOOD_BY_TYPE.gato}
+function getFoodById(type,id){var arr=getPetFood(type);for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return null}
+function getBasicFoodId(type){var arr=getPetFood(type);for(var i=0;i<arr.length;i++)if(arr[i].tier==='basic')return arr[i].id;return null}
+var TIER_LABELS={'basic':{label:'Básica',color:'#94a3b8'},'standard':{label:'Estándar',color:'#22d3ee'},'premium':{label:'Premium 😊',color:'#a855f7'},'premium-plus':{label:'Premium 🌟',color:'#fbbf24'}};
 /* Backwards compatibility - default food list */
 var PET_FOOD=PET_FOOD_BY_TYPE.gato;
 var PET_TOYS=[
@@ -2604,6 +2632,9 @@ function getBgUrl(num){
   var nstr=num+'';while(nstr.length<2)nstr='0'+nstr;
   return SPRITE_BUCKET_URL+'bg/'+nstr+'.png?v='+SPRITE_VERSION;
 }
+function getItemUrl(file){
+  return SPRITE_BUCKET_URL+'items/'+file+'?v='+SPRITE_VERSION;
+}
 
 /* Low-level sprite animator using CSS background-position */
 function PetSprite(opts){
@@ -2729,6 +2760,16 @@ function moodToState(mood){
   return 'idle'; /* content, neutral, default */
 }
 
+function closeTutorialV2(){
+  closeM('m-tutorial-v2');
+  if(P&&P.mascota){P.mascota.mostrar_tutorial_v2=false;savePet()}
+}
+function maybeShowTutorialV2(){
+  if(P&&P.mascota&&P.mascota.mostrar_tutorial_v2){
+    setTimeout(function(){openM('m-tutorial-v2')},800);
+  }
+}
+
 var _currentPetController=null;
 function initPetSprite(){
   var el=document.getElementById('pet-sprite-el');
@@ -2742,6 +2783,8 @@ function initPetSprite(){
   _currentPetController=new PetController(el,category,variant);
   var state=moodToState(getMood(pet));
   _currentPetController.setState(state);
+  /* Update bowl sprite based on state */
+  updatePetBowl();
 }
 function petSpriteSetState(state){
   if(_currentPetController)_currentPetController.setState(state);
@@ -2790,6 +2833,7 @@ function renderPetCard(){
   /* Dev button (only in dev mode) */
   if(devModeActive())h+='<button onclick="devOpen()" style="position:absolute;top:10px;right:42px;z-index:5;background:rgba(168,85,247,.6);border:1px solid rgba(168,85,247,.4);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Dev panel">🛠️</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
+  h+='<div class="pet-bowl" id="pet-bowl-el" onclick="openBowl()" title="Tocar plato"><div class="bowl-sprite" id="bowl-sprite-el"></div></div>';
   h+='<div class="pet-walker"><div class="pet-shadow"></div><div id="pet-sprite-el" class="pet-sprite" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent"></div></div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
   h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood)+'</div></div>';
@@ -2831,16 +2875,29 @@ function renderPetCard(){
   h+='<div style="text-align:center;padding:4px 14px 8px;font-size:10px;color:var(--txt3);font-style:italic;line-height:1.4">'+randMsg+'</div>';
 
   h+='<div class="pet-actions">';
-  h+='<button class="pet-btn feed" onclick="openM(\'m-pet-feed\');renderFeedMenu()"'+(isSleep?' disabled':'')+' title="Alimentar con croquetas">🍽️ Comer</button>';
   h+='<button class="pet-btn play" onclick="petPlay()"'+(!canPlay?' disabled':'')+' title="Jugar (cuesta 15⚡ energía)">🎾 Jugar</button>';
-  h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')" title="Tienda tropical">🛍️ Tienda</button>';
+  h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'comida\')" title="Tropi Shop">🛍️ Tropi Shop</button>';
   h+='</div></div>';
   area.innerHTML=h;
   initPetSprite();
   startPetWander();
+  maybeShowTutorialV2();
 }
 
 function petDailyUpdate(pet){
+  /* === MIGRATION v2: ensure pet has new v2 fields === */
+  if(!pet.migracion_v2){
+    if(!pet.inventario_comida)pet.inventario_comida={};
+    var basicId=getBasicFoodId(pet.tipo||'gato');
+    if(basicId){pet.inventario_comida[basicId]=(pet.inventario_comida[basicId]||0)+5}
+    pet.croquetas=(pet.croquetas||0)+50;
+    pet.croquetas_total=(pet.croquetas_total||0)+50;
+    pet.bowl_filled_at=null;
+    pet.bowl_food=null;
+    pet.migracion_v2=true;
+    pet.mostrar_tutorial_v2=true;
+    /* Defer save to end of function */
+  }
   var nowTs=Date.now();
   var nowDate=new Date().toISOString().slice(0,10);
   /* Hourly energy regeneration based on ultima_energia_ts */
@@ -2889,9 +2946,11 @@ function selPetGender(g,el){selectedPetGender=g;document.getElementById('pg-f').
 function validateAdopt(){var btn=document.getElementById('btn-adopt');if(btn)btn.disabled=!selectedPetType||!document.getElementById('pet-name-input').value.trim()}
 
 function adoptPet(){
-  var name=document.getElementById('pet-name-input').value.trim();if(!name||!selectedPetType)return;
+  if(!selectedPetType||!P)return;
+  var name=document.getElementById('pet-name-input').value.trim()||'Mascota';
   var colores=generatePetColors(selectedPetType);
-  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0};
+  var inventario={};inventario[getBasicFoodId(selectedPetType)]=5;
+  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0,inventario_comida:inventario,bowl_filled_at:null,bowl_food:null,migracion_v2:true};
   P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();
   var rareMsg=colores.rare?' ¡Color raro: '+colores.rare+'! ✨':'';
   toast('🐾 ¡Adoptaste a '+name+'!'+rareMsg);
@@ -2899,33 +2958,104 @@ function adoptPet(){
   setTimeout(function(){if(P.mascota&&(P.mascota.tutorial_step===0||P.mascota.tutorial_step===undefined))startPetTutorial()},1500);
 }
 
+/* ===== BOWL & FEEDING v2 — Diegetic interface ===== */
+
+function updatePetBowl(){
+  /* Renders the bowl sprite based on pet.bowl_filled_at state */
+  var el=document.getElementById('bowl-sprite-el');
+  if(!el)return;
+  var pet=P&&P.mascota;if(!pet)return;
+  var bowlEl=document.getElementById('pet-bowl-el');
+  var isFull=!!pet.bowl_filled_at;
+  el.style.backgroundImage='url("'+getItemUrl(isFull?'bowl_full.png':'bowl_empty.png')+'")';
+  /* Empty hint glow when bowl has been empty for a while AND pet is hungry */
+  if(bowlEl){
+    var hambreLow=(pet.hambre||100)<50;
+    bowlEl.classList.toggle('empty-hint',!isFull&&hambreLow);
+  }
+}
+
+function openBowl(){
+  var pet=P&&P.mascota;if(!pet)return;
+  /* If bowl already has food, gentle reminder */
+  if(pet.bowl_filled_at){toast('🍽️ El plato ya tiene comida');return}
+  /* If sleeping, don't disturb */
+  if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
+  openM('m-pet-feed');
+  renderFeedMenu();
+}
+
 function renderFeedMenu(){
   var pet=P.mascota;if(!pet)return;
   document.getElementById('feed-croquetas').textContent=fmt(pet.croquetas||0);
-  var hoy=new Date().toISOString().slice(0,10);if(pet.ultima_comida!==hoy){pet.comidas_hoy={};pet.ultima_comida=hoy}
-  var fed=pet.comidas_hoy||{};var h='';
+  if(!pet.inventario_comida)pet.inventario_comida={};
+  var inv=pet.inventario_comida;
   var foods=getPetFood(pet.tipo||'gato');
-  for(var i=0;i<foods.length;i++){var f=foods[i];var bought=fed[f.id]||false;var canBuy=(pet.croquetas||0)>=f.cost&&!bought;
-    h+='<div class="feed-item'+(bought?' bought':'')+((!canBuy&&!bought)?' disabled':'')+'" onclick="'+(canBuy?'feedPet(\''+f.id+'\')':'')+'">';
-    h+='<div class="fi-icon">'+f.icon+'</div><div class="fi-name">'+f.name+'</div>';
-    h+='<div class="fi-cost">'+(bought?'✅':'🐾 '+f.cost)+'</div>';
-    h+='<div class="fi-xp">+'+(bought?'':f.xp+' XP · +'+f.happy+' 😊')+'</div></div>';
-  }h+='</div>';document.getElementById('feed-grid').innerHTML=h;
+  var totalItems=0;
+  for(var k in inv)totalItems+=(inv[k]||0);
+  var h='';
+  if(totalItems===0){
+    /* Empty inventory state — guide user to shop */
+    h='<div style="text-align:center;padding:20px 14px">';
+    h+='<div style="font-size:42px;margin-bottom:8px">🛒</div>';
+    h+='<div style="font-family:Fredoka,sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px">No tienes comida</div>';
+    h+='<div style="font-size:11px;color:var(--txt2);line-height:1.5;margin-bottom:14px">Compra comidas en la tienda y se acumularán en tu inventario para alimentar a '+(pet.nombre||'tu mascota')+' cuando quieras.</div>';
+    h+='<button class="bp" onclick="closeM(\'m-pet-feed\');openM(\'m-pet-shop\');shopTab(\'comida\')">🛒 Ir a la tienda</button>';
+    h+='</div>';
+  }else{
+    h+='<div style="font-size:11px;color:var(--txt2);text-align:center;margin:0 0 10px;padding:0 8px;line-height:1.4">Toca una comida para llenar el plato. La consumes una unidad.</div>';
+    for(var i=0;i<foods.length;i++){var f=foods[i];var owned=inv[f.id]||0;
+      if(owned<=0)continue; /* Only show foods owned */
+      var tier=TIER_LABELS[f.tier]||TIER_LABELS.basic;
+      h+='<div class="feed-item" onclick="consumeFood(\''+f.id+'\')">';
+      h+='<div class="fi-icon">'+f.icon+'</div>';
+      h+='<div class="fi-name">'+f.name+' <span style="color:'+tier.color+';font-size:8px">'+tier.label+'</span></div>';
+      h+='<div class="fi-cost" style="color:var(--cyan)">×'+owned+'</div>';
+      h+='<div class="fi-xp">'+(f.hunger?'+'+f.hunger+' 🍽️ ':'')+(f.happy?'+'+f.happy+' 😊 ':'')+(f.energy?'+'+f.energy+' ⚡':'')+'</div>';
+      h+='</div>';
+    }
+    /* Footer with shop link */
+    h+='<div style="grid-column:1/-1;text-align:center;margin-top:6px;padding-top:8px;border-top:1px dashed rgba(168,85,247,.15)"><a href="javascript:closeM(\'m-pet-feed\');openM(\'m-pet-shop\');shopTab(\'comida\')" style="font-size:10px;color:var(--cyan);text-decoration:none">🛒 Comprar más comidas</a></div>';
+  }
+  document.getElementById('feed-grid').innerHTML=h;
 }
 
-function feedPet(foodId){
+function consumeFood(foodId){
   var pet=P.mascota;if(!pet)return;
-  var foods=getPetFood(pet.tipo||'gato');
-  var food=null;for(var i=0;i<foods.length;i++)if(foods[i].id===foodId)food=foods[i];
-  if(!food||(pet.croquetas||0)<food.cost)return;
-  pet.croquetas-=food.cost;pet.hambre=Math.min(100,(pet.hambre||0)+food.hunger);
-  pet.felicidad=Math.min(100,(pet.felicidad||0)+food.happy);pet.xp=(pet.xp||0)+food.xp;
-  if(!pet.comidas_hoy)pet.comidas_hoy={};pet.comidas_hoy[foodId]=true;pet.ultima_comida=new Date().toISOString().slice(0,10);
-  checkPetLevelUp(pet);savePet();renderFeedMenu();renderPetCard();
-  /* Play eating animation as one-shot after re-render */
+  if(!pet.inventario_comida)pet.inventario_comida={};
+  if((pet.inventario_comida[foodId]||0)<=0){toast('No te queda esa comida');return}
+  var food=getFoodById(pet.tipo||'gato',foodId);
+  if(!food)return;
+  /* Consume from inventory */
+  pet.inventario_comida[foodId]=(pet.inventario_comida[foodId]||0)-1;
+  /* Apply stats boost */
+  pet.hambre=Math.min(100,(pet.hambre||0)+food.hunger);
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+food.happy);
+  pet.energia=Math.min(100,(pet.energia||0)+(food.energy||0));
+  pet.xp=(pet.xp||0)+food.xp;
+  pet.ultima_comida=new Date().toISOString().slice(0,10);
+  /* Fill the bowl visually */
+  pet.bowl_filled_at=Date.now();
+  pet.bowl_food=foodId;
+  checkPetLevelUp(pet);savePet();
+  closeM('m-pet-feed');
+  renderPetCard();
+  /* Play eating animation right after re-render */
   setTimeout(function(){petSpritePlayOnce('eating')},50);
-  toast(food.icon+' '+(pet.nombre)+' comió '+food.name+' (+'+food.xp+' XP)');
+  /* Empty the bowl after eating animation completes (~5s) */
+  setTimeout(function(){
+    if(P&&P.mascota){
+      P.mascota.bowl_filled_at=null;
+      P.mascota.bowl_food=null;
+      savePet();
+      updatePetBowl();
+    }
+  },5000);
+  toast(food.icon+' '+(pet.nombre)+' está comiendo '+food.name+' · +'+food.xp+' XP');
 }
+
+/* Backwards compat: feedPet still callable but routes to consumeFood */
+function feedPet(foodId){consumeFood(foodId)}
 
 function petPlay(){
   var pet=P.mascota;if(!pet)return;
@@ -3174,9 +3304,9 @@ function devDeletePet(){
 }
 
 /* ===== SHOP ===== */
-var shopMode='accesorios';
+var shopMode='comida';
 function shopTab(tab){
-  shopMode=tab;var tabs=['acc','toy','hab'];var names=['accesorios','juguetes','habitat'];
+  shopMode=tab;var tabs=['food','acc','toy','hab'];var names=['comida','accesorios','juguetes','habitat'];
   for(var i=0;i<tabs.length;i++){var btn=document.getElementById('st-'+tabs[i]);if(btn){btn.classList.toggle('a',names[i]===tab)}}
   renderShop();
 }
@@ -3184,7 +3314,21 @@ function renderShop(){
   var pet=P.mascota;if(!pet)return;
   document.getElementById('shop-croquetas').textContent=fmt(pet.croquetas||0);
   var h='';var accs=pet.accesorios||[];
-  if(shopMode==='accesorios'){
+  if(shopMode==='comida'){
+    if(!pet.inventario_comida)pet.inventario_comida={};
+    var foods=getPetFood(pet.tipo||'gato');
+    h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Comidas consumibles · se acumulan en tu inventario · úsalas tocando el plato</div>';
+    for(var fi=0;fi<foods.length;fi++){var f=foods[fi];
+      var owned=pet.inventario_comida[f.id]||0;
+      var canBuy=(pet.croquetas||0)>=f.cost;
+      var tier=TIER_LABELS[f.tier]||TIER_LABELS.basic;
+      h+='<div class="feed-item'+(!canBuy?' disabled':'')+'" onclick="'+(canBuy?'buyFoodConsumable(\''+f.id+'\')':'')+'">';
+      h+='<div class="fi-icon">'+f.icon+'</div>';
+      h+='<div class="fi-name">'+f.name+' <span style="display:block;color:'+tier.color+';font-size:8px;margin-top:1px">'+tier.label+'</span></div>';
+      h+='<div class="fi-cost">🐾 '+f.cost+(owned>0?' <span style="color:var(--cyan);font-size:9px">×'+owned+'</span>':'')+'</div>';
+      h+='<div class="fi-xp">'+(f.hunger?'+'+f.hunger+' 🍽️ ':'')+(f.happy?'+'+f.happy+' 😊 ':'')+(f.energy?'+'+f.energy+' ⚡':'')+'</div></div>';
+    }
+  }else if(shopMode==='accesorios'){
     for(var i=0;i<PET_ACCS.length;i++){var a=PET_ACCS[i];var owned=accs.indexOf(a.id)>-1;var canBuy=(pet.croquetas||0)>=a.cost&&!owned;
       h+='<div class="feed-item'+(owned?' bought':'')+((!canBuy&&!owned)?' disabled':'')+'" onclick="'+(canBuy?'buyAcc(\''+a.id+'\')':owned?'togAcc(\''+a.id+'\')':'')+'">';
       h+='<div class="fi-icon">'+a.icon+'</div><div class="fi-name">'+a.name+'</div>';
@@ -3220,6 +3364,16 @@ function renderShop(){
   document.getElementById('shop-grid').innerHTML=h;
 }
 function buyAcc(id){var pet=P.mascota;if(!pet)return;var a=null;for(var i=0;i<PET_ACCS.length;i++)if(PET_ACCS[i].id===id)a=PET_ACCS[i];if(!a||(pet.croquetas||0)<a.cost)return;pet.croquetas-=a.cost;if(!pet.accesorios)pet.accesorios=[];pet.accesorios.push(id);pet.xp=(pet.xp||0)+15;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎀 ¡'+a.name+' comprado!')}
+function buyFoodConsumable(id){
+  var pet=P.mascota;if(!pet)return;
+  var f=getFoodById(pet.tipo||'gato',id);
+  if(!f||(pet.croquetas||0)<f.cost){toast('🐾 No tienes suficientes puntitos');return}
+  pet.croquetas-=f.cost;
+  if(!pet.inventario_comida)pet.inventario_comida={};
+  pet.inventario_comida[id]=(pet.inventario_comida[id]||0)+1;
+  savePet();renderShop();renderPetCard();
+  toast(f.icon+' ¡'+f.name+' comprado! ×'+pet.inventario_comida[id]+' en inventario');
+}
 function togAcc(id){var pet=P.mascota;if(!pet||!pet.accesorios)return;var idx=pet.accesorios.indexOf(id);if(idx>-1)pet.accesorios.splice(idx,1);else pet.accesorios.push(id);savePet();renderPetCard();renderShop();toast(idx>-1?'Accesorio quitado':'Accesorio puesto')}
 function buyToy(id){var pet=P.mascota;if(!pet)return;var t=null;for(var i=0;i<PET_TOYS.length;i++)if(PET_TOYS[i].id===id)t=PET_TOYS[i];if(!t||(pet.croquetas||0)<t.cost)return;pet.croquetas-=t.cost;pet.juguete_activo=id;var exp=new Date();exp.setDate(exp.getDate()+t.days);pet.juguete_expira=exp.toISOString().slice(0,10);pet.xp=(pet.xp||0)+10;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎾 '+t.name+' activado por '+t.days+' días!')}
 function buyHabitat(id,cost){
@@ -3241,7 +3395,18 @@ function useHabitat(id){
   toast('🏠 Hábitat cambiado');
 }
 
-function awardCroquetas(monedas){var pet=P.mascota;if(!pet||!monedas)return 0;var croq=coinsToCroquetas(monedas);pet.croquetas=(pet.croquetas||0)+croq;pet.croquetas_total=(pet.croquetas_total||0)+croq;pet.xp=(pet.xp||0)+3;checkPetLevelUp(pet);savePet();renderPetCard();return croq}
+function awardCroquetas(monedas,horas){
+  var pet=P.mascota;if(!pet||(!monedas&&!horas))return 0;
+  /* v2: more generous puntitos since stats don't auto-fill from sessions */
+  var croq=monedas?coinsToCroquetas(monedas)*2:0; /* 2x boost for v2 */
+  if(horas&&horas>0)croq+=Math.round(horas*10); /* +10 puntitos per hour transmitted */
+  if(croq<1)croq=1;
+  pet.croquetas=(pet.croquetas||0)+croq;
+  pet.croquetas_total=(pet.croquetas_total||0)+croq;
+  pet.xp=(pet.xp||0)+5;
+  checkPetLevelUp(pet);savePet();renderPetCard();
+  return croq;
+}
 function savePet(){if(!P||!U)return;sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:{mascota:P.mascota},h:{'Prefer':'return=minimal'}}).catch(function(e){console.error('Pet save error:',e)})}
 
 /* ===== PET TUTORIAL ===== */
@@ -3786,7 +3951,7 @@ function regSession(){
     document.getElementById('r-date').value='';
     document.getElementById('r-date-field').style.display='none';
     document.getElementById('r-date-link').textContent='📅 ¿Es de otro día? Cambiar fecha';
-    var croq=awardCroquetas(c);
+    var croq=awardCroquetas(c,hr);
     btn.disabled=false;btn.textContent='+ Registrar sesión';
     var extraMsg='';
     if(P.contrato_tipo==='antigua'&&hr<1){

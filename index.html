@@ -1104,6 +1104,70 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <!-- TAB TUTORIAL OVERLAY -->
 <div id="m-tab-tutorial" class="modal"><div class="mbox" style="max-width:340px" id="tab-tut-content"></div></div>
 
+<!-- DEV MODE PANEL -->
+<div id="m-dev-panel" class="modal"><div class="mbox" style="max-width:360px;max-height:85vh;overflow-y:auto">
+  <div class="mtt">🛠️ Dev Mode <button class="m-close" onclick="closeM('m-dev-panel')">✕</button></div>
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:12px;line-height:1.4">Panel solo visible para desarrollador. Permite manipular el estado de la mascota para probar mecánicas sin esperar.</div>
+  
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">⚡ Stats</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devSetStat('energia',100)">⚡ Full energía</button>
+    <button class="bs" onclick="devSetStat('energia',5)">⚡ Drenar energía</button>
+    <button class="bs" onclick="devSetStat('felicidad',100)">😊 Full felicidad</button>
+    <button class="bs" onclick="devSetStat('felicidad',10)">😢 Drenar felicidad</button>
+    <button class="bs" onclick="devSetStat('hambre',100)">🍽️ Full hambre</button>
+    <button class="bs" onclick="devSetStat('hambre',10)">🥺 Drenar hambre</button>
+  </div>
+  
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">😊 Mood test</div>
+  <div style="font-size:9px;color:var(--txt3);margin-bottom:6px">Setea las stats para forzar cada mood:</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devSetMood('happy')">😄 Happy</button>
+    <button class="bs" onclick="devSetMood('content')">🙂 Content</button>
+    <button class="bs" onclick="devSetMood('neutral')">😐 Neutral</button>
+    <button class="bs" onclick="devSetMood('sad')">😢 Sad</button>
+    <button class="bs" onclick="devSetMood('hungry')">🤤 Hungry</button>
+    <button class="bs" onclick="devSetMood('sleeping')">💤 Sleeping</button>
+  </div>
+  
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">⭐ Nivel & XP</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devSetLevel(1)">👶 Bebé (1)</button>
+    <button class="bs" onclick="devSetLevel(8)">🌱 Joven (8)</button>
+    <button class="bs" onclick="devSetLevel(18)">✨ Adulta (18)</button>
+    <button class="bs" onclick="devSetLevel(28)">👑 Tropical (28)</button>
+    <button class="bs" onclick="devAddXP(100)">+100 XP</button>
+    <button class="bs" onclick="devAddXP(500)">+500 XP</button>
+  </div>
+  
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">🐾 Recursos</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devAddCroquetas(100)">+100 🐾</button>
+    <button class="bs" onclick="devAddCroquetas(1000)">+1000 🐾</button>
+    <button class="bs" onclick="devUnlockHabitats()">🏠 Desbloquear hábitats</button>
+    <button class="bs" onclick="devClearAccs()">🎀 Quitar accesorios</button>
+  </div>
+  
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">🎬 Animaciones</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devTriggerWander()">🚶 Forzar wander</button>
+    <button class="bs" onclick="devTriggerPlay()">🎾 Animar jugar</button>
+    <button class="bs" onclick="devRegenColors()">🎨 Re-rolar colores</button>
+    <button class="bs" onclick="devResetTutorial()">📖 Reset tutorial</button>
+  </div>
+  
+  <div style="font-size:11px;color:var(--red);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">⚠️ Peligrosos</div>
+  <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devDeletePet()" style="color:var(--red);border-color:rgba(239,68,68,.3)">🗑️ Eliminar mascota (forzar adopción)</button>
+    <button class="bs" onclick="devDisable()" style="color:var(--txt3)">🚪 Desactivar dev mode</button>
+  </div>
+  
+  <div style="font-size:9px;color:var(--txt3);text-align:center;margin-top:14px;padding-top:10px;border-top:1px dashed rgba(168,85,247,.15)">
+    Estado actual de la mascota:<br>
+    <span id="dev-pet-state" style="font-family:monospace;font-size:10px;color:var(--cyan)">—</span>
+  </div>
+</div></div>
+
 <!-- NAV -->
 <div class="nav" id="nav">
   <button class="nt a" onclick="go('perfil')" id="tab-perfil"><span class="te">👤</span>Perfil</button>
@@ -2517,6 +2581,8 @@ function renderPetCard(){
   var h='<div class="pet-card">';
   /* Help button */
   h+='<button onclick="resetTutorial()" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Ver tutorial">?</button>';
+  /* Dev button (only in dev mode) */
+  if(devModeActive())h+='<button onclick="devOpen()" style="position:absolute;top:10px;right:42px;z-index:5;background:rgba(168,85,247,.6);border:1px solid rgba(168,85,247,.4);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Dev panel">🛠️</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
   h+='<div class="pet-walker"><div class="pet-shadow"></div><div class="pet-svg" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
@@ -2765,6 +2831,118 @@ function petWander(){
   /* Random target between 20% and 80% of scene width */
   var newLeft=20+Math.random()*60;
   w.style.left=newLeft+'%';
+}
+
+/* ===== DEV MODE — para probar mecánicas sin esperar ===== */
+var DEV_USER_IDS=[1493651830]; /* Telegram IDs con acceso permanente a dev mode */
+function devModeActive(){
+  /* Auto-active for developer Telegram IDs */
+  if(U&&DEV_USER_IDS.indexOf(U.id)>=0)return true;
+  /* Or via localStorage flag */
+  try{return window.localStorage&&window.localStorage.getItem('tropical-dev')==='1'}catch(e){return false}
+}
+function devEnable(){try{window.localStorage&&window.localStorage.setItem('tropical-dev','1')}catch(e){}toast('🛠️ Dev mode activado')}
+function devDisable(){try{window.localStorage&&window.localStorage.removeItem('tropical-dev')}catch(e){}closeM('m-dev-panel');renderPetCard();toast('🚪 Dev mode desactivado')}
+function devCheckURL(){
+  try{
+    var p=new URLSearchParams(window.location.search);
+    if(p.get('dev')==='1'){devEnable()}
+    if(p.get('dev')==='0'){devDisable()}
+  }catch(e){}
+}
+function devOpen(){
+  if(!P||!P.mascota){toast('Necesitas tener una mascota');return}
+  updateDevState();
+  openM('m-dev-panel');
+}
+function updateDevState(){
+  var pet=P&&P.mascota;if(!pet)return;
+  var el=document.getElementById('dev-pet-state');if(!el)return;
+  el.innerHTML='Nv.'+(pet.nivel||1)+' XP:'+(pet.xp||0)+' · 😊'+Math.round(pet.felicidad||0)+' 🍽️'+Math.round(pet.hambre||0)+' ⚡'+Math.round(pet.energia||0)+' · 🐾'+(pet.croquetas||0)+'<br>Mood: '+getMood(pet)+' · Tap_count: '+(pet.taps_count||0);
+}
+function devSetStat(stat,val){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet[stat]=val;
+  if(stat==='energia')pet.ultima_energia_ts=Date.now();
+  savePet();renderPetCard();updateDevState();
+  toast('🛠️ '+stat+' = '+val);
+}
+function devSetMood(mood){
+  var pet=P&&P.mascota;if(!pet)return;
+  /* Set stats to match the mood logic in getMood() */
+  if(mood==='sleeping'){pet.energia=10;pet.ultima_energia_ts=Date.now()}
+  else if(mood==='hungry'){pet.hambre=15;pet.felicidad=50;pet.energia=50}
+  else if(mood==='sad'){pet.felicidad=20;pet.hambre=50;pet.energia=50}
+  else if(mood==='happy'){pet.felicidad=95;pet.hambre=80;pet.energia=80}
+  else if(mood==='content'){pet.felicidad=70;pet.hambre=70;pet.energia=70}
+  else if(mood==='neutral'){pet.felicidad=50;pet.hambre=60;pet.energia=60}
+  savePet();renderPetCard();updateDevState();
+  toast('🛠️ Mood: '+mood);
+}
+function devSetLevel(lvl){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.nivel=lvl;
+  pet.xp=xpForLevel(lvl-1)||0;
+  savePet();renderPetCard();updateDevState();
+  toast('🛠️ Nivel '+lvl);
+}
+function devAddXP(amount){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.xp=(pet.xp||0)+amount;
+  checkPetLevelUp(pet);savePet();renderPetCard();updateDevState();
+  toast('🛠️ +'+amount+' XP');
+}
+function devAddCroquetas(amount){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.croquetas=(pet.croquetas||0)+amount;
+  pet.croquetas_total=(pet.croquetas_total||0)+amount;
+  savePet();renderPetCard();updateDevState();
+  toast('🛠️ +'+amount+' 🐾');
+}
+function devUnlockHabitats(){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.habitats_owned=['default','playa','jardin','casa','mansion','arcoiris','espacio'];
+  savePet();renderPetCard();
+  toast('🛠️ Todos los hábitats desbloqueados');
+}
+function devClearAccs(){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.accesorios=[];
+  savePet();renderPetCard();
+  toast('🛠️ Accesorios quitados');
+}
+function devTriggerWander(){
+  petWander();
+  toast('🛠️ Wander forzado');
+}
+function devTriggerPlay(){
+  showPlayAnimation();
+  toast('🛠️ Animación jugar');
+}
+function devRegenColors(){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.colores=generatePetColors(pet.tipo||'gato');
+  savePet();renderPetCard();
+  var rare=pet.colores.rare?' raro: '+pet.colores.rare:'';
+  toast('🛠️ Colores re-rolados'+rare);
+}
+function devResetTutorial(){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.tutorial_step=0;
+  pet.tutorial_reward_given=false;
+  savePet();
+  /* Also clear tab tutorials */
+  P.tutoriales_vistos={};
+  save({tutoriales_vistos:{}});
+  toast('🛠️ Tutoriales reseteados');
+}
+function devDeletePet(){
+  if(!confirm('¿Eliminar mascota? Esto fuerza la pantalla de adopción'))return;
+  P.mascota=null;
+  sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:{mascota:null},h:{'Prefer':'return=minimal'}});
+  closeM('m-dev-panel');
+  renderPetCard();
+  toast('🛠️ Mascota eliminada');
 }
 
 /* ===== SHOP ===== */
@@ -4153,6 +4331,8 @@ function toggleTheme(){
 }
 /* Restore saved theme */
 try{if(window.localStorage&&window.localStorage.getItem('tropical-theme')==='light'){document.body.classList.add('theme-light');var tb=document.getElementById('theme-btn');if(tb){tb.textContent='☀️';tb.style.borderColor='rgba(46,125,50,.3)'}}}catch(e){}
+/* Check URL for ?dev=1 to toggle dev mode */
+devCheckURL();
 
 
 /* ===== ADMIN PANEL JS ===== */

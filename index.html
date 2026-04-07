@@ -831,6 +831,8 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes petLookAround{0%,40%,100%{transform:translateX(0)}45%{transform:translateX(3px)}55%{transform:translateX(-3px)}60%{transform:translateX(0)}}
 @keyframes zzz{0%{opacity:0;transform:translateY(0) scale(.5)}50%{opacity:.7;transform:translateY(-12px) scale(1)}100%{opacity:0;transform:translateY(-24px) scale(.6)}}
 @keyframes heartPop{0%{opacity:0;transform:scale(0) translateY(0)}30%{opacity:1;transform:scale(1.2) translateY(-8px)}60%{opacity:.8;transform:scale(.9) translateY(-16px)}100%{opacity:0;transform:scale(.5) translateY(-28px)}}
+@keyframes tapHeart{0%{opacity:0;transform:scale(.3) translate(-50%,-50%)}20%{opacity:1;transform:scale(1.4) translate(-50%,-60%)}100%{opacity:0;transform:scale(.8) translate(-50%,-200%)}}
+.pet-svg{transition:transform .15s}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 .pet-card{margin:10px 16px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(251,191,36,.2);background:linear-gradient(180deg,rgba(251,191,36,.06),rgba(168,85,247,.04));position:relative}
 .pet-card.no-pet{cursor:pointer;text-align:center;padding:20px;border-style:dashed}
@@ -2088,8 +2090,8 @@ var PET_HABITATS=[
 /* XP table: ~3x slower than v1. Egg hatches at level 5 */
 var PET_XP_TABLE=[0,30,70,120,180,260,360,480,620,780,960,1170,1400,1660,1950,2280,2650,3060,3520,4030,4600,5230,5930,6700,7550,8480,9500,10600,11800,13100,14500,16000,17600,19400,21400,23600,26000,28600,31400,34500,37800,41400,45300,49500,54000,59000,64400,70200,76500,83300];
 
-function getPetStage(lvl){if(lvl<5)return 0;if(lvl<12)return 1;if(lvl<22)return 2;if(lvl<32)return 3;return 4}
-function getPetStageName(s){return['Huevo','Bebé','Joven','Adulta','Tropical'][s]}
+function getPetStage(lvl){if(lvl<8)return 1;if(lvl<18)return 2;if(lvl<28)return 3;return 4}
+function getPetStageName(s){return['','Bebé','Joven','Adulta','Tropical'][s]}
 function xpForLevel(lvl){return PET_XP_TABLE[Math.min(lvl,PET_XP_TABLE.length-1)]||(83300+(lvl-49)*5000)}
 function coinsToCroquetas(c){if(c<=0)return 0;return Math.max(1,Math.round(Math.log(c+1)*3.2))}
 function getMood(pet){var h=pet.hambre||0,f=pet.felicidad||0,e=pet.energia||0;if(e<15)return'sleeping';if(h<15)return'hungry';if(f<20)return'sad';if(f>70&&h>50)return'happy';if(f>50)return'content';return'neutral'}
@@ -2493,7 +2495,7 @@ function renderPetCard(){
   var pet=P.mascota;
   if(!pet){
     area.innerHTML='<div class="pet-card no-pet" onclick="openM(\'m-pet-select\');initPetSelect()">'+
-      '<div style="font-size:48px;margin-bottom:10px">🥚</div>'+
+      '<div style="font-size:48px;margin-bottom:10px">🐾</div>'+
       '<div style="font-family:Fredoka,sans-serif;font-size:17px;font-weight:700;color:var(--gold);margin-bottom:6px">Adopta tu mascota tropical</div>'+
       '<div style="font-size:12px;color:var(--txt2);line-height:1.5;padding:0 12px">Tu compañera vivirá contigo mientras transmites. Crecerá, evolucionará y necesitará tus cuidados.</div>'+
       '<div style="display:flex;justify-content:center;gap:10px;margin-top:12px;font-size:10px;color:var(--txt3)">'+
@@ -2515,7 +2517,7 @@ function renderPetCard(){
   /* Help button */
   h+='<button onclick="resetTutorial()" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Ver tutorial">?</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
-  h+='<div class="pet-svg">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div>';
+  h+='<div class="pet-svg" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
   h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood)+'</div></div>';
   h+='<div class="pet-croquetas">🐾 '+fmt(pet.croquetas||0)+'</div></div>';
@@ -2594,10 +2596,9 @@ function petDailyUpdate(pet){
 function checkPetLevelUp(pet){
   var lvl=pet.nivel||1;var needed=xpForLevel(lvl);
   while(pet.xp>=needed&&lvl<60){lvl++;needed=xpForLevel(lvl);
-    if(lvl===5)toast('🐣 ¡'+(pet.nombre||'Tu mascota')+' nació del huevo!');
-    else if(lvl===12)toast('🌟 ¡'+(pet.nombre)+' evolucionó a Joven!');
-    else if(lvl===22)toast('🔥 ¡'+(pet.nombre)+' evolucionó a Adulta!');
-    else if(lvl===32)toast('👑 ¡'+(pet.nombre)+' alcanzó nivel Tropical!');
+    if(lvl===8)toast('🌟 ¡'+(pet.nombre)+' evolucionó a Joven!');
+    else if(lvl===18)toast('🔥 ¡'+(pet.nombre)+' evolucionó a Adulta!');
+    else if(lvl===28)toast('👑 ¡'+(pet.nombre)+' alcanzó nivel Tropical!');
   }pet.nivel=lvl;
 }
 
@@ -2665,6 +2666,55 @@ function petPlay(){
   toast('🎾 ¡'+(pet.nombre)+' jugó! (+'+xpGain+' XP)'+(toy?' con '+toy.name:''));
 }
 
+/* ===== TAP-TO-PET (Tom Cat style interaction) ===== */
+var _petTapSaveTimer=null;
+function petTap(e){
+  var pet=P.mascota;if(!pet)return;
+  var mood=getMood(pet);
+  if(mood==='sleeping'){
+    showTapHeart(e,'💤');
+    toast('💤 Está durmiendo, déjala descansar');
+    return;
+  }
+  /* Daily tap counter — max 30 taps for XP per day */
+  var hoy=new Date().toISOString().slice(0,10);
+  if(pet.taps_dia!==hoy){pet.taps_count=0;pet.taps_dia=hoy}
+  var rewarded=false;
+  if((pet.taps_count||0)<30){
+    pet.felicidad=Math.min(100,(pet.felicidad||0)+1);
+    pet.xp=(pet.xp||0)+1;
+    pet.taps_count=(pet.taps_count||0)+1;
+    rewarded=true;
+    checkPetLevelUp(pet);
+  }
+  /* Visual: heart particle at click position */
+  var hearts=mood==='hungry'?['🍽️','🐾','🥺']:mood==='sad'?['💙','🥺','💧']:['💕','❤️','💖','💗','✨','💝','😊'];
+  showTapHeart(e,hearts[Math.floor(Math.random()*hearts.length)]);
+  /* Bounce */
+  var svg=document.querySelector('.pet-svg');
+  if(svg){svg.style.transform='scale(1.08)';setTimeout(function(){svg.style.transform=''},150)}
+  /* Telegram haptic feedback */
+  try{if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback){window.Telegram.WebApp.HapticFeedback.impactOccurred('light')}}catch(err){}
+  /* Debounced save (don't hammer API) */
+  if(rewarded){
+    if(_petTapSaveTimer)clearTimeout(_petTapSaveTimer);
+    _petTapSaveTimer=setTimeout(function(){savePet();renderPetCard()},2000);
+  }
+}
+function showTapHeart(e,emoji){
+  var el=document.createElement('div');
+  el.textContent=emoji||'💕';
+  el.style.cssText='position:fixed;font-size:28px;pointer-events:none;z-index:9999;animation:tapHeart 1.2s ease-out forwards;text-shadow:0 2px 8px rgba(0,0,0,.3)';
+  var x,y;
+  if(e&&e.clientX){x=e.clientX;y=e.clientY}
+  else if(e&&e.touches&&e.touches[0]){x=e.touches[0].clientX;y=e.touches[0].clientY}
+  else{var r=e&&e.currentTarget?e.currentTarget.getBoundingClientRect():null;x=r?r.left+r.width/2:200;y=r?r.top+r.height/2:200}
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+  document.body.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.remove()},1300);
+}
+
 /* ===== SHOP ===== */
 var shopMode='accesorios';
 function shopTab(tab){
@@ -2717,13 +2767,13 @@ function getPetTutorialSteps(pet){
   var foodIcons=foods.map(function(f){return f.icon}).join(' ');
   return[
     {title:'¡Hola mi querida! 🌴',content:'¡Bienvenida al mundo de las mascotas tropicales! 🎉<br><br>Soy <strong>TropicalBot</strong> y voy a presentarte a tu nueva compañera. Te prometo que vas a amarla tanto como ella te ama a ti.<br><br>¿Lista para conocer todos los secretos? 💫'},
-    {title:'¡Saluda a '+n+'! '+(pet.genero==='macho'?'♂':'♀'),content:'Mira qué <strong>'+(pet.genero==='macho'?'lindo':'linda')+'</strong> está '+n+' 😍<br><br>Es '+(pet.genero==='macho'?'un':'una')+' '+tipoNombre+' única — sus colores y pelaje fueron generados solo para ti. Nunca habrá otra mascota igual.<br><br>Cada vez que entres a esta pestaña '+n+' te recibirá feliz y ganarás XP solo por visitarla 💕'},
+    {title:'¡Saluda a '+n+'! '+(pet.genero==='macho'?'♂':'♀'),content:'Mira qué <strong>'+(pet.genero==='macho'?'lindo':'linda')+'</strong> está '+n+' 😍<br><br>Es '+(pet.genero==='macho'?'un':'una')+' '+tipoNombre+' única — sus colores y pelaje fueron generados solo para ti. Nunca habrá otra mascota igual.<br><br>💡 <strong>Tip:</strong> Toca a '+n+' para acariciarla y subirle la felicidad 💕<br><br>Cada vez que entres a esta pestaña '+n+' te recibirá feliz y ganarás XP solo por visitarla'},
     {title:'Sus 3 necesidades 💝',content:'Como toda buena compañera, '+n+' tiene 3 cositas que cuidar:<br><br>😊 <strong>Felicidad</strong> — sube al jugar y alimentar<br>🍽️ <strong>Hambre</strong> — sube al darle comida<br>⚡ <strong>Energía</strong> — baja al jugar, vuelve sola (+10 cada hora)<br><br>Si la abandonas las barras bajan... pero <strong>nunca muere</strong>. Solo se pone tristona 🥺'},
-    {title:'Subir de nivel ⭐',content:'Esa <strong>barra dorada</strong> que viste arriba es su experiencia (XP). Cada acción suma:<br><br>🍽️ Comer · +8 a +20 XP<br>🎾 Jugar · +8 a +25 XP<br>📅 Visita diaria · +3 XP<br>🛍️ Comprar accesorios · +15 XP<br><br>Al subir de nivel, <strong>'+n+' evolucionará</strong> 🥚 → 🐣 → ✨ ¡Es lo más bonito de cuidarla!'},
+    {title:'Subir de nivel ⭐',content:'Esa <strong>barra dorada</strong> que viste arriba es su experiencia (XP). Cada acción suma:<br><br>🍽️ Comer · +8 a +20 XP<br>🎾 Jugar · +8 a +25 XP<br>📅 Visita diaria · +3 XP<br>🛍️ Comprar accesorios · +15 XP<br><br>Al subir de nivel, <strong>'+n+' evolucionará</strong> 👶 → 🌱 → ✨ → 👑 ¡Es lo más bonito de cuidarla!'},
     {title:'Su comida favorita 🍽️',content:n+' es '+(pet.genero==='macho'?'un':'una')+' '+tipoNombre+', así que come cositas especiales para '+(pet.genero==='macho'?'él':'ella')+':<br><br><div style="text-align:center;font-size:26px;letter-spacing:6px;margin:10px 0">'+foodIcons+'</div>Para alimentarla necesitas <strong>puntitos 🐾</strong> que se ganan al <strong>registrar tus sesiones</strong> en la pestaña de Progreso. Mientras más monedas hagas, más puntitos ganas.'},
     {title:'¡A jugar! 🎾',content:'Jugar con '+n+' le da <strong>la mayor cantidad de XP</strong> y la pone feliz, pero gasta su energía.<br><br>Puedes jugar <strong>hasta 3 veces al día</strong>. Si se queda sin energía, déjala descansar — recupera +10 cada hora.<br><br>Tip pro 🌟: en la <strong>tienda</strong> hay juguetes que dan XP extra todos los días que estén activos.'},
     {title:'Tienda tropical 🛍️',content:'En la tienda puedes mimar a '+n+' con:<br><br>🎀 <strong>Accesorios</strong> — collares, coronas, lentes, sombreros<br>🎾 <strong>Juguetes</strong> — pelota, ratón, hamaca, túnel<br>🏠 <strong>Hábitats</strong> — playa, jardín, mansión, espacio 🚀<br><br>Todo se compra con puntitos 🐾. ¡Mientras más activa seas, más puede tener '+n+'!'},
-    {title:'¡Listas para empezar! 🌴✨',content:'Ya lo sabes todo mi querida 💕<br><br>Recuerda:<br>📅 Entra cada día<br>📝 Registra tus sesiones<br>🍽️ Aliméntala y juega para subir de nivel<br>🥚 Al nivel 5 romperá el huevo<br><br><strong>¡Como recompensa por completar el tutorial te regalo:</strong><div style="text-align:center;font-size:18px;color:var(--gold);margin-top:10px;font-family:Fredoka,sans-serif;line-height:1.6">+50 🐾 puntitos<br>+20 😊 felicidad para '+n+'</div>'}
+    {title:'¡Listas para empezar! 🌴✨',content:'Ya lo sabes todo mi querida 💕<br><br>Recuerda:<br>📅 Entra cada día<br>📝 Registra tus sesiones<br>🍽️ Aliméntala y juega para subir de nivel<br>🌟 Al nivel 8, 18 y 28 evolucionará<br><br><strong>¡Como recompensa por completar el tutorial te regalo:</strong><div style="text-align:center;font-size:18px;color:var(--gold);margin-top:10px;font-family:Fredoka,sans-serif;line-height:1.6">+50 🐾 puntitos<br>+20 😊 felicidad para '+n+'</div>'}
   ];
 }
 var PET_TUTORIAL=[];
@@ -3909,8 +3959,8 @@ var TAB_TUTORIALS={
     msg:'Pon a prueba lo que sabes sobre las <strong>reglas, salarios y estrategias</strong> de la agencia 📝<br><br>3 niveles: 🌱 Fácil, 🔥 Medio, 👑 Experto.<br><br>Compite en el ranking anónimo y mejora tu mejor puntaje.'
   }
 };
-function visitedTabs(){try{return JSON.parse(window.localStorage.getItem('tropical-visited-tabs')||'{}')}catch(e){return{}}}
-function markTabVisited(t){try{var v=visitedTabs();v[t]=1;window.localStorage.setItem('tropical-visited-tabs',JSON.stringify(v))}catch(e){}}
+function visitedTabs(){return(P&&P.tutoriales_vistos)||{}}
+function markTabVisited(t){if(!P)return;if(!P.tutoriales_vistos)P.tutoriales_vistos={};if(P.tutoriales_vistos[t])return;P.tutoriales_vistos[t]=1;save({tutoriales_vistos:P.tutoriales_vistos})}
 function checkTabTutorial(t){
   var v=visitedTabs();
   if(v[t])return false;

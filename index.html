@@ -834,7 +834,10 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes tapHeart{0%{opacity:0;transform:scale(.3) translate(-50%,-50%)}20%{opacity:1;transform:scale(1.4) translate(-50%,-60%)}100%{opacity:0;transform:scale(.8) translate(-50%,-200%)}}
 @keyframes playBall{0%{left:-40px;bottom:20%;transform:rotate(0)}25%{left:30%;bottom:60%;transform:rotate(180deg)}50%{left:50%;bottom:30%;transform:rotate(360deg)}75%{left:70%;bottom:55%;transform:rotate(540deg)}100%{left:110%;bottom:25%;transform:rotate(720deg);opacity:0}}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
-.pet-svg{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);z-index:2;transition:transform .15s;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45)) drop-shadow(0 0 4px rgba(0,0,0,.2));pointer-events:auto}
+.pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
+.pet-walker{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
+.pet-shadow{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:75px;height:14px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 40%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
+@keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1)}50%{transform:translateX(-50%) scale(.95,.85)}}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 .pet-card{margin:10px 16px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(251,191,36,.2);background:linear-gradient(180deg,rgba(251,191,36,.06),rgba(168,85,247,.04));position:relative}
 .pet-card.no-pet{cursor:pointer;text-align:center;padding:20px;border-style:dashed}
@@ -2515,7 +2518,7 @@ function renderPetCard(){
   /* Help button */
   h+='<button onclick="resetTutorial()" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Ver tutorial">?</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
-  h+='<div class="pet-svg" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div>';
+  h+='<div class="pet-walker"><div class="pet-shadow"></div><div class="pet-svg" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
   h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood)+'</div></div>';
   h+='<div class="pet-croquetas">🐾 '+fmt(pet.croquetas||0)+'</div></div>';
@@ -2561,6 +2564,7 @@ function renderPetCard(){
   h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')" title="Tienda tropical">🛍️ Tienda</button>';
   h+='</div></div>';
   area.innerHTML=h;
+  startPetWander();
 }
 
 function petDailyUpdate(pet){
@@ -2718,7 +2722,7 @@ function petTap(e){
   showTapHeart(e,hearts[Math.floor(Math.random()*hearts.length)]);
   /* Bounce */
   var svg=document.querySelector('.pet-svg');
-  if(svg){svg.style.transform='translateX(-50%) scale(1.08)';setTimeout(function(){svg.style.transform=''},150)}
+  if(svg){svg.style.transform='scale(1.08)';setTimeout(function(){svg.style.transform=''},150)}
   /* Telegram haptic feedback */
   try{if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback){window.Telegram.WebApp.HapticFeedback.impactOccurred('light')}}catch(err){}
   /* Debounced save (don't hammer API) */
@@ -2739,6 +2743,28 @@ function showTapHeart(e,emoji){
   el.style.top=y+'px';
   document.body.appendChild(el);
   setTimeout(function(){if(el.parentNode)el.remove()},1300);
+}
+
+/* ===== PET WANDERING — pet moves naturally around the room ===== */
+var _petWanderInterval=null;
+function startPetWander(){
+  if(_petWanderInterval)clearInterval(_petWanderInterval);
+  _petWanderInterval=setInterval(petWander,7000);
+  setTimeout(petWander,1800); /* first move after a moment */
+}
+function petWander(){
+  var w=document.querySelector('.pet-walker');
+  if(!w)return;
+  /* Pause if mascota tab not active */
+  var sec=document.getElementById('s-mascota');
+  if(!sec||!sec.classList.contains('a'))return;
+  var pet=P&&P.mascota;
+  if(!pet)return;
+  var mood=getMood(pet);
+  if(mood==='sleeping')return; /* dormir = quieta */
+  /* Random target between 20% and 80% of scene width */
+  var newLeft=20+Math.random()*60;
+  w.style.left=newLeft+'%';
 }
 
 /* ===== SHOP ===== */

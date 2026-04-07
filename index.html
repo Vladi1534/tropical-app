@@ -835,16 +835,17 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes playBall{0%{left:-40px;bottom:20%;transform:rotate(0)}25%{left:30%;bottom:60%;transform:rotate(180deg)}50%{left:50%;bottom:30%;transform:rotate(360deg)}75%{left:70%;bottom:55%;transform:rotate(540deg)}100%{left:110%;bottom:25%;transform:rotate(720deg);opacity:0}}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
-.pet-walker{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
+.pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
+.pet-walker{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
 .pet-shadow{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:75px;height:14px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 40%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
 @keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1)}50%{transform:translateX(-50%) scale(.95,.85)}}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 .pet-card{margin:10px 16px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(251,191,36,.2);background:linear-gradient(180deg,rgba(251,191,36,.06),rgba(168,85,247,.04));position:relative}
 .pet-card.no-pet{cursor:pointer;text-align:center;padding:20px;border-style:dashed}
 .pet-card.no-pet:active{transform:scale(.98)}
-.pet-scene{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#1a1530}
+.pet-scene{position:relative;width:100%;aspect-ratio:4/5;overflow:hidden;background:#1a1530}
 .pet-bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.pet-bg img{width:100%;height:100%;object-fit:cover;display:block}
+.pet-bg img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:pixelated}
 .pet-info{padding:10px 14px;display:flex;align-items:center;gap:10px}
 .pet-name-area{flex:1}
 .pet-pname{font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#fff}
@@ -1154,6 +1155,18 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devTriggerPlay()">🎾 Animar jugar</button>
     <button class="bs" onclick="devRegenColors()">🎨 Re-rolar colores</button>
     <button class="bs" onclick="devResetTutorial()">📖 Reset tutorial</button>
+  </div>
+  
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">🎭 Test sprite (v10.0)</div>
+  <div style="font-size:9px;color:var(--txt3);margin-bottom:6px">Forza una animación específica del sprite sin cambiar stats:</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devTestSprite('idle')">🐾 Idle</button>
+    <button class="bs" onclick="devTestSprite('sleep')">💤 Sleep</button>
+    <button class="bs" onclick="devTestSprite('sleepy')">😪 Sleepy</button>
+    <button class="bs" onclick="devTestSprite('eating')">🍽️ Eating</button>
+    <button class="bs" onclick="devTestSprite('excited')">🤸 Excited</button>
+    <button class="bs" onclick="devTestSprite('laydown')">🛌 LayDown</button>
+    <button class="bs" onclick="devTestSprite('sad')">😢 Sad</button>
   </div>
   
   <div style="font-size:11px;color:var(--red);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">⚠️ Peligrosos</div>
@@ -2546,13 +2559,206 @@ function petEggSVG(s,type,_pid,col){
   return svg;
 }
 
+/* ===== PIXEL SPRITE ENGINE (v10.0) =====
+   Sprite-based pet rendering using ToffeeCraft pixel art assets.
+   Replaces the old SVG-generated pets with real animated sprites.
+*/
+
+/* Sprite metadata: defines frame counts and FPS for each animation */
+var SPRITE_ANIMS={
+  cats:{
+    classical:{
+      frameW:32,frameH:32,
+      idle:{file:'idle.png',frames:10,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:4,fps:3,loop:true},
+      sleepy:{file:'sleepy.png',frames:8,fps:5,loop:true},
+      eating:{file:'eating.png',frames:15,fps:8,loop:true},
+      excited:{file:'excited.png',frames:12,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
+      sad:{file:'sad.png',frames:9,fps:5,loop:true}
+    }
+  },
+  dogs:{
+    golden:{
+      frameW:64,frameH:64,
+      /* Filled in during phase 2 */
+      idle:{file:'idle.png',frames:10,fps:6,loop:true}
+    }
+  },
+  bunnies:{
+    white:{
+      frameW:32,frameH:32,
+      /* Filled in during phase 2 */
+      idle:{file:'idle.png',frames:12,fps:6,loop:true}
+    }
+  }
+};
+
+var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
+var SPRITE_VERSION='1';
+
+function getSpriteUrl(category,variant,animFile){
+  return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
+}
+function getBgUrl(num){
+  var nstr=num+'';while(nstr.length<2)nstr='0'+nstr;
+  return SPRITE_BUCKET_URL+'bg/'+nstr+'.png?v='+SPRITE_VERSION;
+}
+
+/* Low-level sprite animator using CSS background-position */
+function PetSprite(opts){
+  this.el=opts.el;
+  this.frameW=opts.frameW||32;
+  this.frameH=opts.frameH||32;
+  this.scale=opts.scale||5;
+  this.fps=8;
+  this.totalFrames=1;
+  this.currentFrame=0;
+  this.url='';
+  this.loop=true;
+  this.timer=null;
+  this.onComplete=null;
+  this._setupStyle();
+}
+PetSprite.prototype._setupStyle=function(){
+  var dispW=this.frameW*this.scale;
+  var dispH=this.frameH*this.scale;
+  this.el.style.width=dispW+'px';
+  this.el.style.height=dispH+'px';
+  this.el.style.backgroundRepeat='no-repeat';
+  this.el.style.imageRendering='pixelated';
+  this.el.style.backgroundSize='auto '+dispH+'px';
+  this.el.style.backgroundPositionY='0';
+};
+PetSprite.prototype.play=function(opts){
+  if(this.url===opts.url&&this.timer)return;
+  this.url=opts.url;
+  this.totalFrames=opts.frames||1;
+  this.fps=opts.fps||8;
+  this.loop=opts.loop!==false;
+  this.onComplete=opts.onComplete||null;
+  this.currentFrame=0;
+  this.el.style.backgroundImage='url("'+this.url+'")';
+  this._draw();
+  this._start();
+};
+PetSprite.prototype._start=function(){
+  if(this.timer)clearInterval(this.timer);
+  if(this.totalFrames<=1)return;
+  var self=this;
+  this.timer=setInterval(function(){self._tick()},1000/this.fps);
+};
+PetSprite.prototype._tick=function(){
+  this.currentFrame++;
+  if(this.currentFrame>=this.totalFrames){
+    if(this.loop){this.currentFrame=0}
+    else{this.currentFrame=this.totalFrames-1;this.stop();if(this.onComplete)this.onComplete();return}
+  }
+  this._draw();
+};
+PetSprite.prototype._draw=function(){
+  var x=-(this.currentFrame*this.frameW*this.scale);
+  this.el.style.backgroundPositionX=x+'px';
+};
+PetSprite.prototype.stop=function(){
+  if(this.timer){clearInterval(this.timer);this.timer=null}
+};
+PetSprite.prototype.destroy=function(){this.stop()};
+
+/* High-level pet controller — knows what animation to play based on state */
+function PetController(el,category,variant){
+  this.el=el;
+  this.category=category;
+  this.variant=variant;
+  this.config=SPRITE_ANIMS[category]&&SPRITE_ANIMS[category][variant];
+  if(!this.config){console.warn('No sprite config for',category,variant);return}
+  this.sprite=new PetSprite({
+    el:el,
+    frameW:this.config.frameW,
+    frameH:this.config.frameH,
+    scale:5
+  });
+  this.currentState='';
+}
+PetController.prototype.setState=function(state){
+  if(!this.config)return;
+  if(this.currentState===state)return;
+  var anim=this.config[state];
+  if(!anim){
+    state='idle';
+    anim=this.config.idle;
+    if(!anim)return;
+  }
+  this.currentState=state;
+  this.sprite.play({
+    url:getSpriteUrl(this.category,this.variant,anim.file),
+    frames:anim.frames,
+    fps:anim.fps,
+    loop:anim.loop
+  });
+};
+PetController.prototype.playOnce=function(state,onDone){
+  /* Play a one-shot animation then return to previous */
+  if(!this.config||!this.config[state])return;
+  var anim=this.config[state];
+  var self=this;
+  var prevState=this.currentState;
+  this.currentState=state;
+  this.sprite.play({
+    url:getSpriteUrl(this.category,this.variant,anim.file),
+    frames:anim.frames,
+    fps:anim.fps,
+    loop:false,
+    onComplete:function(){
+      self.currentState='';
+      self.setState(prevState||'idle');
+      if(onDone)onDone();
+    }
+  });
+};
+PetController.prototype.destroy=function(){
+  if(this.sprite)this.sprite.destroy();
+};
+
+/* Map mood -> sprite state */
+function moodToState(mood){
+  if(mood==='sleeping')return 'sleep';
+  if(mood==='happy')return 'excited';
+  if(mood==='sad')return 'sad';
+  if(mood==='hungry')return 'sleepy';
+  return 'idle'; /* content, neutral, default */
+}
+
+var _currentPetController=null;
+function initPetSprite(){
+  var el=document.getElementById('pet-sprite-el');
+  if(!el)return;
+  var pet=P&&P.mascota;
+  if(!pet)return;
+  /* Phase 1: only cats classical, dogs golden, bunnies white supported */
+  var category=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':'bunnies';
+  var variant=category==='cats'?'classical':category==='dogs'?'golden':'white';
+  if(_currentPetController)_currentPetController.destroy();
+  _currentPetController=new PetController(el,category,variant);
+  var state=moodToState(getMood(pet));
+  _currentPetController.setState(state);
+}
+function petSpriteSetState(state){
+  if(_currentPetController)_currentPetController.setState(state);
+}
+function petSpritePlayOnce(state,onDone){
+  if(_currentPetController)_currentPetController.playOnce(state,onDone);
+}
+
 function petBgSVG(habitat){
-  /* Returns img tag pointing to Supabase Storage diorama background */
-  /* PET_BG_VERSION: bump this number when you replace background images to bust browser cache */
-  var validHabitats=['default','playa','jardin','casa','mansion','arcoiris','espacio'];
-  var hb=validHabitats.indexOf(habitat)>=0?habitat:'default';
-  var url='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-backgrounds/'+hb+'.jpg?v=2';
-  return '<img src="'+url+'" alt="" loading="eager" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none">';
+  /* Returns img tag pointing to pixel art background from new sprite bucket */
+  /* Phase 1: hardcoded to bg/01.png. Phase 2 will map all 20+ backgrounds. */
+  var bgNum=1;
+  /* Temporary mapping for legacy habitat names */
+  var legacyMap={'default':1,'playa':2,'jardin':3,'casa':4,'mansion':5,'arcoiris':6,'espacio':7};
+  if(legacyMap[habitat])bgNum=legacyMap[habitat];
+  var url=getBgUrl(bgNum);
+  return '<img src="'+url+'" alt="" loading="eager" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none;image-rendering:pixelated">';
 }
 
 function renderPetCard(){
@@ -2584,7 +2790,7 @@ function renderPetCard(){
   /* Dev button (only in dev mode) */
   if(devModeActive())h+='<button onclick="devOpen()" style="position:absolute;top:10px;right:42px;z-index:5;background:rgba(168,85,247,.6);border:1px solid rgba(168,85,247,.4);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Dev panel">🛠️</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
-  h+='<div class="pet-walker"><div class="pet-shadow"></div><div class="pet-svg" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent">'+getPetSVG(pet.tipo||'gato',stage,mood,130,pet.genero,pet.accesorios||[],pet.colores)+'</div></div></div>';
+  h+='<div class="pet-walker"><div class="pet-shadow"></div><div id="pet-sprite-el" class="pet-sprite" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent"></div></div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
   h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood)+'</div></div>';
   h+='<div class="pet-croquetas">🐾 '+fmt(pet.croquetas||0)+'</div></div>';
@@ -2630,6 +2836,7 @@ function renderPetCard(){
   h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')" title="Tienda tropical">🛍️ Tienda</button>';
   h+='</div></div>';
   area.innerHTML=h;
+  initPetSprite();
   startPetWander();
 }
 
@@ -2715,6 +2922,8 @@ function feedPet(foodId){
   pet.felicidad=Math.min(100,(pet.felicidad||0)+food.happy);pet.xp=(pet.xp||0)+food.xp;
   if(!pet.comidas_hoy)pet.comidas_hoy={};pet.comidas_hoy[foodId]=true;pet.ultima_comida=new Date().toISOString().slice(0,10);
   checkPetLevelUp(pet);savePet();renderFeedMenu();renderPetCard();
+  /* Play eating animation as one-shot after re-render */
+  setTimeout(function(){petSpritePlayOnce('eating')},50);
   toast(food.icon+' '+(pet.nombre)+' comió '+food.name+' (+'+food.xp+' XP)');
 }
 
@@ -2738,6 +2947,8 @@ function petPlay(){
   checkPetLevelUp(pet);savePet();renderPetCard();
   /* Fun visual: bouncing ball across the diorama */
   showPlayAnimation();
+  /* Play excited animation as one-shot after re-render */
+  setTimeout(function(){petSpritePlayOnce('excited')},50);
   toast('🎾 ¡'+(pet.nombre)+' jugó! +'+xpGain+' XP, +15 felicidad'+(toy?' con '+toy.name:''));
 }
 function showPlayAnimation(){
@@ -2786,9 +2997,13 @@ function petTap(e){
   /* Visual: heart particle at click position */
   var hearts=mood==='hungry'?['🍽️','🐾','🥺']:mood==='sad'?['💙','🥺','💧']:['💕','❤️','💖','💗','✨','💝','😊'];
   showTapHeart(e,hearts[Math.floor(Math.random()*hearts.length)]);
-  /* Bounce */
-  var svg=document.querySelector('.pet-svg');
-  if(svg){svg.style.transform='scale(1.08)';setTimeout(function(){svg.style.transform=''},150)}
+  /* Bounce + play excited animation briefly */
+  var spr=document.querySelector('.pet-sprite')||document.querySelector('.pet-svg');
+  if(spr){spr.style.transform='scale(1.08)';setTimeout(function(){spr.style.transform=''},150)}
+  /* If sprite controller exists, play excited animation as one-shot */
+  if(_currentPetController&&mood!=='sleeping'){
+    petSpritePlayOnce('excited');
+  }
   /* Telegram haptic feedback */
   try{if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback){window.Telegram.WebApp.HapticFeedback.impactOccurred('light')}}catch(err){}
   /* Debounced save (don't hammer API) */
@@ -2828,6 +3043,9 @@ function petWander(){
   if(!pet)return;
   var mood=getMood(pet);
   if(mood==='sleeping')return; /* dormir = quieta */
+  /* Cats don't wander — they sit and do their thing.
+     Dogs and bunnies will wander when those sprites are added in phase 2. */
+  if(pet.tipo==='gato')return;
   /* Random target between 20% and 80% of scene width */
   var newLeft=20+Math.random()*60;
   w.style.left=newLeft+'%';
@@ -2917,7 +3135,17 @@ function devTriggerWander(){
 }
 function devTriggerPlay(){
   showPlayAnimation();
+  petSpritePlayOnce('excited');
   toast('🛠️ Animación jugar');
+}
+function devTestSprite(animName){
+  /* Test any sprite animation directly without changing pet state */
+  if(_currentPetController){
+    _currentPetController.setState(animName);
+    toast('🛠️ Sprite: '+animName);
+  }else{
+    toast('⚠️ Sprite no inicializado');
+  }
 }
 function devRegenColors(){
   var pet=P&&P.mascota;if(!pet)return;

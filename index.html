@@ -832,6 +832,8 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes zzz{0%{opacity:0;transform:translateY(0) scale(.5)}50%{opacity:.7;transform:translateY(-12px) scale(1)}100%{opacity:0;transform:translateY(-24px) scale(.6)}}
 @keyframes heartPop{0%{opacity:0;transform:scale(0) translateY(0)}30%{opacity:1;transform:scale(1.2) translateY(-8px)}60%{opacity:.8;transform:scale(.9) translateY(-16px)}100%{opacity:0;transform:scale(.5) translateY(-28px)}}
 @keyframes tapHeart{0%{opacity:0;transform:scale(.3) translate(-50%,-50%)}20%{opacity:1;transform:scale(1.4) translate(-50%,-60%)}100%{opacity:0;transform:scale(.8) translate(-50%,-200%)}}
+@keyframes playBall{0%{left:-40px;bottom:20%;transform:rotate(0)}25%{left:30%;bottom:60%;transform:rotate(180deg)}50%{left:50%;bottom:30%;transform:rotate(360deg)}75%{left:70%;bottom:55%;transform:rotate(540deg)}100%{left:110%;bottom:25%;transform:rotate(720deg);opacity:0}}
+@keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);z-index:2;transition:transform .15s;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45)) drop-shadow(0 0 4px rgba(0,0,0,.2));pointer-events:auto}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 .pet-card{margin:10px 16px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(251,191,36,.2);background:linear-gradient(180deg,rgba(251,191,36,.06),rgba(168,85,247,.04));position:relative}
@@ -1227,6 +1229,8 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
       </div>
       <div class="rf"><label>📡 Tipo de horas</label><div class="htc"><div class="hc sel" id="ht-org" onclick="selHT('Orgánica')">🟢 Orgánica</div><div class="hc" id="ht-fan" onclick="selHT('Fantasma')">👻 Fantasma</div><div class="hc" id="ht-mix" onclick="selHT('Mixta')">🔀 Mixta</div></div></div>
       <div class="rf"><label>💬 ¿Cómo estuvo? (opcional)</label><input type="text" class="ti" id="r-desc" placeholder="Ej: Buen show, muchos regalos..."></div>
+      <div id="r-date-toggle" style="text-align:center;margin:0 0 10px"><a href="javascript:toggleDateField()" style="font-size:11px;color:var(--cyan);text-decoration:none" id="r-date-link">📅 ¿Es de otro día? Cambiar fecha</a></div>
+      <div class="rf" id="r-date-field" style="display:none"><label>📅 Fecha de la sesión</label><input type="date" class="ni" id="r-date" style="font-size:14px;color:var(--txt);font-family:'Nunito',sans-serif"></div>
       <button class="bp" onclick="regSession()" id="btn-reg">+ Registrar sesión</button>
     </div>
 
@@ -2503,8 +2507,8 @@ function renderPetCard(){
   var xp=pet.xp||0;var nxt=xpForLevel(lvl);var prev=xpForLevel(lvl-1);
   var xpInLevel=xp-prev;var xpNeeded=nxt-prev;
   var xpPct=xpNeeded>0?Math.min(100,Math.round((xpInLevel/xpNeeded)*100)):0;
-  var playsLeft=3-(pet.juegos_hoy||0);if(pet.ultimo_juego!==new Date().toISOString().slice(0,10)){playsLeft=3}
   var isSleep=mood==='sleeping';
+  var canPlay=(pet.energia||0)>=15&&!isSleep;
 
   var h='<div class="pet-card">';
   /* Help button */
@@ -2552,7 +2556,7 @@ function renderPetCard(){
 
   h+='<div class="pet-actions">';
   h+='<button class="pet-btn feed" onclick="openM(\'m-pet-feed\');renderFeedMenu()"'+(isSleep?' disabled':'')+' title="Alimentar con croquetas">🍽️ Comer</button>';
-  h+='<button class="pet-btn play" onclick="petPlay()"'+(playsLeft<=0||(pet.energia||0)<10||isSleep?' disabled':'')+' title="Jugar ('+playsLeft+' restantes hoy)">🎾 '+playsLeft+'x</button>';
+  h+='<button class="pet-btn play" onclick="petPlay()"'+(!canPlay?' disabled':'')+' title="Jugar (cuesta 15⚡ energía)">🎾 Jugar</button>';
   h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'accesorios\')" title="Tienda tropical">🛍️ Tienda</button>';
   h+='</div></div>';
   area.innerHTML=h;
@@ -2609,7 +2613,7 @@ function validateAdopt(){var btn=document.getElementById('btn-adopt');if(btn)btn
 function adoptPet(){
   var name=document.getElementById('pet-name-input').value.trim();if(!name||!selectedPetType)return;
   var colores=generatePetColors(selectedPetType);
-  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0};
+  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0};
   P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();
   var rareMsg=colores.rare?' ¡Color raro: '+colores.rare+'! ✨':'';
   toast('🐾 ¡Adoptaste a '+name+'!'+rareMsg);
@@ -2645,18 +2649,46 @@ function feedPet(foodId){
 
 function petPlay(){
   var pet=P.mascota;if(!pet)return;
-  var hoy=new Date().toISOString().slice(0,10);
-  if(pet.ultimo_juego!==hoy){pet.juegos_hoy=0;pet.ultimo_juego=hoy}
-  if((pet.juegos_hoy||0)>=3){toast('🎾 Ya jugaron 3 veces hoy');return}
-  if((pet.energia||0)<10){toast('⚡ Sin energía, déjala descansar un rato');return}
-  var xpGain=8;var toy=null;
-  if(pet.juguete_activo){for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];
-    if(toy){xpGain+=toy.xp_day;pet.energia=Math.max(0,(pet.energia||0)-toy.energy_cost)}else{pet.energia=Math.max(0,(pet.energia||0)-15)}
-  }else{pet.energia=Math.max(0,(pet.energia||0)-15)}
-  pet.felicidad=Math.min(100,(pet.felicidad||0)+10);pet.xp=(pet.xp||0)+xpGain;pet.juegos_hoy=(pet.juegos_hoy||0)+1;
+  /* Energy is the only gating factor — no more daily limits */
+  if((pet.energia||0)<15){toast('⚡ Sin energía suficiente, déjala descansar (recupera +10/hora)');return}
+  var mood=getMood(pet);
+  if(mood==='sleeping'){toast('💤 Está durmiendo, no la despiertes');return}
+  var xpGain=12;var energyCost=15;var toy=null;
+  if(pet.juguete_activo){
+    for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];
+    if(toy){xpGain+=toy.xp_day;energyCost=toy.energy_cost||15}
+  }
+  pet.energia=Math.max(0,(pet.energia||0)-energyCost);
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+15);
+  pet.xp=(pet.xp||0)+xpGain;
   pet.ultima_energia_ts=Date.now(); /* Reset energy regen timer */
+  /* Track plays for stats but no daily limit */
+  pet.juegos_total=(pet.juegos_total||0)+1;
   checkPetLevelUp(pet);savePet();renderPetCard();
-  toast('🎾 ¡'+(pet.nombre)+' jugó! (+'+xpGain+' XP)'+(toy?' con '+toy.name:''));
+  /* Fun visual: bouncing ball across the diorama */
+  showPlayAnimation();
+  toast('🎾 ¡'+(pet.nombre)+' jugó! +'+xpGain+' XP, +15 felicidad'+(toy?' con '+toy.name:''));
+}
+function showPlayAnimation(){
+  var scene=document.querySelector('.pet-scene');
+  if(!scene)return;
+  var ball=document.createElement('div');
+  ball.textContent='🎾';
+  ball.style.cssText='position:absolute;font-size:32px;left:-40px;bottom:20%;z-index:5;pointer-events:none;animation:playBall 1.6s ease-in-out forwards;text-shadow:0 4px 8px rgba(0,0,0,.4)';
+  scene.appendChild(ball);
+  /* Sparkles */
+  for(var i=0;i<5;i++){
+    (function(idx){
+      setTimeout(function(){
+        var sp=document.createElement('div');
+        sp.textContent=['✨','💫','⭐','🌟','💖'][idx];
+        sp.style.cssText='position:absolute;font-size:20px;left:'+(20+idx*15)+'%;top:'+(30+idx*5)+'%;z-index:6;pointer-events:none;animation:sparklePop .8s ease-out forwards';
+        scene.appendChild(sp);
+        setTimeout(function(){if(sp.parentNode)sp.remove()},800);
+      },idx*100);
+    })(i);
+  }
+  setTimeout(function(){if(ball.parentNode)ball.remove()},1600);
 }
 
 /* ===== TAP-TO-PET (Tom Cat style interaction) ===== */
@@ -2734,10 +2766,21 @@ function renderShop(){
       h+='<div class="fi-xp">'+t.desc+(isActive?' · hasta '+(pet.juguete_expira||'?'):'')+'</div></div>';
     }
   }else{
-    for(var k=0;k<PET_HABITATS.length;k++){var hb=PET_HABITATS[k];var isCur=pet.habitat===hb.id;var canBuyH=(pet.croquetas||0)>=hb.cost&&!isCur;
-      h+='<div class="feed-item'+(isCur?' bought':'')+((!canBuyH&&!isCur&&hb.cost>0)?' disabled':'')+'" onclick="'+(canBuyH||hb.cost===0?'buyHabitat(\''+hb.id+'\','+hb.cost+')':'')+'">';
+    if(!pet.habitats_owned)pet.habitats_owned=[];
+    /* Migration: ensure default and current habitat are in owned list */
+    if(pet.habitats_owned.indexOf('default')<0)pet.habitats_owned.push('default');
+    if(pet.habitat&&pet.habitats_owned.indexOf(pet.habitat)<0)pet.habitats_owned.push(pet.habitat);
+    for(var k=0;k<PET_HABITATS.length;k++){var hb=PET_HABITATS[k];
+      var isCur=pet.habitat===hb.id;
+      var isOwned=pet.habitats_owned.indexOf(hb.id)>=0;
+      var canBuyH=(pet.croquetas||0)>=hb.cost;
+      var clickable=isCur?false:(isOwned||hb.cost===0||canBuyH);
+      var clickHandler='';
+      if(isOwned&&!isCur)clickHandler='useHabitat(\''+hb.id+'\')';
+      else if(!isOwned&&canBuyH)clickHandler='buyHabitat(\''+hb.id+'\','+hb.cost+')';
+      h+='<div class="feed-item'+(isCur?' bought':'')+(!clickable&&!isCur?' disabled':'')+'" onclick="'+clickHandler+'">';
       h+='<div class="fi-icon">'+hb.icon+'</div><div class="fi-name">'+hb.name+'</div>';
-      h+='<div class="fi-cost">'+(isCur?'✅ Actual':hb.cost===0?'Gratis':'🐾 '+hb.cost)+'</div>';
+      h+='<div class="fi-cost">'+(isCur?'✅ Actual':isOwned?'🏠 Usar':hb.cost===0?'Gratis':'🐾 '+hb.cost)+'</div>';
       h+='<div class="fi-xp">'+hb.desc+'</div></div>';
     }
   }
@@ -2746,7 +2789,24 @@ function renderShop(){
 function buyAcc(id){var pet=P.mascota;if(!pet)return;var a=null;for(var i=0;i<PET_ACCS.length;i++)if(PET_ACCS[i].id===id)a=PET_ACCS[i];if(!a||(pet.croquetas||0)<a.cost)return;pet.croquetas-=a.cost;if(!pet.accesorios)pet.accesorios=[];pet.accesorios.push(id);pet.xp=(pet.xp||0)+15;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎀 ¡'+a.name+' comprado!')}
 function togAcc(id){var pet=P.mascota;if(!pet||!pet.accesorios)return;var idx=pet.accesorios.indexOf(id);if(idx>-1)pet.accesorios.splice(idx,1);else pet.accesorios.push(id);savePet();renderPetCard();renderShop();toast(idx>-1?'Accesorio quitado':'Accesorio puesto')}
 function buyToy(id){var pet=P.mascota;if(!pet)return;var t=null;for(var i=0;i<PET_TOYS.length;i++)if(PET_TOYS[i].id===id)t=PET_TOYS[i];if(!t||(pet.croquetas||0)<t.cost)return;pet.croquetas-=t.cost;pet.juguete_activo=id;var exp=new Date();exp.setDate(exp.getDate()+t.days);pet.juguete_expira=exp.toISOString().slice(0,10);pet.xp=(pet.xp||0)+10;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎾 '+t.name+' activado por '+t.days+' días!')}
-function buyHabitat(id,cost){var pet=P.mascota;if(!pet)return;if(cost>0&&(pet.croquetas||0)<cost)return;if(cost>0)pet.croquetas-=cost;pet.habitat=id;pet.xp=(pet.xp||0)+20;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🏠 Hábitat cambiado!')}
+function buyHabitat(id,cost){
+  var pet=P.mascota;if(!pet)return;
+  if(cost>0&&(pet.croquetas||0)<cost)return;
+  if(cost>0)pet.croquetas-=cost;
+  if(!pet.habitats_owned)pet.habitats_owned=[];
+  if(pet.habitats_owned.indexOf(id)<0)pet.habitats_owned.push(id);
+  pet.habitat=id;
+  pet.xp=(pet.xp||0)+20;
+  checkPetLevelUp(pet);savePet();renderShop();renderPetCard();
+  toast('🏠 ¡Hábitat comprado y activado!');
+}
+function useHabitat(id){
+  var pet=P.mascota;if(!pet)return;
+  if(!pet.habitats_owned||pet.habitats_owned.indexOf(id)<0)return;
+  pet.habitat=id;
+  savePet();renderShop();renderPetCard();
+  toast('🏠 Hábitat cambiado');
+}
 
 function awardCroquetas(monedas){var pet=P.mascota;if(!pet||!monedas)return 0;var croq=coinsToCroquetas(monedas);pet.croquetas=(pet.croquetas||0)+croq;pet.croquetas_total=(pet.croquetas_total||0)+croq;pet.xp=(pet.xp||0)+3;checkPetLevelUp(pet);savePet();renderPetCard();return croq}
 function savePet(){if(!P||!U)return;sbq('emisora_perfil?id=eq.'+U.id,{m:'PATCH',b:{mascota:P.mascota},h:{'Prefer':'return=minimal'}}).catch(function(e){console.error('Pet save error:',e)})}
@@ -3232,6 +3292,23 @@ function saveStartingValues(){
   }).catch(function(e){console.error(e);alert('Error al guardar')});
 }
 
+function toggleDateField(){
+  var f=document.getElementById('r-date-field');
+  var l=document.getElementById('r-date-link');
+  var inp=document.getElementById('r-date');
+  if(f.style.display==='none'){
+    f.style.display='block';
+    l.textContent='📅 Cancelar — usar fecha de hoy';
+    if(!inp.value)inp.value=new Date().toISOString().slice(0,10);
+    /* Set max to today, no future dates allowed */
+    inp.max=new Date().toISOString().slice(0,10);
+  }else{
+    f.style.display='none';
+    l.textContent='📅 ¿Es de otro día? Cambiar fecha';
+    inp.value='';
+  }
+}
+
 function regSession(){
   var c=parseInt(document.getElementById('r-coins').value)||0;
   var hInput=parseInt(document.getElementById('r-hours').value)||0;
@@ -3240,26 +3317,51 @@ function regSession(){
   var desc=document.getElementById('r-desc').value.trim();
   if(!c&&!hr){alert('Ingresa monedas o duración');return}
   if(mInput>59){alert('Los minutos no pueden ser más de 59');return}
+  /* Optional custom date — defaults to today */
+  var customDate=document.getElementById('r-date').value;
+  var sessionTs=null;
+  if(customDate){
+    /* Validate date is not in future */
+    var picked=new Date(customDate+'T12:00:00');
+    var today=new Date();today.setHours(23,59,59,999);
+    if(picked>today){alert('No puedes registrar sesiones de fechas futuras');return}
+    /* Check date is in current month for stat updates */
+    sessionTs=picked.toISOString();
+  }
   var btn=document.getElementById('btn-reg');btn.disabled=true;btn.textContent='Guardando...';
   var ses={emisora_id:U.id,tipo_sesion:'manual',monedas_reportadas:c,horas_transmitidas:hr,tipo_horas:htype,show_descrito:desc||null,resumen:desc||'Sesión registrada desde Mi Carrera'};
+  if(sessionTs)ses.created_at=sessionTs;
   sbq('historial_sesiones',{m:'POST',b:ses,h:{'Prefer':'return=representation'}}).then(function(r){
     if(!r.ok)return r.text().then(function(t){throw new Error('HTTP '+r.status+': '+t)});
     return r.json();
   }).then(function(d){
-    P.monedas_acumuladas=(P.monedas_acumuladas||0)+c;
-    P.horas_mes=Math.round(((P.horas_mes||0)+hr)*10)/10;
-    P.horas_contables=Math.round(((P.horas_contables||0)+Math.min(3,hr))*10)/10;
+    /* Only update current month stats if session is in current month */
+    var sesDate=sessionTs?new Date(sessionTs):new Date();
+    var now=new Date();
+    var sameMonth=(sesDate.getFullYear()===now.getFullYear()&&sesDate.getMonth()===now.getMonth());
+    if(sameMonth){
+      P.monedas_acumuladas=(P.monedas_acumuladas||0)+c;
+      P.horas_mes=Math.round(((P.horas_mes||0)+hr)*10)/10;
+      P.horas_contables=Math.round(((P.horas_contables||0)+Math.min(3,hr))*10)/10;
+    }
     P.monedas_cuenta_total=(P.monedas_cuenta_total||0)+c;
     save({monedas_acumuladas:P.monedas_acumuladas,horas_mes:P.horas_mes,horas_contables:P.horas_contables,monedas_cuenta_total:P.monedas_cuenta_total,monedas_actuales_fecha:new Date().toISOString().slice(0,10)});
-    var ns=Array.isArray(d)?d[0]:d;if(!ns)ns=ses;ns.created_at=ns.created_at||new Date().toISOString();allS.unshift(ns);
+    var ns=Array.isArray(d)?d[0]:d;if(!ns)ns=ses;ns.created_at=ns.created_at||sessionTs||new Date().toISOString();allS.unshift(ns);
     refreshAll();renderSes();
     document.getElementById('r-coins').value='';document.getElementById('r-hours').value='';document.getElementById('r-minutes').value='';document.getElementById('r-desc').value='';
+    /* Reset date field */
+    document.getElementById('r-date').value='';
+    document.getElementById('r-date-field').style.display='none';
+    document.getElementById('r-date-link').textContent='📅 ¿Es de otro día? Cambiar fecha';
     var croq=awardCroquetas(c);
     btn.disabled=false;btn.textContent='+ Registrar sesión';
     var extraMsg='';
-    /* Show contract-type aware day message */
     if(P.contrato_tipo==='antigua'&&hr<1){
       extraMsg=' · '+Math.round(hr*60)+' min (suma para el día)';
+    }
+    if(sessionTs){
+      var fechaStr=sesDate.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+      extraMsg+=' · 📅 '+fechaStr;
     }
     toast('✓ Sesión registrada'+(croq?' · +'+croq+' 🐾':'')+extraMsg);
   }).catch(function(e){console.error('Session save error:',e);btn.disabled=false;btn.textContent='+ Registrar sesión';alert('Error: '+e.message)});

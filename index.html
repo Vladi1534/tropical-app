@@ -5011,7 +5011,7 @@ function renderRanking(){
     else if(rankMode==='ghost'){var ghostH=Math.max(0,Math.round(((e.horas_mes||0)-(e.horas_contables||0))*10)/10);statVal='👻 '+ghostH+'h';statLbl=ghostH>0?'en riesgo':'limpia'}
     else{statVal=bonusTxt;statLbl=fmt(hCont)+'/40h'}
 
-    h+='<div class="rank-item'+posClass+'" onclick="showProfile('+i+',\''+rankMode+'\')">';
+    h+='<div class="rank-item'+posClass+'" onclick="showProfile(\''+(e.id||'')+'\')">';
     h+='<div class="ri-pos'+posColor+'">'+posText+'</div>';
     h+='<div class="ri-av">'+av+'</div>';
     h+='<div class="ri-info"><div class="ri-name">'+(e.nombre||'Emisora')+' '+(FLAGS[e.pais]||'')+'</div>';
@@ -5023,13 +5023,34 @@ function renderRanking(){
   document.getElementById('rank-list').innerHTML=h;
 }
 
-function showProfile(idx,mode){
-  var list=emisoras.slice();
-  if(mode==='coins')list.sort(function(a,b){return(b.monedas_acumuladas||0)-(a.monedas_acumuladas||0)});
-  else if(mode==='hours')list.sort(function(a,b){return(b.horas_contables||0)-(a.horas_contables||0)});
-  else if(mode==='days')list.sort(function(a,b){return(b.dias_transmitidos||0)-(a.dias_transmitidos||0)});
-  else if(mode==='quiz')list.sort(function(a,b){return(b.quiz_mejor_puntaje||0)-(a.quiz_mejor_puntaje||0)});
-  var e=list[idx];if(!e)return;
+function showProfile(idOrIdx,legacyMode){
+  /* v10.5: Lookup by stable emisora id instead of sorted index.
+     This eliminates the bug where showProfile's sort logic had to mirror
+     renderRanking's sort logic (and didn't, for 7 of 11 modes).
+     Supports legacy index+mode signature for backwards compat. */
+  var e=null;
+  if(typeof idOrIdx==='string'&&idOrIdx){
+    /* New path: lookup by id */
+    for(var i=0;i<emisoras.length;i++){
+      if(String(emisoras[i].id)===String(idOrIdx)){e=emisoras[i];break}
+    }
+  }else if(typeof idOrIdx==='number'){
+    /* Legacy path: index + mode (mirrors renderRanking sorting, kept for safety) */
+    var list=emisoras.slice();
+    if(legacyMode==='coins')list.sort(function(a,b){return(b.monedas_acumuladas||0)-(a.monedas_acumuladas||0)});
+    else if(legacyMode==='total')list.sort(function(a,b){return(b.monedas_cuenta_total||0)-(a.monedas_cuenta_total||0)});
+    else if(legacyMode==='hours')list.sort(function(a,b){return(b.horas_contables||0)-(a.horas_contables||0)});
+    else if(legacyMode==='real_hours')list.sort(function(a,b){return(b.horas_mes||0)-(a.horas_mes||0)});
+    else if(legacyMode==='efficiency')list.sort(function(a,b){var ea=(a.horas_mes||0)>0?(a.monedas_acumuladas||0)/(a.horas_mes):0;var eb=(b.horas_mes||0)>0?(b.monedas_acumuladas||0)/(b.horas_mes):0;return eb-ea});
+    else if(legacyMode==='meta_pct')list.sort(function(a,b){var pa=(a.meta_monedas_mes||0)>0?((a.monedas_acumuladas||0)/(a.meta_monedas_mes))*100:0;var pb=(b.meta_monedas_mes||0)>0?((b.monedas_acumuladas||0)/(b.meta_monedas_mes))*100:0;return pb-pa});
+    else if(legacyMode==='days')list.sort(function(a,b){return(b.dias_transmitidos||0)-(a.dias_transmitidos||0)});
+    else if(legacyMode==='quiz')list.sort(function(a,b){return(b.quiz_mejor_puntaje||0)-(a.quiz_mejor_puntaje||0)});
+    else if(legacyMode==='best_day')list.sort(function(a,b){return(b.mejor_dia_monedas||0)-(a.mejor_dia_monedas||0)});
+    else if(legacyMode==='bonus')list.sort(function(a,b){return((b.horas_contables||0)>=40?1:0)-((a.horas_contables||0)>=40?1:0)||(b.monedas_acumuladas||0)-(a.monedas_acumuladas||0)});
+    else if(legacyMode==='ghost')list.sort(function(a,b){var ga=(a.horas_mes||0)-(a.horas_contables||0);var gb=(b.horas_mes||0)-(b.horas_contables||0);return gb-ga});
+    e=list[idOrIdx];
+  }
+  if(!e)return;
   
   var av=e.captura_url?'<img src="'+e.captura_url+'">':'🌴';
   var hc=e.horas_contables||0,hr=e.horas_mes||0;

@@ -836,19 +836,19 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
 .pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
-.pet-bowl{position:absolute;right:18%;bottom:9%;width:48px;height:48px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.pet-bowl{position:absolute;right:22%;bottom:8%;width:32px;height:32px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .pet-bowl:active{transform:scale(.92)}
-.pet-bowl::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.18),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
+.pet-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.2),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.water-bowl{position:absolute;right:5%;bottom:9%;width:48px;height:48px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.water-bowl{position:absolute;right:8%;bottom:8%;width:32px;height:32px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .water-bowl:active{transform:scale(.92)}
-.water-bowl::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
+.water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
 @keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
-.pet-decor.bed{left:8%;bottom:9%;width:96px;height:96px}
-.pet-walker{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
+.pet-decor.bed{left:6%;bottom:7%;width:64px;height:64px}
+.pet-walker{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
 .pet-shadow{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:75px;height:14px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 40%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
 @keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1)}50%{transform:translateX(-50%) scale(.95,.85)}}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
@@ -2709,8 +2709,8 @@ function PetController(el,category,variant){
   this.variant=variant;
   this.config=SPRITE_ANIMS[category]&&SPRITE_ANIMS[category][variant];
   if(!this.config){console.warn('No sprite config for',category,variant);return}
-  /* Scale tuned per category to keep visual size consistent (~128px tall) */
-  var scale=4;
+  /* Scale tuned per category to keep visual size consistent (~96px tall) */
+  var scale=3;
   if(this.config.frameH===64)scale=2; /* Dogs are 64x64 native, scale less */
   this.sprite=new PetSprite({
     el:el,

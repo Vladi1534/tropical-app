@@ -836,28 +836,35 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
 .pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
-.pet-bowl{position:absolute;right:22%;bottom:8%;width:32px;height:32px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.pet-bowl{position:absolute;right:26%;bottom:8%;width:28px;height:28px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .3s}
 .pet-bowl:active{transform:scale(.92)}
 .pet-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.2),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.water-bowl{position:absolute;right:8%;bottom:8%;width:32px;height:32px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.pet-bowl.hide-for-eating{opacity:0;pointer-events:none}
+.water-bowl{position:absolute;right:10%;bottom:8%;width:28px;height:28px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:50%;bottom:6%;width:28px;height:28px;transform:translateX(-50%);z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
-.toy-ball:active{transform:translateX(-50%) scale(.88)}
+.toy-ball{position:absolute;left:72%;bottom:7%;width:24px;height:24px;z-index:4;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .toy-ball.ready::after{opacity:1;animation:bowlPulse 2.4s ease-in-out infinite}
 @keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
-.pet-decor.bed{left:5%;bottom:7%;width:56px;height:56px}
-.pet-decor.brush{left:21%;bottom:8%;width:24px;height:24px}
-.pet-decor.flower{left:32%;bottom:10%;width:18px;height:18px}
-.pet-decor.snack{right:40%;bottom:9%;width:18px;height:18px}
-.pet-walker{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
-.pet-walker.fast{transition:left 1.5s cubic-bezier(.4,0,.6,1)}
+.pet-decor.bed{left:4%;bottom:7%;width:44px;height:44px}
+.pet-decor.brush{left:19%;bottom:7%;width:18px;height:18px}
+.pet-decor.flower{left:28%;bottom:8%;width:14px;height:14px}
+.pet-decor.snack{left:86%;bottom:9%;width:14px;height:14px;display:none}
+.pet-walker{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:3;will-change:left}
+.pet-walker.fast{transition:left 1.5s cubic-bezier(.4,0,.6,1);animation:petWalkBounce .35s ease-in-out infinite}
+@keyframes petWalkBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}
+.pet-time-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;mix-blend-mode:multiply;transition:background-color 2s ease,opacity 2s ease;opacity:0}
+.pet-time-overlay.dusk{background:linear-gradient(to bottom,rgba(255,170,100,.35),rgba(200,100,150,.25));opacity:1}
+.pet-time-overlay.night{background:linear-gradient(to bottom,rgba(30,40,80,.55),rgba(20,25,60,.7));opacity:1}
+.pet-time-overlay.dawn{background:linear-gradient(to bottom,rgba(255,200,150,.3),rgba(255,220,180,.2));opacity:1}
+.pet-time-badge{position:absolute;top:8px;left:8px;z-index:6;font-size:11px;color:#fff;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:12px;backdrop-filter:blur(4px);pointer-events:none;font-weight:700}
 .pet-facing{display:inline-block;transition:transform .25s ease}
 .pet-facing.face-left{transform:scaleX(-1)}
 .pet-shadow{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:75px;height:14px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 40%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
@@ -2722,8 +2729,8 @@ function PetController(el,category,variant){
   this.config=SPRITE_ANIMS[category]&&SPRITE_ANIMS[category][variant];
   if(!this.config){console.warn('No sprite config for',category,variant);return}
   /* Scale tuned per category to keep visual size consistent */
-  var scale=2.5; /* Cats/bunnies 32x32 → 80px tall */
-  if(this.config.frameH===64)scale=1.5; /* Dogs 64x64 → 96px tall */
+  var scale=2; /* Cats/bunnies 32x32 → 64px tall (~17% of scene) */
+  if(this.config.frameH===64)scale=1; /* Dogs 64x64 → 64px tall */
   this.sprite=new PetSprite({
     el:el,
     frameW:this.config.frameW,
@@ -2774,11 +2781,14 @@ PetController.prototype.destroy=function(){
 
 /* Map mood -> sprite state */
 function moodToState(mood){
+  /* Resting/base states are ALWAYS idle variants (the cat sits naturally).
+     Excited is NEVER a continuous state — it's a one-shot triggered by actions
+     (tap, feed, play) then auto-returns to idle. */
   if(mood==='sleeping')return 'sleep';
-  if(mood==='happy')return 'excited';
   if(mood==='sad')return 'sad';
-  if(mood==='hungry')return 'sleepy';
-  return 'idle'; /* content, neutral, default */
+  if(mood==='hungry')return 'sleepy'; /* sleepy = drowsy/low energy pose */
+  /* happy, content, neutral, default → idle (cat sitting calmly) */
+  return 'idle';
 }
 
 function closeTutorialV2(){
@@ -2792,6 +2802,40 @@ function maybeShowTutorialV2(){
 }
 
 var _currentPetController=null;
+
+/* ===== DAY/NIGHT OVERLAY — simulates time of day inside the room =====
+   Uses approximate timezone offset per country for realism. */
+var COUNTRY_UTC_OFFSET={
+  'MX':-6,'AR':-3,'CL':-4,'PE':-5,'CO':-5,'VE':-4,'EC':-5,'BO':-4,'UY':-3,'PY':-3,
+  'CR':-6,'PA':-5,'DO':-4,'CU':-5,'GT':-6,'HN':-6,'NI':-6,'SV':-6,'PR':-4,
+  'ES':1,'US':-5,'BR':-3
+};
+function getPetLocalHour(){
+  /* Returns local hour 0-23 for the user's country, or local machine hour if unknown */
+  if(P&&P.pais&&typeof COUNTRY_UTC_OFFSET[P.pais]==='number'){
+    var utcMs=Date.now()+(new Date().getTimezoneOffset()*60000);
+    var localMs=utcMs+(COUNTRY_UTC_OFFSET[P.pais]*3600000);
+    return new Date(localMs).getHours();
+  }
+  return new Date().getHours();
+}
+function updateTimeOverlay(){
+  var overlay=document.getElementById('pet-time-overlay');
+  var badge=document.getElementById('pet-time-badge');
+  if(!overlay)return;
+  var h=getPetLocalHour();
+  var phase='day';
+  var icon='☀️';
+  var label='Día';
+  if(h>=21||h<5){phase='night';icon='🌙';label='Noche'}
+  else if(h>=5&&h<7){phase='dawn';icon='🌅';label='Amanecer'}
+  else if(h>=18&&h<21){phase='dusk';icon='🌇';label='Atardecer'}
+  overlay.className='pet-time-overlay'+(phase==='day'?'':' '+phase);
+  if(badge){
+    badge.textContent=icon+' '+label+' '+(h<10?'0'+h:h)+':00';
+  }
+}
+
 function initPetSprite(){
   var el=document.getElementById('pet-sprite-el');
   if(!el)return;
@@ -2821,6 +2865,8 @@ function initPetSprite(){
   if(mood==='sleeping'&&Math.abs(_lastWalkerLeft-POS_BED)>3){
     setTimeout(function(){petWalkTo(POS_BED)},300);
   }
+  /* Update day/night overlay */
+  updateTimeOverlay();
 }
 function petSpriteSetState(state){
   if(_currentPetController)_currentPetController.setState(state);
@@ -2869,6 +2915,8 @@ function renderPetCard(){
   /* Dev button (only in dev mode) */
   if(devModeActive())h+='<button onclick="devOpen()" style="position:absolute;top:10px;right:42px;z-index:5;background:rgba(168,85,247,.6);border:1px solid rgba(168,85,247,.4);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Dev panel">🛠️</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
+  h+='<div class="pet-time-overlay" id="pet-time-overlay"></div>';
+  h+='<div class="pet-time-badge" id="pet-time-badge"></div>';
   h+='<div class="pet-decor bed" id="pet-decor-bed"></div>';
   h+='<div class="pet-decor brush" id="pet-decor-brush"></div>';
   h+='<div class="pet-decor flower" id="pet-decor-flower"></div>';
@@ -3148,9 +3196,14 @@ function consumeFood(foodId){
   checkPetLevelUp(pet);savePet();
   closeM('m-pet-feed');
   renderPetCard();
-  /* Walk to food bowl, then play eating animation */
+  /* Walk to food bowl, then play eating animation.
+     NOTE: The ToffeeCraft eating sprite has a bowl drawn INSIDE the animation
+     frames, so we hide the scene bowl during eating to avoid the "double bowl"
+     visual bug. The scene bowl is restored once eating finishes. */
   setTimeout(function(){
     petWalkTo(POS_FOOD,function(){
+      var bowlEl=document.getElementById('pet-bowl-el');
+      if(bowlEl)bowlEl.classList.add('hide-for-eating');
       petSpritePlayOnce('eating');
     });
   },100);
@@ -3161,9 +3214,11 @@ function consumeFood(foodId){
       P.mascota.bowl_food=null;
       savePet();
       updatePetBowl();
+      var bowlEl=document.getElementById('pet-bowl-el');
+      if(bowlEl)bowlEl.classList.remove('hide-for-eating');
     }
   },4500);
-  toast(food.icon+' '+(pet.nombre)+' está comiendo '+food.name+' · +'+food.xp+' XP');
+  toast(food.icon+' '+(pet.nombre)+' va a comer '+food.name+' · +'+food.xp+' XP');
 }
 
 /* Backwards compat: feedPet still callable but routes to consumeFood */
@@ -3224,7 +3279,7 @@ function petTap(e){
   var pet=P.mascota;if(!pet)return;
   var mood=getMood(pet);
   if(mood==='sleeping'){
-    showTapHeart(e,'💤');
+    showTapParticle(e,'💤','#22d3ee');
     toast('💤 Está durmiendo, déjala descansar');
     return;
   }
@@ -3232,35 +3287,49 @@ function petTap(e){
   var hoy=new Date().toISOString().slice(0,10);
   if(pet.taps_dia!==hoy){pet.taps_count=0;pet.taps_dia=hoy}
   var rewarded=false;
-  if((pet.taps_count||0)<30){
+  var capReached=(pet.taps_count||0)>=30;
+  if(!capReached){
     pet.felicidad=Math.min(100,(pet.felicidad||0)+1);
     pet.xp=(pet.xp||0)+1;
     pet.taps_count=(pet.taps_count||0)+1;
     rewarded=true;
     checkPetLevelUp(pet);
   }
-  /* Visual: heart particle at click position */
-  var hearts=mood==='hungry'?['🍽️','🐾','🥺']:mood==='sad'?['💙','🥺','💧']:['💕','❤️','💖','💗','✨','💝','😊'];
-  showTapHeart(e,hearts[Math.floor(Math.random()*hearts.length)]);
-  /* Bounce + play excited animation briefly */
-  var spr=document.querySelector('.pet-sprite')||document.querySelector('.pet-svg');
-  if(spr){spr.style.transform='scale(1.08)';setTimeout(function(){spr.style.transform=''},150)}
-  /* If sprite controller exists, play excited animation as one-shot */
-  if(_currentPetController&&mood!=='sleeping'){
-    petSpritePlayOnce('excited');
+  /* Visual: floating '+1 XP' text (or heart if cap reached) */
+  if(rewarded){
+    showTapParticle(e,'+1 XP','#fbbf24');
+  }else{
+    showTapParticle(e,'💖','#ec4899');
   }
+  /* Subtle bounce on sprite wrapper, NOT on sprite itself (preserves facing) */
+  var spr=document.getElementById('pet-sprite-el');
+  if(spr){spr.style.transform='scale(1.06)';setTimeout(function(){spr.style.transform=''},140)}
   /* Telegram haptic feedback */
   try{if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback){window.Telegram.WebApp.HapticFeedback.impactOccurred('light')}}catch(err){}
+  /* Show hint once per session explaining what taps do */
+  try{
+    if(window.sessionStorage&&!window.sessionStorage.getItem('pet-tap-hint-shown')){
+      window.sessionStorage.setItem('pet-tap-hint-shown','1');
+      setTimeout(function(){
+        toast('✨ Cada caricia suma +1 XP y felicidad · máx 30 al día');
+      },600);
+    }
+  }catch(err){}
+  /* When cap is reached, gentle notice */
+  if(capReached&&(pet.taps_count||0)===30){
+    toast('💝 '+(pet.nombre||'Tu mascota')+' ya recibió todas las caricias de hoy');
+  }
   /* Debounced save (don't hammer API) */
   if(rewarded){
     if(_petTapSaveTimer)clearTimeout(_petTapSaveTimer);
     _petTapSaveTimer=setTimeout(function(){savePet();renderPetCard()},2000);
   }
 }
-function showTapHeart(e,emoji){
+function showTapParticle(e,text,color){
   var el=document.createElement('div');
-  el.textContent=emoji||'💕';
-  el.style.cssText='position:fixed;font-size:28px;pointer-events:none;z-index:9999;animation:tapHeart 1.2s ease-out forwards;text-shadow:0 2px 8px rgba(0,0,0,.3)';
+  el.textContent=text||'+1 XP';
+  var c=color||'#fbbf24';
+  el.style.cssText='position:fixed;font-size:16px;font-weight:800;font-family:Fredoka,sans-serif;pointer-events:none;z-index:9999;animation:tapHeart 1.2s ease-out forwards;text-shadow:0 2px 8px rgba(0,0,0,.5),0 0 4px rgba(0,0,0,.3);color:'+c;
   var x,y;
   if(e&&e.clientX){x=e.clientX;y=e.clientY}
   else if(e&&e.touches&&e.touches[0]){x=e.touches[0].clientX;y=e.touches[0].clientY}
@@ -3270,14 +3339,16 @@ function showTapHeart(e,emoji){
   document.body.appendChild(el);
   setTimeout(function(){if(el.parentNode)el.remove()},1300);
 }
+/* Legacy alias — some code may still call showTapHeart */
+function showTapHeart(e,emoji){showTapParticle(e,emoji||'💕','#ec4899')}
 
 /* ===== PET WANDERING — pet moves naturally around the room ===== */
 /* ===== PET WALKER & POSITION TRACKING ===== */
-/* Object positions in % (center of each interactive item) */
-var POS_BED=13;
-var POS_TOY=50;
-var POS_FOOD=74;
-var POS_WATER=88;
+/* Object positions in % — centers of each interactive item, matches CSS */
+var POS_BED=10;    /* bed at left:4% + width 44px */
+var POS_FOOD=70;   /* food bowl at right:26% */
+var POS_WATER=86;  /* water bowl at right:10% */
+var POS_TOY=75;    /* toy ball at left:72% */
 /* Walker remembers its position across re-renders since renderPetCard rewrites the DOM */
 var _lastWalkerLeft=50;
 var _lastWalkerFace='right'; /* 'left' or 'right' */
@@ -3318,10 +3389,14 @@ function petWalkTo(targetPct,callback){
 }
 
 var _petWanderInterval=null;
+var _petTimeInterval=null;
 function startPetWander(){
   if(_petWanderInterval)clearInterval(_petWanderInterval);
   _petWanderInterval=setInterval(petWander,8000);
   setTimeout(petWander,2000); /* first move after a moment */
+  /* Also refresh time-of-day overlay every minute so day→dusk→night transitions are visible */
+  if(_petTimeInterval)clearInterval(_petTimeInterval);
+  _petTimeInterval=setInterval(updateTimeOverlay,60000);
 }
 function petWander(){
   if(_walkPaused)return; /* don't interrupt action walks */
@@ -3334,9 +3409,9 @@ function petWander(){
   if(!pet)return;
   var mood=getMood(pet);
   if(mood==='sleeping')return; /* dormir = quieta en la cama */
-  /* Random target between 25% and 75% (free zone, doesn't reach items at edges) */
-  var newLeft=25+Math.random()*50;
-  /* Set facing direction */
+  /* Free zone: 38% to 62% — away from decorations (left) and bowls/toy (right) */
+  var newLeft=38+Math.random()*24;
+  /* Set facing direction based on movement */
   var direction=newLeft<_lastWalkerLeft?'left':'right';
   setPetFacing(direction);
   w.style.left=newLeft+'%';

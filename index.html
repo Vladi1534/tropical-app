@@ -836,12 +836,18 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
 .pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
-.pet-bowl{position:absolute;right:12%;bottom:8%;width:80px;height:40px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.pet-bowl{position:absolute;right:18%;bottom:9%;width:48px;height:48px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .pet-bowl:active{transform:scale(.92)}
-.pet-bowl::after{content:'';position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.18),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
+.pet-bowl::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.18),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
+.water-bowl{position:absolute;right:5%;bottom:9%;width:48px;height:48px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.water-bowl:active{transform:scale(.92)}
+.water-bowl::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
+.water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
 @keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
+.pet-decor.bed{left:8%;bottom:9%;width:96px;height:96px}
 .pet-walker{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:2;will-change:left}
 .pet-shadow{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:75px;height:14px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 40%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
 @keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1)}50%{transform:translateX(-50%) scale(.95,.85)}}
@@ -857,7 +863,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-pname{font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#fff}
 .pet-level{font-size:10px;color:var(--gold);font-weight:700}
 .pet-croquetas{font-size:11px;color:var(--gold);font-weight:700;display:flex;align-items:center;gap:3px}
-.pet-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:0 14px 10px}
+.pet-stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;padding:0 14px 10px}
 .pet-stat{background:rgba(255,255,255,.04);border-radius:8px;padding:6px 8px}
 .pet-stat-lbl{font-size:8px;color:var(--txt3);text-transform:uppercase;display:flex;align-items:center;gap:3px}
 .pet-stat-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:3px;overflow:hidden}
@@ -2703,11 +2709,14 @@ function PetController(el,category,variant){
   this.variant=variant;
   this.config=SPRITE_ANIMS[category]&&SPRITE_ANIMS[category][variant];
   if(!this.config){console.warn('No sprite config for',category,variant);return}
+  /* Scale tuned per category to keep visual size consistent (~128px tall) */
+  var scale=4;
+  if(this.config.frameH===64)scale=2; /* Dogs are 64x64 native, scale less */
   this.sprite=new PetSprite({
     el:el,
     frameW:this.config.frameW,
     frameH:this.config.frameH,
-    scale:5
+    scale:scale
   });
   this.currentState='';
 }
@@ -2833,7 +2842,9 @@ function renderPetCard(){
   /* Dev button (only in dev mode) */
   if(devModeActive())h+='<button onclick="devOpen()" style="position:absolute;top:10px;right:42px;z-index:5;background:rgba(168,85,247,.6);border:1px solid rgba(168,85,247,.4);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Dev panel">🛠️</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'</div>';
+  h+='<div class="pet-decor bed" id="pet-decor-bed"></div>';
   h+='<div class="pet-bowl" id="pet-bowl-el" onclick="openBowl()" title="Tocar plato"><div class="bowl-sprite" id="bowl-sprite-el"></div></div>';
+  h+='<div class="water-bowl" id="water-bowl-el" onclick="openWaterBowl()" title="Tocar agua"><div class="bowl-sprite" id="water-sprite-el"></div></div>';
   h+='<div class="pet-walker"><div class="pet-shadow"></div><div id="pet-sprite-el" class="pet-sprite" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent"></div></div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
   h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood)+'</div></div>';
@@ -2841,9 +2852,10 @@ function renderPetCard(){
   h+='<div class="pet-xp"><div class="pet-xp-bar"><div class="pet-xp-fill" style="width:'+xpPct+'%"></div></div>';
   h+='<div class="pet-xp-txt"><span>XP '+fmt(xp)+'/'+fmt(nxt)+'</span><span>Nv.'+(lvl+1)+'</span></div></div>';
   h+='<div class="pet-stats">';
-  h+='<div class="pet-stat" title="Sube al alimentar y jugar. Baja 12 puntos por día sin entrar."><div class="pet-stat-lbl">😊 Felicidad</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.felicidad||0)+'%;background:'+(pet.felicidad>50?'var(--green)':'var(--red)')+'"></div></div></div>';
-  h+='<div class="pet-stat" title="Sube al alimentarla. Baja 20 puntos por día. Si baja mucho se pone hambrienta."><div class="pet-stat-lbl">🍽️ Hambre</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.hambre||0)+'%;background:'+(pet.hambre>40?'var(--gold)':'var(--red)')+'"></div></div></div>';
-  h+='<div class="pet-stat" title="Baja al jugar, sube +10 por hora en reposo. Si baja de 15 se duerme."><div class="pet-stat-lbl">⚡ Energía</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.energia||0)+'%;background:var(--cyan)"></div></div></div>';
+  h+='<div class="pet-stat" title="Felicidad — Sube al jugar y comer. Baja 12/día sin entrar."><div class="pet-stat-lbl">😊</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.felicidad||0)+'%;background:'+(pet.felicidad>50?'var(--green)':'var(--red)')+'"></div></div></div>';
+  h+='<div class="pet-stat" title="Hambre — Sube al alimentar (toca el plato). Baja 20/día."><div class="pet-stat-lbl">🍽️</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.hambre||0)+'%;background:'+(pet.hambre>40?'var(--gold)':'var(--red)')+'"></div></div></div>';
+  h+='<div class="pet-stat" title="Sed — Sube al tomar agua (toca el cuenco azul). Baja 25/día."><div class="pet-stat-lbl">💧</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.sed||0)+'%;background:'+((pet.sed||0)>40?'var(--cyan)':'var(--red)')+'"></div></div></div>';
+  h+='<div class="pet-stat" title="Energía — Baja al jugar. Sube +10/hora en reposo."><div class="pet-stat-lbl">⚡</div><div class="pet-stat-bar"><div class="pet-stat-fill" style="width:'+Math.max(0,pet.energia||0)+'%;background:var(--purple)"></div></div></div>';
   h+='</div>';
 
   /* Sleep progress bar */
@@ -2898,6 +2910,8 @@ function petDailyUpdate(pet){
     pet.mostrar_tutorial_v2=true;
     /* Defer save to end of function */
   }
+  /* === MIGRATION v2.2: ensure pet has sed (thirst) stat === */
+  if(typeof pet.sed!=='number'){pet.sed=100;pet.water_last_refill=null}
   var nowTs=Date.now();
   var nowDate=new Date().toISOString().slice(0,10);
   /* Hourly energy regeneration based on ultima_energia_ts */
@@ -2915,6 +2929,7 @@ function petDailyUpdate(pet){
   if(diasSin>0){
     pet.hambre=Math.max(0,(pet.hambre||50)-diasSin*20);
     pet.felicidad=Math.max(0,(pet.felicidad||50)-diasSin*12);
+    pet.sed=Math.max(0,(pet.sed||100)-diasSin*25);
     /* Energy is handled hourly, skip here */
   }
   pet.felicidad=Math.min(100,(pet.felicidad||50)+3);pet.xp=(pet.xp||0)+3;
@@ -2950,7 +2965,7 @@ function adoptPet(){
   var name=document.getElementById('pet-name-input').value.trim()||'Mascota';
   var colores=generatePetColors(selectedPetType);
   var inventario={};inventario[getBasicFoodId(selectedPetType)]=5;
-  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0,inventario_comida:inventario,bowl_filled_at:null,bowl_food:null,migracion_v2:true};
+  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,sed:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0,inventario_comida:inventario,bowl_filled_at:null,bowl_food:null,water_last_refill:null,migracion_v2:true};
   P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();
   var rareMsg=colores.rare?' ¡Color raro: '+colores.rare+'! ✨':'';
   toast('🐾 ¡Adoptaste a '+name+'!'+rareMsg);
@@ -2961,17 +2976,36 @@ function adoptPet(){
 /* ===== BOWL & FEEDING v2 — Diegetic interface ===== */
 
 function updatePetBowl(){
-  /* Renders the bowl sprite based on pet.bowl_filled_at state */
-  var el=document.getElementById('bowl-sprite-el');
-  if(!el)return;
+  /* Renders all room sprites: food bowl, water bowl, bed decoration */
   var pet=P&&P.mascota;if(!pet)return;
-  var bowlEl=document.getElementById('pet-bowl-el');
-  var isFull=!!pet.bowl_filled_at;
-  el.style.backgroundImage='url("'+getItemUrl(isFull?'bowl_full.png':'bowl_empty.png')+'")';
-  /* Empty hint glow when bowl has been empty for a while AND pet is hungry */
-  if(bowlEl){
-    var hambreLow=(pet.hambre||100)<50;
-    bowlEl.classList.toggle('empty-hint',!isFull&&hambreLow);
+  /* === FOOD BOWL === */
+  var foodEl=document.getElementById('bowl-sprite-el');
+  if(foodEl){
+    var isFull=!!pet.bowl_filled_at;
+    foodEl.style.backgroundImage='url("'+getItemUrl(isFull?'bowl_full.png':'bowl_empty.png')+'")';
+    var bowlEl=document.getElementById('pet-bowl-el');
+    if(bowlEl){
+      var hambreLow=(pet.hambre||100)<50;
+      bowlEl.classList.toggle('empty-hint',!isFull&&hambreLow);
+    }
+  }
+  /* === WATER BOWL === */
+  var waterEl=document.getElementById('water-sprite-el');
+  if(waterEl){
+    /* Water shows full when sed >= 30, empty otherwise */
+    var sedLevel=pet.sed||0;
+    var waterIsFull=sedLevel>=30;
+    waterEl.style.backgroundImage='url("'+getItemUrl(waterIsFull?'water_full.png':'water_empty.png')+'")';
+    var wbEl=document.getElementById('water-bowl-el');
+    if(wbEl){
+      var sedLow=sedLevel<50;
+      wbEl.classList.toggle('empty-hint',sedLow);
+    }
+  }
+  /* === BED DECORATION (static) === */
+  var bedEl=document.getElementById('pet-decor-bed');
+  if(bedEl){
+    bedEl.style.backgroundImage='url("'+getItemUrl('bed.png')+'")';
   }
 }
 
@@ -2983,6 +3017,31 @@ function openBowl(){
   if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
   openM('m-pet-feed');
   renderFeedMenu();
+}
+
+function openWaterBowl(){
+  var pet=P&&P.mascota;if(!pet)return;
+  /* If sleeping, don't disturb */
+  if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
+  /* Cooldown check — 30 second between refills to prevent spam */
+  var now=Date.now();
+  var lastRefill=pet.water_last_refill||0;
+  if(now-lastRefill<30000){
+    var sec=Math.ceil((30000-(now-lastRefill))/1000);
+    toast('💧 Ya tomó agua hace poco · '+sec+'s');
+    return;
+  }
+  /* If already full enough, no need */
+  if((pet.sed||0)>=95){toast('💧 No tiene sed ahora');return}
+  /* Refill water — free, instant */
+  pet.sed=100;
+  pet.water_last_refill=now;
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+5); /* small happiness boost */
+  pet.xp=(pet.xp||0)+2;
+  savePet();renderPetCard();
+  /* Play eating animation as drink stand-in */
+  setTimeout(function(){petSpritePlayOnce('eating')},50);
+  toast('💧 '+(pet.nombre||'Tu mascota')+' está bebiendo agua fresca');
 }
 
 function renderFeedMenu(){

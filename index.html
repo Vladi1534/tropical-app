@@ -484,6 +484,52 @@ label{display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;font-weig
 .ti-role-badge.sa{background:rgba(236,72,153,.12);color:var(--pink)}
 .ti-role-badge.ad{background:rgba(168,85,247,.15);color:var(--gold)}
 .ti-role-badge.em{background:rgba(52,211,153,.15);color:var(--green)}
+/* ===== v10.8 SECURITY SYSTEM ===== */
+.sec-subtabs{display:flex;gap:0;margin-bottom:14px;background:var(--card2);border-radius:25px;padding:3px}
+.sec-subtabs .st-btn{flex:1;padding:8px 10px;border:none;background:transparent;color:var(--txt3);font-size:11px;font-weight:700;cursor:pointer;border-radius:22px;font-family:Nunito,sans-serif;transition:all .2s}
+.sec-subtabs .st-btn.a{background:var(--card);color:var(--gold);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.admin-card{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--card);border-radius:var(--rs);margin-bottom:8px;border:1px solid rgba(139,99,53,.12);animation:fadeUp .3s ease}
+.admin-card.me{border-color:rgba(251,191,36,.3);background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(168,85,247,.03))}
+.admin-card.suspicious{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.04)}
+.ac-av{width:42px;height:42px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ac-info{flex:1;min-width:0}
+.ac-name{font-family:Fredoka,sans-serif;font-size:14px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap}
+.ac-me-tag{font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(251,191,36,.15);color:var(--gold);font-weight:700;letter-spacing:.3px}
+.ac-id{font-size:10px;color:var(--txt3);margin-bottom:4px;font-family:monospace}
+.ac-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:10px;color:var(--txt3);margin-bottom:8px}
+.ac-meta-item{display:flex;align-items:center;gap:3px}
+.ac-meta-warn{color:var(--red);font-weight:700}
+.ac-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ac-btn{padding:6px 10px;border:none;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif;transition:transform .1s}
+.ac-btn:active{transform:scale(.95)}
+.ac-btn.reset{background:rgba(251,191,36,.15);color:var(--gold);border:1px solid rgba(251,191,36,.25)}
+.ac-btn.disable{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.ac-btn.edit{background:rgba(168,85,247,.12);color:var(--pink);border:1px solid rgba(168,85,247,.2)}
+.pin-display-box{background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(236,72,153,.08));border:2px dashed rgba(251,191,36,.4);border-radius:var(--rs);padding:20px;text-align:center;margin:16px 0}
+.pin-display-digits{font-family:monospace;font-size:38px;font-weight:800;color:var(--gold);letter-spacing:10px;padding:10px 0;text-shadow:0 2px 8px rgba(251,191,36,.3)}
+.pin-warning{background:rgba(239,68,68,.08);border-left:3px solid var(--red);padding:10px 12px;border-radius:0 8px 8px 0;font-size:11px;color:var(--txt);line-height:1.5;margin:12px 0}
+.audit-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--card);border-radius:8px;margin-bottom:5px;font-size:11px;border-left:3px solid transparent}
+.audit-item.login-ok{border-left-color:var(--green)}
+.audit-item.login-fail{border-left-color:var(--red)}
+.audit-item.reset{border-left-color:var(--gold)}
+.audit-item.change{border-left-color:var(--cyan)}
+.audit-icon{font-size:16px;flex-shrink:0}
+.audit-body{flex:1;min-width:0}
+.audit-main{color:var(--txt);margin-bottom:2px;line-height:1.4}
+.audit-time{color:var(--txt3);font-size:9px}
+.audit-filters{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.audit-filter-btn{padding:6px 12px;border:none;border-radius:16px;background:var(--card2);color:var(--txt3);font-size:10px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif}
+.audit-filter-btn.a{background:var(--grad-b);color:#fff}
+.sec-banner{background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(251,146,60,.08));border:1px solid rgba(239,68,68,.3);border-radius:var(--rs);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease}
+.sec-banner-icon{font-size:22px}
+.sec-banner-text{flex:1;font-size:11px;color:var(--txt);line-height:1.5}
+.sec-banner-text strong{color:var(--red)}
+.emergency-banner{background:linear-gradient(135deg,rgba(239,68,68,.2),rgba(220,38,38,.12));border:2px solid var(--red);border-radius:var(--rs);padding:10px 14px;margin:10px 16px 0;font-size:11px;color:var(--txt);display:flex;align-items:center;gap:10px;font-weight:600}
+.locked-screen{text-align:center;padding:40px 24px}
+.locked-icon{font-size:54px;margin-bottom:12px}
+.locked-title{font-family:Fredoka,sans-serif;font-size:18px;font-weight:700;color:var(--red);margin-bottom:6px}
+.locked-msg{font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:14px}
+.locked-countdown{font-family:monospace;font-size:28px;color:var(--gold);font-weight:700}
 .ti-role-badge.inv{background:rgba(251,191,36,.15);color:var(--gold)}
 
 /* SALARY TABLE */
@@ -1559,6 +1605,11 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <div id="m-rule" class="modal"><div class="mbox" id="m-rule-content"></div></div>
 <div id="m-user" class="modal"><div class="mbox" id="m-user-content"></div></div>
 
+<!-- v10.8 SECURITY MODALS -->
+<div id="m-reset-pin" class="modal"><div class="mbox" id="m-reset-pin-content" style="max-width:360px"></div></div>
+<div id="m-change-pin" class="modal"><div class="mbox" id="m-change-pin-content" style="max-width:340px"></div></div>
+<div id="m-promote" class="modal"><div class="mbox" id="m-promote-content" style="max-width:360px"></div></div>
+
 <!-- HEADER -->
 <div class="header" id="adm-header" style="display:none">
   <div class="h-top">
@@ -1588,6 +1639,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <button class="nt" onclick="admGo('reglas')">⚖️ Reglas</button>
   <button class="nt" onclick="admGo('biblioteca')">📚 Media</button>
   <button class="nt" onclick="admGo('equipo')">👥 Equipo</button>
+  <button class="nt" onclick="admGo('seguridad')" id="nav-seguridad" style="display:none">🔐 Seguridad</button>
 </div>
 
 <!-- ====== RANKING ====== -->
@@ -1664,6 +1716,31 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="filterByRole()" style="margin:0;flex:1;font-size:11px" id="btn-role-filter">Todos los roles</button>
   </div>
   <div id="team-list"><div class="empty"><div class="em-icon">👥</div>Cargando...</div></div>
+</div>
+
+<!-- ====== v10.8 SEGURIDAD ====== -->
+<div class="sec" id="s-seguridad">
+  <div class="section-title">🔐 Seguridad y Accesos</div>
+  <div id="sec-suspicious-banner" style="display:none"></div>
+  <div class="sec-subtabs">
+    <button class="st-btn a" onclick="secTab('admins')" id="sect-admins">👥 Administradores</button>
+    <button class="st-btn" onclick="secTab('audit')" id="sect-audit">📜 Historial</button>
+  </div>
+  <div id="sec-admins-view">
+    <div id="sec-admins-list"><div class="empty"><div class="em-icon">🔐</div>Cargando...</div></div>
+    <div id="sec-promote-wrap" style="margin-top:12px;display:none">
+      <button class="bs" onclick="openPromoteUser()" style="font-size:11px">➕ Promover usuario a Admin</button>
+    </div>
+  </div>
+  <div id="sec-audit-view" style="display:none">
+    <div class="audit-filters">
+      <button class="audit-filter-btn a" onclick="auditFilter('all')" id="af-all">Todas</button>
+      <button class="audit-filter-btn" onclick="auditFilter('login')" id="af-login">Logins</button>
+      <button class="audit-filter-btn" onclick="auditFilter('reset')" id="af-reset">Cambios PIN</button>
+      <button class="audit-filter-btn" onclick="auditFilter('fail')" id="af-fail">Fallos</button>
+    </div>
+    <div id="sec-audit-list"><div class="empty"><div class="em-icon">📜</div>Cargando historial...</div></div>
+  </div>
 </div>
 
 
@@ -5039,6 +5116,22 @@ function loadAll(){
       for(var ni=0;ni<navBtns.length;ni++){if(navBtns[ni].textContent.indexOf('Equipo')>-1)navBtns[ni].style.display='none'}
     }
     
+    /* v10.8: Show Seguridad tab for admin + superadmin */
+    var segNav=document.getElementById('nav-seguridad');
+    if(segNav&&(currentRole==='admin'||currentRole==='superadmin'))segNav.style.display='';
+    
+    /* v10.8: Emergency mode banner */
+    if(_emergencyMode){
+      var adminApp=document.getElementById('app-admin');
+      if(adminApp&&!document.getElementById('emergency-banner-el')){
+        var eb=document.createElement('div');
+        eb.id='emergency-banner-el';
+        eb.className='emergency-banner';
+        eb.innerHTML='<span style="font-size:20px">⚠️</span><span>Modo emergencia activo · Tu usuario necesita repararse. Ve a <strong>🔐 Seguridad</strong> para asignarte un PIN.</span>';
+        adminApp.insertBefore(eb,adminApp.firstChild);
+      }
+    }
+    
     renderRanking();renderGifts();renderSalaries();renderRules();renderBib();renderTeam();
     
     var ldEl=document.getElementById('loading')||document.getElementById('ld');
@@ -5047,6 +5140,8 @@ function loadAll(){
     document.getElementById('adm-nav').style.display='flex';
     var hUser=document.getElementById('h-user');
     if(hUser)hUser.textContent=emisoras.length+' emisoras · '+regalos.length+' regalos · '+team.length+' usuarios';
+    /* v10.8: check for suspicious attempts after team data loads */
+    if(typeof checkSuspiciousAttempts==='function')checkSuspiciousAttempts();
   }).catch(function(e){console.error('loadAll error:',e)});
 }
 
@@ -5869,11 +5964,12 @@ function deleteBib(id,name){
 function admGo(t){
   var ts=document.querySelectorAll('#adm-nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
   var ss=document.querySelectorAll('#app-admin .sec');for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
-  var mp={ranking:0,regalos:1,salarios:2,reglas:3,biblioteca:4,equipo:5};
-  if(mp[t]!==undefined)ts[mp[t]].classList.add('a');
+  var mp={ranking:0,regalos:1,salarios:2,reglas:3,biblioteca:4,equipo:5,seguridad:6};
+  if(mp[t]!==undefined&&ts[mp[t]])ts[mp[t]].classList.add('a');
   var s=document.getElementById('s-'+t);if(s)s.classList.add('a');
   if(ts[mp[t]])ts[mp[t]].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
   window.scrollTo({top:0,behavior:'smooth'});
+  if(t==='seguridad')loadSecurity();
 }
 
 
@@ -6043,6 +6139,544 @@ function checkOnboarding(){
 
 
 /* ===== UNIFIED AUTH + MODE SWITCH ===== */
+/* ===== v10.8 SECURITY SYSTEM ===== */
+var EMERGENCY_BYPASS_IDS=[1493651830]; /* If auth gets corrupted, these IDs can always enter */
+var _emergencyMode=false;
+var _pendingAdminUser=null; /* User waiting to enter PIN */
+var _auditFilter='all';
+var _auditCache=[];
+var _secTab='admins';
+var _lockedTimerInterval=null;
+
+function generateRandomPin(){
+  /* Returns 4 random digits, avoiding obvious patterns */
+  var pin;var tries=0;
+  while(tries<20){
+    pin='';
+    for(var i=0;i<4;i++)pin+=String(Math.floor(Math.random()*10));
+    if(pin==='0000'||pin==='1111'||pin==='2222'||pin==='3333'||pin==='4444'||pin==='5555'||pin==='6666'||pin==='7777'||pin==='8888'||pin==='9999'||pin==='1234'||pin==='4321'||pin==='7741'){tries++;continue}
+    return pin;
+  }
+  return pin;
+}
+
+function auditLog(actorId,actorName,targetId,targetName,accion,detalle){
+  var entry={
+    actor_id:actorId||null,
+    actor_name:actorName||null,
+    target_id:targetId||null,
+    target_name:targetName||null,
+    accion:accion,
+    detalle:detalle||null
+  };
+  return sbq('admin_audit_log',{m:'POST',b:entry,h:{'Prefer':'return=minimal'}}).catch(function(e){console.warn('audit log failed:',e)});
+}
+
+function formatRelTime(ts){
+  if(!ts)return 'nunca';
+  var d=new Date(ts);var now=new Date();
+  var diffMs=now-d;var diffMin=Math.floor(diffMs/60000);
+  if(diffMin<1)return 'ahora';
+  if(diffMin<60)return 'hace '+diffMin+'m';
+  var diffHr=Math.floor(diffMin/60);
+  if(diffHr<24)return 'hace '+diffHr+'h';
+  var diffDays=Math.floor(diffHr/24);
+  if(diffDays<7)return 'hace '+diffDays+'d';
+  return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+}
+
+function securityGateCheck(user){
+  _pendingAdminUser=user;
+  /* Check lockout */
+  if(user.bloqueado_hasta){
+    var until=new Date(user.bloqueado_hasta);
+    if(until>new Date()){showLockedScreen(user,until);return}
+  }
+  /* Initial setup case: no pin at all */
+  if(!user.pin){showInitialPinSetup(user);return}
+  /* Normal PIN prompt */
+  showSecPinPrompt(user,'Ingresa tu PIN');
+}
+
+function showSecPinPrompt(user,subtitle){
+  var msg=document.getElementById('ua-msg');
+  var area=document.getElementById('ua-pin-area');
+  var err=document.getElementById('ua-err');
+  if(!msg||!area)return;
+  if(err){err.style.display='none';err.textContent=''}
+  msg.innerHTML='Hola, <strong style="color:var(--gold)">'+(user.nombre||'Admin')+'</strong>';
+  var h='<div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--txt2)">'+subtitle+'</div>';
+  h+='<div class="ua-pin">';
+  h+='<input type="tel" maxlength="1" id="spin1" oninput="spinNext(1)" onkeydown="spinBack(event,1)" autofocus>';
+  h+='<input type="tel" maxlength="1" id="spin2" oninput="spinNext(2)" onkeydown="spinBack(event,2)">';
+  h+='<input type="tel" maxlength="1" id="spin3" oninput="spinNext(3)" onkeydown="spinBack(event,3)">';
+  h+='<input type="tel" maxlength="1" id="spin4" oninput="checkSecPin()" onkeydown="spinBack(event,4)">';
+  h+='</div>';
+  h+='<div style="text-align:center;margin-top:10px;font-size:10px;color:var(--txt3)">ID: '+user.id+'</div>';
+  area.innerHTML=h;
+  setTimeout(function(){var f=document.getElementById('spin1');if(f)f.focus()},100);
+}
+
+function spinNext(n){var el=document.getElementById('spin'+n);if(el&&el.value){var nx=document.getElementById('spin'+(n+1));if(nx)nx.focus()}}
+function spinBack(e,n){if(e.key==='Backspace'){var el=document.getElementById('spin'+n);if(!el.value&&n>1){e.preventDefault();var prev=document.getElementById('spin'+(n-1));if(prev){prev.value='';prev.focus()}}}}
+
+function checkSecPin(){
+  var p='';
+  for(var i=1;i<=4;i++){var el=document.getElementById('spin'+i);if(el)p+=el.value}
+  if(p.length!==4)return;
+  var user=_pendingAdminUser;
+  if(!user)return;
+  if(String(p)===String(user.pin))handlePinSuccess(user);
+  else handlePinFail(user);
+}
+
+function handlePinSuccess(user){
+  var nowIso=new Date().toISOString();
+  sbq('usuarios?id=eq.'+user.id,{m:'PATCH',b:{ultimo_login:nowIso,intentos_fallidos:0,bloqueado_hasta:null},h:{'Prefer':'return=minimal'}}).catch(function(){});
+  auditLog(user.id,user.nombre,user.id,user.nombre,'login_ok',null);
+  if(user.pin_reset_req){forcePinChangeModal(user);return}
+  startAdminMode();
+}
+
+function handlePinFail(user){
+  var newFails=(user.intentos_fallidos||0)+1;
+  user.intentos_fallidos=newFails;
+  var patch={intentos_fallidos:newFails};
+  var blocked=false;
+  if(newFails>=5){
+    var blockUntil=new Date(Date.now()+15*60000).toISOString();
+    patch.bloqueado_hasta=blockUntil;
+    user.bloqueado_hasta=blockUntil;
+    blocked=true;
+  }
+  sbq('usuarios?id=eq.'+user.id,{m:'PATCH',b:patch,h:{'Prefer':'return=minimal'}}).catch(function(){});
+  auditLog(user.id,user.nombre,user.id,user.nombre,'login_fail','Intento '+newFails+'/5');
+  for(var j=1;j<=4;j++){var e=document.getElementById('spin'+j);if(e)e.value=''}
+  var f=document.getElementById('spin1');if(f)f.focus();
+  if(blocked){
+    auditLog(user.id,user.nombre,user.id,user.nombre,'login_blocked','Bloqueada 15 min tras 5 fallos');
+    showLockedScreen(user,new Date(Date.now()+15*60000));
+    return;
+  }
+  var err=document.getElementById('ua-err');
+  if(err){err.textContent='PIN incorrecto ('+newFails+'/5)';err.style.display='block'}
+}
+
+function showLockedScreen(user,until){
+  var msg=document.getElementById('ua-msg');
+  var area=document.getElementById('ua-pin-area');
+  var err=document.getElementById('ua-err');
+  if(msg)msg.textContent='';
+  if(err){err.style.display='none';err.textContent=''}
+  if(!area)return;
+  var h='<div class="locked-screen">';
+  h+='<div class="locked-icon">🔒</div>';
+  h+='<div class="locked-title">Cuenta bloqueada</div>';
+  h+='<div class="locked-msg">Demasiados intentos fallidos.<br>Espera unos minutos antes de volver.</div>';
+  h+='<div class="locked-countdown" id="lock-cd">--:--</div>';
+  h+='</div>';
+  area.innerHTML=h;
+  if(_lockedTimerInterval)clearInterval(_lockedTimerInterval);
+  var updateCd=function(){
+    var ms=until-new Date();
+    if(ms<=0){
+      clearInterval(_lockedTimerInterval);
+      if(_pendingAdminUser){
+        _pendingAdminUser.bloqueado_hasta=null;
+        _pendingAdminUser.intentos_fallidos=0;
+        securityGateCheck(_pendingAdminUser);
+      }
+      return;
+    }
+    var mins=Math.floor(ms/60000);
+    var secs=Math.floor((ms%60000)/1000);
+    var cd=document.getElementById('lock-cd');
+    if(cd)cd.textContent=(mins<10?'0':'')+mins+':'+(secs<10?'0':'')+secs;
+  };
+  updateCd();
+  _lockedTimerInterval=setInterval(updateCd,1000);
+}
+
+function forcePinChangeModal(user){
+  var h='<div class="mtt">🔐 Cambia tu PIN<button class="m-close" disabled style="opacity:.3;pointer-events:none">✕</button></div>';
+  h+='<div style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:6px">🔑</div>';
+  h+='<div style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px">Tu PIN actual es temporal. Crea un PIN personal para continuar.</div></div>';
+  h+='<div class="mfield"><label>Nuevo PIN (4 dígitos)</label><input type="tel" class="ti" id="new-pin-1" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
+  h+='<div class="mfield"><label>Confirmar PIN</label><input type="tel" class="ti" id="new-pin-2" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
+  h+='<div id="new-pin-err" style="display:none;color:var(--red);font-size:11px;text-align:center;margin:6px 0"></div>';
+  h+='<button class="bp" onclick="saveForcedPin('+user.id+')">Guardar nuevo PIN</button>';
+  document.getElementById('m-change-pin-content').innerHTML=h;
+  openM('m-change-pin');
+  setTimeout(function(){var f=document.getElementById('new-pin-1');if(f)f.focus()},200);
+}
+
+function showInitialPinSetup(user){
+  var h='<div class="mtt">🎉 Configura tu PIN<button class="m-close" disabled style="opacity:.3;pointer-events:none">✕</button></div>';
+  h+='<div style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:6px">🔑</div>';
+  h+='<div style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px">Bienvenida '+(user.nombre||'Admin')+'. Crea tu PIN personal para acceder al panel.</div></div>';
+  h+='<div class="mfield"><label>Nuevo PIN (4 dígitos)</label><input type="tel" class="ti" id="new-pin-1" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
+  h+='<div class="mfield"><label>Confirmar PIN</label><input type="tel" class="ti" id="new-pin-2" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
+  h+='<div id="new-pin-err" style="display:none;color:var(--red);font-size:11px;text-align:center;margin:6px 0"></div>';
+  h+='<button class="bp" onclick="saveForcedPin('+user.id+')">Guardar y entrar</button>';
+  document.getElementById('m-change-pin-content').innerHTML=h;
+  openM('m-change-pin');
+  setTimeout(function(){var f=document.getElementById('new-pin-1');if(f)f.focus()},200);
+}
+
+function saveForcedPin(userId){
+  var p1=(document.getElementById('new-pin-1')||{value:''}).value;
+  var p2=(document.getElementById('new-pin-2')||{value:''}).value;
+  var err=document.getElementById('new-pin-err');
+  function showErr(m){if(err){err.textContent=m;err.style.display='block'}}
+  if(!/^\d{4}$/.test(p1)){showErr('El PIN debe ser 4 dígitos');return}
+  if(p1!==p2){showErr('Los PINs no coinciden');return}
+  if(p1==='0000'||p1==='1234'||p1==='1111'||p1==='7741'){showErr('Elige un PIN menos común');return}
+  sbq('usuarios?id=eq.'+userId,{m:'PATCH',b:{pin:p1,pin_reset_req:false},h:{'Prefer':'return=minimal'}}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var u=_pendingAdminUser;
+    if(u){u.pin=p1;u.pin_reset_req=false}
+    auditLog(userId,(u&&u.nombre)||null,userId,(u&&u.nombre)||null,'pin_changed','PIN cambiado por el usuario');
+    closeM('m-change-pin');
+    toast('✅ PIN actualizado');
+    if(_pendingAdminUser&&currentMode!=='admin'){setTimeout(function(){startAdminMode()},300)}
+    else{if(currentMode==='admin')renderSecAdmins()}
+  }).catch(function(e){showErr('Error: '+e.message)});
+}
+
+/* ===== SECURITY PANEL ===== */
+
+function loadSecurity(){renderSecAdmins()}
+
+function secTab(t){
+  _secTab=t;
+  var admTab=document.getElementById('sect-admins');
+  var audTab=document.getElementById('sect-audit');
+  var admView=document.getElementById('sec-admins-view');
+  var audView=document.getElementById('sec-audit-view');
+  if(admTab)admTab.classList.toggle('a',t==='admins');
+  if(audTab)audTab.classList.toggle('a',t==='audit');
+  if(admView)admView.style.display=t==='admins'?'block':'none';
+  if(audView)audView.style.display=t==='audit'?'block':'none';
+  if(t==='admins')renderSecAdmins();
+  else renderSecAudit();
+}
+
+function renderSecAdmins(){
+  var admins=team.filter(function(u){return u.rol==='admin'||u.rol==='superadmin'});
+  var meId=currentUser?currentUser.id:null;
+  admins.sort(function(a,b){
+    if(String(a.id)===String(meId))return -1;
+    if(String(b.id)===String(meId))return 1;
+    if(a.rol!==b.rol)return a.rol==='superadmin'?-1:1;
+    return (a.nombre||'').localeCompare(b.nombre||'');
+  });
+  var listEl=document.getElementById('sec-admins-list');
+  if(!listEl)return;
+  if(!admins.length){listEl.innerHTML='<div class="empty"><div class="em-icon">🔐</div>No hay admins</div>';return}
+  var h='';var now=new Date();
+  for(var i=0;i<admins.length;i++){
+    var u=admins[i];
+    var isMe=String(u.id)===String(meId);
+    var isSuper=u.rol==='superadmin';
+    var canIManage=currentRole==='superadmin'&&!isMe;
+    var blocked=u.bloqueado_hasta&&new Date(u.bloqueado_hasta)>now;
+    var recentFails=(u.intentos_fallidos||0)>=3;
+    h+='<div class="admin-card'+(isMe?' me':'')+(recentFails?' suspicious':'')+'">';
+    h+='<div class="ac-av">'+(isSuper?'👑':'🛡️')+'</div>';
+    h+='<div class="ac-info">';
+    h+='<div class="ac-name">'+(u.nombre||'Sin nombre');
+    if(isMe)h+='<span class="ac-me-tag">TÚ</span>';
+    h+='<span class="ti-role-badge '+(isSuper?'sa':'ad')+'" style="margin-left:auto">'+(isSuper?'👑 Super':'🛡️ Admin')+'</span>';
+    h+='</div>';
+    h+='<div class="ac-id">ID: '+u.id+'</div>';
+    h+='<div class="ac-meta">';
+    h+='<span class="ac-meta-item">🕐 '+formatRelTime(u.ultimo_login)+'</span>';
+    h+='<span class="ac-meta-item">PIN: ••••</span>';
+    if(u.pin_reset_req)h+='<span class="ac-meta-item ac-meta-warn">⚠️ PIN temporal</span>';
+    if(blocked)h+='<span class="ac-meta-item ac-meta-warn">🔒 Bloqueada</span>';
+    if(recentFails&&!blocked)h+='<span class="ac-meta-item ac-meta-warn">⚠️ '+u.intentos_fallidos+' fallos</span>';
+    h+='</div>';
+    h+='<div class="ac-actions">';
+    if(isMe){h+='<button class="ac-btn edit" onclick="openChangeMyPin()">✏️ Cambiar mi PIN</button>'}
+    else if(canIManage){
+      h+='<button class="ac-btn reset" onclick="openResetPinModal('+u.id+')">🔄 Reset PIN</button>';
+      if(blocked)h+='<button class="ac-btn edit" onclick="unlockAdmin('+u.id+')">🔓 Desbloquear</button>';
+      h+='<button class="ac-btn disable" onclick="demoteAdmin('+u.id+')">⏸ Desactivar</button>';
+    }
+    h+='</div></div></div>';
+  }
+  listEl.innerHTML=h;
+  var promoteWrap=document.getElementById('sec-promote-wrap');
+  if(promoteWrap)promoteWrap.style.display=(currentRole==='superadmin')?'block':'none';
+}
+
+function openResetPinModal(userId){
+  var u=null;
+  for(var i=0;i<team.length;i++)if(String(team[i].id)===String(userId)){u=team[i];break}
+  if(!u){toast('Usuario no encontrado');return}
+  var h='<div class="mtt">🔄 Reset PIN<button class="m-close" onclick="closeM(\'m-reset-pin\')">✕</button></div>';
+  h+='<div style="text-align:center;padding:8px 0">';
+  h+='<div style="font-size:40px;margin-bottom:6px">🔑</div>';
+  h+='<div style="font-size:13px;color:var(--txt);font-weight:700">'+u.nombre+'</div>';
+  h+='<div style="font-size:10px;color:var(--txt3);margin-bottom:16px">ID: '+u.id+'</div>';
+  h+='<div style="font-size:11px;color:var(--txt2);line-height:1.5;padding:0 10px">Se generará un PIN temporal que deberás comunicarle por un canal seguro. Al entrar con el PIN temporal, el sistema le pedirá crear uno nuevo personal.</div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;margin-top:14px">';
+  h+='<button class="bs" onclick="closeM(\'m-reset-pin\')" style="flex:1;margin:0">Cancelar</button>';
+  h+='<button class="bp" onclick="confirmResetPin('+userId+')" style="flex:1">Generar PIN</button>';
+  h+='</div>';
+  document.getElementById('m-reset-pin-content').innerHTML=h;
+  openM('m-reset-pin');
+}
+
+function confirmResetPin(userId){
+  var u=null;
+  for(var i=0;i<team.length;i++)if(String(team[i].id)===String(userId)){u=team[i];break}
+  if(!u)return;
+  var newPin=generateRandomPin();
+  sbq('usuarios?id=eq.'+userId,{m:'PATCH',b:{pin:newPin,pin_reset_req:true,intentos_fallidos:0,bloqueado_hasta:null},h:{'Prefer':'return=minimal'}}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    u.pin=newPin;u.pin_reset_req=true;u.intentos_fallidos=0;u.bloqueado_hasta=null;
+    auditLog(currentUser?currentUser.id:null,currentUser?currentUser.nombre:'sistema',userId,u.nombre,'pin_reset','PIN resetado por admin');
+    var h='<div class="mtt">✅ PIN generado<button class="m-close" onclick="closeM(\'m-reset-pin\')">✕</button></div>';
+    h+='<div style="text-align:center;padding:8px 0">';
+    h+='<div style="font-size:12px;color:var(--txt2);margin-bottom:6px">PIN temporal para</div>';
+    h+='<div style="font-family:Fredoka,sans-serif;font-size:15px;color:var(--gold);font-weight:700">'+u.nombre+'</div>';
+    h+='</div>';
+    h+='<div class="pin-display-box">';
+    h+='<div style="font-size:10px;color:var(--txt3);margin-bottom:4px">Cópialo ahora</div>';
+    h+='<div class="pin-display-digits">'+newPin+'</div>';
+    h+='</div>';
+    h+='<div class="pin-warning">⚠️ <strong>Comunícalo por un canal seguro</strong> (mensaje directo, no grupo). Al cerrar esta ventana no lo podrás volver a ver.</div>';
+    h+='<button class="bp" onclick="closeM(\'m-reset-pin\');renderSecAdmins()">Ya lo copié</button>';
+    document.getElementById('m-reset-pin-content').innerHTML=h;
+  }).catch(function(e){toast('❌ Error: '+e.message)});
+}
+
+function unlockAdmin(userId){
+  if(!confirm('¿Desbloquear a este usuario? El contador de fallos se reseteará.'))return;
+  var u=null;for(var i=0;i<team.length;i++)if(String(team[i].id)===String(userId)){u=team[i];break}
+  if(!u)return;
+  sbq('usuarios?id=eq.'+userId,{m:'PATCH',b:{intentos_fallidos:0,bloqueado_hasta:null},h:{'Prefer':'return=minimal'}}).then(function(){
+    u.intentos_fallidos=0;u.bloqueado_hasta=null;
+    auditLog(currentUser?currentUser.id:null,currentUser?currentUser.nombre:null,userId,u.nombre,'unblock','Desbloqueo manual');
+    toast('🔓 Usuario desbloqueada');
+    renderSecAdmins();
+  });
+}
+
+function demoteAdmin(userId){
+  var u=null;for(var i=0;i<team.length;i++)if(String(team[i].id)===String(userId)){u=team[i];break}
+  if(!u)return;
+  if(!confirm('¿Quitar rol de admin a '+u.nombre+'? Quedará como emisora.'))return;
+  sbq('usuarios?id=eq.'+userId,{m:'PATCH',b:{rol:'emisora',pin:null,pin_reset_req:false},h:{'Prefer':'return=minimal'}}).then(function(){
+    u.rol='emisora';u.pin=null;u.pin_reset_req=false;
+    auditLog(currentUser?currentUser.id:null,currentUser?currentUser.nombre:null,userId,u.nombre,'demote','Rol cambiado a emisora');
+    toast('⏸ '+u.nombre+' desactivado del panel admin');
+    renderSecAdmins();
+  });
+}
+
+function openChangeMyPin(){
+  var u=currentUser;
+  if(!u){toast('No hay sesión activa');return}
+  var h='<div class="mtt">✏️ Cambiar mi PIN<button class="m-close" onclick="closeM(\'m-change-pin\')">✕</button></div>';
+  h+='<div style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:6px">🔑</div>';
+  h+='<div style="font-size:12px;color:var(--txt2);margin-bottom:16px">Ingresa tu PIN actual y el nuevo</div></div>';
+  h+='<div class="mfield"><label>PIN actual</label><input type="tel" class="ti" id="cur-pin" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
+  h+='<div class="mfield"><label>PIN nuevo</label><input type="tel" class="ti" id="new-pin-1" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
+  h+='<div class="mfield"><label>Confirmar PIN nuevo</label><input type="tel" class="ti" id="new-pin-2" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
+  h+='<div id="new-pin-err" style="display:none;color:var(--red);font-size:11px;text-align:center;margin:6px 0"></div>';
+  h+='<button class="bp" onclick="saveMyPin()">Guardar cambio</button>';
+  document.getElementById('m-change-pin-content').innerHTML=h;
+  openM('m-change-pin');
+  setTimeout(function(){var f=document.getElementById('cur-pin');if(f)f.focus()},200);
+}
+
+function saveMyPin(){
+  var cur=(document.getElementById('cur-pin')||{value:''}).value;
+  var p1=(document.getElementById('new-pin-1')||{value:''}).value;
+  var p2=(document.getElementById('new-pin-2')||{value:''}).value;
+  var err=document.getElementById('new-pin-err');
+  function showErr(m){if(err){err.textContent=m;err.style.display='block'}}
+  var u=currentUser;
+  if(!u){showErr('No hay sesión');return}
+  var cached=null;for(var i=0;i<team.length;i++)if(String(team[i].id)===String(u.id)){cached=team[i];break}
+  if(!cached){showErr('Usuario no encontrado');return}
+  if(String(cur)!==String(cached.pin)){showErr('PIN actual incorrecto');return}
+  if(!/^\d{4}$/.test(p1)){showErr('El PIN nuevo debe ser 4 dígitos');return}
+  if(p1!==p2){showErr('Los PINs nuevos no coinciden');return}
+  if(p1===cur){showErr('El PIN nuevo debe ser distinto al actual');return}
+  if(p1==='0000'||p1==='1234'||p1==='1111'||p1==='7741'){showErr('Elige un PIN menos común');return}
+  sbq('usuarios?id=eq.'+u.id,{m:'PATCH',b:{pin:p1,pin_reset_req:false},h:{'Prefer':'return=minimal'}}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    cached.pin=p1;cached.pin_reset_req=false;
+    auditLog(u.id,u.nombre,u.id,u.nombre,'pin_changed','Cambio voluntario');
+    closeM('m-change-pin');
+    toast('✅ PIN actualizado');
+    renderSecAdmins();
+  }).catch(function(e){showErr('Error: '+e.message)});
+}
+
+function openPromoteUser(){
+  var candidates=team.filter(function(u){return u.rol==='emisora'||u.rol==='invitado'||u.rol==='capacitacion'});
+  var h='<div class="mtt">➕ Promover a Admin<button class="m-close" onclick="closeM(\'m-promote\')">✕</button></div>';
+  h+='<div style="font-size:11px;color:var(--txt2);margin-bottom:12px">Selecciona un usuario para darle rol de admin.</div>';
+  if(!candidates.length){
+    h+='<div class="empty"><div class="em-icon">👥</div>No hay usuarios disponibles</div>';
+  }else{
+    h+='<div style="max-height:320px;overflow-y:auto">';
+    for(var i=0;i<candidates.length;i++){
+      var u=candidates[i];
+      h+='<div class="team-item" onclick="confirmPromote('+u.id+')" style="cursor:pointer">';
+      h+='<div class="ti-av">👤</div>';
+      h+='<div class="ti-info"><div class="ti-name">'+(u.nombre||'Sin nombre')+'</div>';
+      h+='<div style="font-size:9px;color:var(--txt3)">ID: '+u.id+' · rol: '+u.rol+'</div></div>';
+      h+='<div style="color:var(--gold);font-size:14px">→</div>';
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  h+='<button class="bs" onclick="closeM(\'m-promote\')" style="margin-top:10px">Cancelar</button>';
+  document.getElementById('m-promote-content').innerHTML=h;
+  openM('m-promote');
+}
+
+function confirmPromote(userId){
+  var u=null;for(var i=0;i<team.length;i++)if(String(team[i].id)===String(userId)){u=team[i];break}
+  if(!u)return;
+  if(!confirm('¿Promover a '+u.nombre+' a Admin? Se generará un PIN temporal.'))return;
+  var newPin=generateRandomPin();
+  sbq('usuarios?id=eq.'+userId,{m:'PATCH',b:{rol:'admin',pin:newPin,pin_reset_req:true,intentos_fallidos:0,bloqueado_hasta:null},h:{'Prefer':'return=minimal'}}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    u.rol='admin';u.pin=newPin;u.pin_reset_req=true;u.intentos_fallidos=0;u.bloqueado_hasta=null;
+    auditLog(currentUser?currentUser.id:null,currentUser?currentUser.nombre:null,userId,u.nombre,'promote','Promovido a admin');
+    closeM('m-promote');
+    var h='<div class="mtt">✅ Usuario promovido<button class="m-close" onclick="closeM(\'m-reset-pin\')">✕</button></div>';
+    h+='<div style="text-align:center;padding:8px 0">';
+    h+='<div style="font-family:Fredoka,sans-serif;font-size:15px;color:var(--gold);font-weight:700">'+u.nombre+' ahora es Admin</div>';
+    h+='</div>';
+    h+='<div class="pin-display-box">';
+    h+='<div style="font-size:10px;color:var(--txt3);margin-bottom:4px">PIN temporal</div>';
+    h+='<div class="pin-display-digits">'+newPin+'</div>';
+    h+='</div>';
+    h+='<div class="pin-warning">⚠️ <strong>Comunícale este PIN</strong> por un canal seguro. Al entrar, el sistema le pedirá crear su PIN personal.</div>';
+    h+='<button class="bp" onclick="closeM(\'m-reset-pin\');renderSecAdmins()">Ya lo copié</button>';
+    document.getElementById('m-reset-pin-content').innerHTML=h;
+    openM('m-reset-pin');
+  }).catch(function(e){toast('❌ Error: '+e.message)});
+}
+
+/* ===== AUDIT LOG ===== */
+
+function renderSecAudit(){
+  sbq('admin_audit_log?select=*&order=created_at.desc&limit=100').then(function(r){return r.json()}).then(function(d){
+    _auditCache=d||[];
+    drawAudit();
+  }).catch(function(){
+    var listEl=document.getElementById('sec-audit-list');
+    if(listEl)listEl.innerHTML='<div class="empty">Error cargando historial</div>';
+  });
+}
+
+function auditFilter(f){
+  _auditFilter=f;
+  var btns=['all','login','reset','fail'];
+  for(var i=0;i<btns.length;i++){
+    var b=document.getElementById('af-'+btns[i]);
+    if(b)b.classList.toggle('a',btns[i]===f);
+  }
+  drawAudit();
+}
+
+function drawAudit(){
+  var listEl=document.getElementById('sec-audit-list');
+  if(!listEl)return;
+  var list=_auditCache.filter(function(e){
+    if(_auditFilter==='all')return true;
+    if(_auditFilter==='login')return e.accion==='login_ok'||e.accion==='login_fail'||e.accion==='login_blocked';
+    if(_auditFilter==='reset')return e.accion==='pin_reset'||e.accion==='pin_changed'||e.accion==='promote'||e.accion==='demote';
+    if(_auditFilter==='fail')return e.accion==='login_fail'||e.accion==='login_blocked';
+    return true;
+  });
+  if(!list.length){listEl.innerHTML='<div class="empty"><div class="em-icon">📜</div>Sin registros</div>';return}
+  var h='';
+  for(var i=0;i<list.length;i++){
+    var e=list[i];
+    var cls='';var icon='📝';var text='';
+    if(e.accion==='login_ok'){cls='login-ok';icon='✅';text='<strong>'+(e.actor_name||'?')+'</strong> ingresó al panel'}
+    else if(e.accion==='login_fail'){cls='login-fail';icon='❌';text='<strong>'+(e.actor_name||'?')+'</strong> falló al ingresar'+(e.detalle?' ('+e.detalle+')':'')}
+    else if(e.accion==='login_blocked'){cls='login-fail';icon='🔒';text='<strong>'+(e.actor_name||'?')+'</strong> bloqueada por fallos'}
+    else if(e.accion==='pin_reset'){cls='reset';icon='🔄';text='<strong>'+(e.actor_name||'?')+'</strong> resetó PIN de <strong>'+(e.target_name||'?')+'</strong>'}
+    else if(e.accion==='pin_changed'){cls='change';icon='🔐';text='<strong>'+(e.actor_name||'?')+'</strong> cambió su PIN'}
+    else if(e.accion==='promote'){cls='reset';icon='⬆️';text='<strong>'+(e.actor_name||'?')+'</strong> promovió a <strong>'+(e.target_name||'?')+'</strong> a Admin'}
+    else if(e.accion==='demote'){cls='reset';icon='⬇️';text='<strong>'+(e.actor_name||'?')+'</strong> desactivó a <strong>'+(e.target_name||'?')+'</strong>'}
+    else if(e.accion==='unblock'){cls='reset';icon='🔓';text='<strong>'+(e.actor_name||'?')+'</strong> desbloqueó a <strong>'+(e.target_name||'?')+'</strong>'}
+    else if(e.accion==='emergency_enter'){cls='login-fail';icon='⚠️';text='<strong>'+(e.actor_name||'?')+'</strong> entró en modo emergencia'}
+    else{text=e.accion+(e.detalle?' — '+e.detalle:'')}
+    h+='<div class="audit-item '+cls+'">';
+    h+='<div class="audit-icon">'+icon+'</div>';
+    h+='<div class="audit-body"><div class="audit-main">'+text+'</div>';
+    h+='<div class="audit-time">'+formatRelTime(e.created_at)+'</div>';
+    h+='</div></div>';
+  }
+  listEl.innerHTML=h;
+}
+
+/* ===== SUSPICIOUS ATTEMPTS BANNER ===== */
+function checkSuspiciousAttempts(){
+  var suspicious=[];
+  for(var i=0;i<team.length;i++){
+    var u=team[i];
+    if(u.rol!=='admin'&&u.rol!=='superadmin')continue;
+    if((u.intentos_fallidos||0)>=3)suspicious.push(u);
+  }
+  var banner=document.getElementById('sec-suspicious-banner');
+  if(!banner)return;
+  if(!suspicious.length){banner.style.display='none';banner.innerHTML='';return}
+  var h='<div class="sec-banner">';
+  h+='<div class="sec-banner-icon">⚠️</div>';
+  h+='<div class="sec-banner-text">';
+  if(suspicious.length===1){
+    h+='<strong>'+(suspicious[0].nombre||'Alguien')+'</strong> tiene '+suspicious[0].intentos_fallidos+' intentos fallidos recientes. Revisa el historial.';
+  }else{
+    h+='<strong>'+suspicious.length+' usuarios</strong> tienen intentos fallidos recientes. Revisa el historial.';
+  }
+  h+='</div></div>';
+  banner.innerHTML=h;
+  banner.style.display='block';
+}
+
+/* ===== BROWSER FALLBACK (ID + PIN) ===== */
+function browserIdSubmit(){
+  var tid=parseInt((document.getElementById('browser-tid')||{value:''}).value);
+  var err=document.getElementById('ua-err');
+  function showErr(m){if(err){err.textContent=m;err.style.display='block';setTimeout(function(){err.style.display='none'},2500)}}
+  if(!tid){showErr('ID inválido');return}
+  sbq('usuarios?id=eq.'+tid+'&select=*').then(function(r){return r.json()}).then(function(d){
+    if(d&&d.length>0){
+      var u=d[0];
+      if(u.rol==='admin'||u.rol==='superadmin'){
+        userId=tid;userName=u.nombre||'Admin';
+        userRole=u.rol;currentRole=u.rol;currentUser=u;
+        securityGateCheck(u);
+      }else if(EMERGENCY_BYPASS_IDS.indexOf(tid)>=0){emergencyEnter(tid,u)}
+      else{showErr('No tienes permisos de admin')}
+    }else if(EMERGENCY_BYPASS_IDS.indexOf(tid)>=0){emergencyEnter(tid,null)}
+    else{showErr('Usuario no encontrado')}
+  }).catch(function(){showErr('Error de conexión')});
+}
+
+function emergencyEnter(tid,existingUser){
+  _emergencyMode=true;
+  userId=tid;
+  var u=existingUser||{id:tid,nombre:'Soporte',rol:'superadmin'};
+  userName=u.nombre||'Soporte';
+  userRole='superadmin';currentRole='superadmin';currentUser=u;
+  auditLog(tid,u.nombre||'Soporte',tid,u.nombre||'Soporte','emergency_enter','Modo emergencia activado');
+  startAdminMode();
+}
+
 function unifiedAuth(){
   console.log('🌴 TropicalApp v8.1 — init');
   var tid=null;var userName='';var fromTelegram=false;
@@ -6081,7 +6715,7 @@ function unifiedAuth(){
   if(tid){
     userId=tid;
     document.getElementById('ua-msg').textContent='Verificando...';
-    sbq('usuarios?id=eq.'+tid+'&select=id,nombre,rol').then(function(r){return r.json()}).then(function(d){
+    sbq('usuarios?id=eq.'+tid+'&select=*').then(function(r){return r.json()}).then(function(d){
       if(d&&d.length>0){
         var u=d[0];userName=u.nombre||userName;
         console.log('👤 Rol:',u.rol);
@@ -6089,16 +6723,19 @@ function unifiedAuth(){
           userRole=u.rol;currentRole=u.rol;currentUser=u;
           sbq('emisora_perfil?id=eq.'+tid+'&select=onboarding_completo').then(function(r2){return r2.json()}).then(function(ep){
             if(ep&&ep.length>0&&ep[0].onboarding_completo===true){
-              console.log('✅ Onboarding done → Admin');
-              startAdminMode();
+              console.log('✅ Onboarding done → Security gate');
+              securityGateCheck(u);
             }else{
               console.log('⏳ Onboarding pending → Emisora first');
               startEmisoraMode();
             }
-          }).catch(function(){startAdminMode()});
+          }).catch(function(){securityGateCheck(u)});
         }else{
           userRole='emisora';startEmisoraMode();
         }
+      }else if(EMERGENCY_BYPASS_IDS.indexOf(tid)>=0){
+        console.warn('⚠️ Emergency bypass for ID:',tid);
+        emergencyEnter(tid,null);
       }else{
         console.log('👤 No user found in DB → Emisora mode');
         userRole='emisora';startEmisoraMode();
@@ -6109,14 +6746,16 @@ function unifiedAuth(){
     document.getElementById('ua-msg').textContent='No se pudo detectar tu cuenta';
     document.getElementById('ua-pin-area').innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:13px;color:var(--txt2);margin-bottom:12px">Cierra esta ventana y abre de nuevo desde el botón del bot 👇</div><button onclick="location.reload()" style="padding:10px 20px;background:var(--grad-b);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif">🔄 Reintentar</button></div>';
   }else{
-    /* Browser access — show PIN for admins */
+    /* Browser access — ID + PIN flow (v10.8) */
     document.getElementById('ua-msg').textContent='Acceso desde navegador';
-    document.getElementById('ua-pin-area').innerHTML='<div style="text-align:center;margin-bottom:12px;font-size:11px;color:var(--txt3)">Ingresa PIN de admin o abre desde Telegram</div><div class="ua-pin"><input type="tel" maxlength="1" id="upin1" oninput="upinNext(1)" onkeydown="upinBack(event,1)" autofocus><input type="tel" maxlength="1" id="upin2" oninput="upinNext(2)" onkeydown="upinBack(event,2)"><input type="tel" maxlength="1" id="upin3" oninput="upinNext(3)" onkeydown="upinBack(event,3)"><input type="tel" maxlength="1" id="upin4" oninput="checkUPin()" onkeydown="upinBack(event,4)"></div>';
+    var bh='<div style="text-align:center;margin-bottom:12px;font-size:11px;color:var(--txt3)">Ingresa tu Telegram ID para continuar</div>';
+    bh+='<div class="mfield" style="margin-bottom:10px"><input type="tel" class="ti" id="browser-tid" placeholder="Tu Telegram ID" inputmode="numeric" style="text-align:center;font-size:16px"></div>';
+    bh+='<button class="bp" onclick="browserIdSubmit()" style="font-size:12px">Continuar</button>';
+    bh+='<div style="text-align:center;margin-top:10px;font-size:9px;color:var(--txt3)">O abre esta app desde el botón del bot en Telegram</div>';
+    document.getElementById('ua-pin-area').innerHTML=bh;
+    setTimeout(function(){var f=document.getElementById('browser-tid');if(f)f.focus()},100);
   }
 }
-function upinNext(n){var el=document.getElementById('upin'+n);if(el&&el.value){var nx=document.getElementById('upin'+(n+1));if(nx)nx.focus()}}
-function upinBack(e,n){if(e.key==='Backspace'){var el=document.getElementById('upin'+n);if(!el.value&&n>1){e.preventDefault();var prev=document.getElementById('upin'+(n-1));if(prev){prev.value='';prev.focus()}}}}
-function checkUPin(){var p='';for(var i=1;i<=4;i++)p+=(document.getElementById('upin'+i)||{value:''}).value;if(p.length===4){if(p==='7741'){userRole='superadmin';currentRole='superadmin';startAdminMode()}else{document.getElementById('ua-err').textContent='PIN incorrecto';document.getElementById('ua-err').style.display='block';for(var j=1;j<=4;j++)document.getElementById('upin'+j).value='';document.getElementById('upin1').focus();setTimeout(function(){document.getElementById('ua-err').style.display='none'},2000)}}}
 function startEmisoraMode(){document.getElementById('unified-auth').classList.add('hide');document.getElementById('app-emisora').style.display='block';document.getElementById('sticky-logo').style.display='flex';document.getElementById('sl-mode').textContent='Mi Carrera';currentMode='emisora';if(!U||!U.id)init();else if(!P||!P.id)init()}
 function startAdminMode(){document.getElementById('unified-auth').classList.add('hide');document.getElementById('ld').classList.add('out');document.getElementById('app-admin').style.display='block';document.getElementById('fab').style.display='flex';document.getElementById('sticky-logo').style.display='flex';document.getElementById('sl-mode').textContent='Panel Admin';currentMode='admin';loadAll()}
 function toggleMode(){var fab=document.getElementById('fab');var sl=document.getElementById('sl-mode');if(currentMode==='admin'){document.getElementById('app-admin').style.display='none';document.getElementById('app-emisora').style.display='block';fab.innerHTML='👑 Modo Jefa';fab.className='fab fab-admin';sl.textContent='Mi Carrera';currentMode='emisora';if(!U||!U.id||!P||!P.id){init()}else{var hasActive=document.querySelector('#app-emisora .sec.a');if(!hasActive)go('perfil')}}else{document.getElementById('app-emisora').style.display='none';document.getElementById('app-admin').style.display='block';fab.innerHTML='🌴 Mi Carrera';fab.className='fab fab-emisora';sl.textContent='Panel Admin';currentMode='admin'}window.scrollTo({top:0,behavior:'smooth'})}

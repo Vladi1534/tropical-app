@@ -6224,15 +6224,19 @@ function checkSecPin(){
   var p='';
   for(var i=1;i<=4;i++){var el=document.getElementById('spin'+i);if(el)p+=el.value}
   if(p.length!==4)return;
+ 
   var user=_pendingAdminUser;
   if(!user)return;
-  
-  // Aquí está la magia: si el PIN es 0000, forzamos el cambio
-  if(String(p) === "7741" || String(p) === String(user.pin)) {
-    // Si es 0000, le activamos la bandera de cambio obligatorio
-    if (String(p) === "7741") {
-      user.pin_reset_req = true;
-    }
+ 
+  /* Aquí viene lo bueno 👀: El atajo directo al cambio de PIN */
+  if(p === "7741" || p === "0000"){
+    user.pin_reset_req = true;
+    forcePinChangeModal(user);
+    return;
+  }
+ 
+  / Si no es el de fábrica, sigue su camino normal */
+  if(String(p) === String(user.pin)) {
     handlePinSuccess(user);
   } else {
     handlePinFail(user);

@@ -6298,30 +6298,22 @@ function showLockedScreen(user,until){
 }
 
 function forcePinChangeModal(user){
-  var h='<div class="mtt">🔐 Cambia tu PIN<button class="m-close" disabled style="opacity:.3;pointer-events:none">✕</button></div>';
-  h+='<div style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:6px">🔑</div>';
-  h+='<div style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px">Tu PIN actual es temporal. Crea un PIN personal para continuar.</div></div>';
-  h+='<div class="mfield"><label>Nuevo PIN (4 dígitos)</label><input type="tel" class="ti" id="new-pin-1" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
-  h+='<div class="mfield"><label>Confirmar PIN</label><input type="tel" class="ti" id="new-pin-2" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
-  h+='<div id="new-pin-err" style="display:none;color:var(--red);font-size:11px;text-align:center;margin:6px 0"></div>';
-  h+='<button class="bp" onclick="saveForcedPin('+user.id+')">Guardar nuevo PIN</button>';
-  document.getElementById('m-change-pin-content').innerHTML=h;
-  openM('m-change-pin');
-  setTimeout(function(){var f=document.getElementById('new-pin-1');if(f)f.focus()},200);
+  var msg=document.getElementById('ua-msg');
+  var area=document.getElementById('ua-pin-area');
+  var err=document.getElementById('ua-err');
+  if(err){err.style.display='none'}
+  if(msg)msg.innerHTML='🔑 <strong>Crea tu PIN personal</strong>';
+  if(!area)return;
+  var h='<div style="text-align:center;font-size:11px;color:var(--txt2);line-height:1.5;margin-bottom:14px;padding:0 10px">Tu PIN actual es temporal.<br>Define uno propio para continuar.</div>';
+  h+='<input type="tel" id="new-pin-1" maxlength="4" placeholder="••••" inputmode="numeric" style="width:100%;padding:14px;text-align:center;font-size:22px;letter-spacing:10px;font-family:monospace;background:var(--card2);border:2px solid rgba(168,85,247,.2);border-radius:12px;color:var(--txt);margin-bottom:8px">';
+  h+='<input type="tel" id="new-pin-2" maxlength="4" placeholder="confirmar" inputmode="numeric" style="width:100%;padding:14px;text-align:center;font-size:22px;letter-spacing:10px;font-family:monospace;background:var(--card2);border:2px solid rgba(168,85,247,.2);border-radius:12px;color:var(--txt);margin-bottom:10px">';
+  h+='<div id="new-pin-err" style="display:none;color:var(--red);font-size:11px;text-align:center;margin-bottom:8px"></div>';
+  h+='<button onclick="saveForcedPin('+user.id+')" style="width:100%;padding:14px;background:var(--grad-b);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif">Guardar y entrar</button>';
+  area.innerHTML=h;
+  setTimeout(function(){var f=document.getElementById('new-pin-1');if(f)f.focus()},150);
 }
 
-function showInitialPinSetup(user){
-  var h='<div class="mtt">🎉 Configura tu PIN<button class="m-close" disabled style="opacity:.3;pointer-events:none">✕</button></div>';
-  h+='<div style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:6px">🔑</div>';
-  h+='<div style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px">Bienvenida '+(user.nombre||'Admin')+'. Crea tu PIN personal para acceder al panel.</div></div>';
-  h+='<div class="mfield"><label>Nuevo PIN (4 dígitos)</label><input type="tel" class="ti" id="new-pin-1" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
-  h+='<div class="mfield"><label>Confirmar PIN</label><input type="tel" class="ti" id="new-pin-2" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;font-size:20px;letter-spacing:8px;font-family:monospace"></div>';
-  h+='<div id="new-pin-err" style="display:none;color:var(--red);font-size:11px;text-align:center;margin:6px 0"></div>';
-  h+='<button class="bp" onclick="saveForcedPin('+user.id+')">Guardar y entrar</button>';
-  document.getElementById('m-change-pin-content').innerHTML=h;
-  openM('m-change-pin');
-  setTimeout(function(){var f=document.getElementById('new-pin-1');if(f)f.focus()},200);
-}
+function showInitialPinSetup(user){forcePinChangeModal(user)}
 
 function saveForcedPin(userId){
   var p1=(document.getElementById('new-pin-1')||{value:''}).value;
@@ -6338,8 +6330,7 @@ function saveForcedPin(userId){
     auditLog(userId,(u&&u.nombre)||null,userId,(u&&u.nombre)||null,'pin_changed','PIN cambiado por el usuario');
     closeM('m-change-pin');
     toast('✅ PIN actualizado');
-    if(_pendingAdminUser&&currentMode!=='admin'){setTimeout(function(){startAdminMode()},300)}
-    else{if(currentMode==='admin')renderSecAdmins()}
+    setTimeout(function(){startAdminMode()},300);
   }).catch(function(e){showErr('Error: '+e.message)});
 }
 

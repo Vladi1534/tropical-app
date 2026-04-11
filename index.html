@@ -2712,15 +2712,38 @@ var SPRITE_ANIMS={
   dogs:{
     golden:{
       frameW:64,frameH:64,
-      /* Filled in during phase 2 */
-      idle:{file:'idle.png',frames:10,fps:6,loop:true}
+      idle:{file:'idle.png',frames:10,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
+      eating:{file:'eating.png',frames:7,fps:7,loop:true},
+      excited:{file:'excited.png',frames:6,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:12,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    black:{
+      frameW:64,frameH:64,
+      idle:{file:'idle.png',frames:7,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
+      eating:{file:'eating.png',frames:7,fps:7,loop:true},
+      excited:{file:'excited.png',frames:6,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:12,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
     }
   },
   bunnies:{
-    white:{
+    grey:{
       frameW:32,frameH:32,
-      /* Filled in during phase 2 */
-      idle:{file:'idle.png',frames:12,fps:6,loop:true}
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
     }
   }
 };
@@ -2919,9 +2942,14 @@ function initPetSprite(){
   if(!el)return;
   var pet=P&&P.mascota;
   if(!pet)return;
-  /* Phase 1: only cats classical, dogs golden, bunnies white supported */
+  /* Phase 2: cats classical, dogs golden (black for Vlacky ID), bunnies grey */
   var category=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':'bunnies';
-  var variant=category==='cats'?'classical':category==='dogs'?'golden':'white';
+  var variant;
+  if(category==='cats')variant='classical';
+  else if(category==='dogs'){
+    /* Special case: Vlacky homenaje — ID 5088635103 gets black dog */
+    variant=(U&&String(U.id)==='5088635103')?'black':'golden';
+  }else variant='grey';
   if(_currentPetController)_currentPetController.destroy();
   _currentPetController=new PetController(el,category,variant);
   var mood=getMood(pet);
@@ -3450,6 +3478,12 @@ function petWalkTo(targetPct,callback){
   /* Use fast transition class + walking bounce */
   w.classList.add('fast');
   w.classList.add('walking');
+  /* v10.9: trigger real walk animation for dogs/bunnies that have walk cycle */
+  var pet=P&&P.mascota;
+  var hasWalkCycle=pet&&(pet.tipo==='perro'||pet.tipo==='conejo');
+  if(hasWalkCycle&&_currentPetController){
+    _currentPetController.setState('walk');
+  }
   /* Force reflow then set position */
   void w.offsetHeight;
   w.style.left=targetPct+'%';
@@ -3458,6 +3492,10 @@ function petWalkTo(targetPct,callback){
   setTimeout(function(){
     var wMid=document.querySelector('.pet-walker');
     if(wMid)wMid.classList.remove('walking');
+    /* Return to idle after walk, unless callback sets a specific state */
+    if(hasWalkCycle&&_currentPetController){
+      _currentPetController.setState('idle');
+    }
     if(callback)callback();
     /* Resume wander after enough time for action animation */
     setTimeout(function(){
@@ -3496,12 +3534,15 @@ function petWander(){
   setPetFacing(direction);
   /* Add walking bounce for the duration of the slow wander (4.5s) */
   w.classList.add('walking');
+  /* v10.9: walk animation for dogs/bunnies */
+  var hasW=pet&&(pet.tipo==='perro'||pet.tipo==='conejo');
+  if(hasW&&_currentPetController)_currentPetController.setState('walk');
   w.style.left=newLeft+'%';
   _lastWalkerLeft=newLeft;
-  /* Stop bouncing after wander transition completes */
   setTimeout(function(){
     var wEnd=document.querySelector('.pet-walker');
     if(wEnd)wEnd.classList.remove('walking');
+    if(hasW&&_currentPetController)_currentPetController.setState('idle');
   },4600);
 }
 

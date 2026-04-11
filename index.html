@@ -1215,6 +1215,17 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devSetStat('hambre',10)">🥺 Drenar hambre</button>
   </div>
   
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">🐾 Cambiar mascota</div>
+  <div style="font-size:9px;color:var(--txt3);margin-bottom:6px">Switch en vivo entre especies/variantes para probar sprites:</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devSwitchPet('gato')">🐱 Gato</button>
+    <button class="bs" onclick="devSwitchPet('perro')">🐶 Perro</button>
+    <button class="bs" onclick="devSwitchPet('conejo')">🐰 Conejo</button>
+    <button class="bs" onclick="devSwitchPet('perro','black')">🖤 Vlacky</button>
+    <button class="bs" onclick="devSwitchPet('perro','golden')">🦮 Golden</button>
+    <button class="bs" onclick="devSwitchPet('conejo','grey')">🐇 Grey</button>
+  </div>
+  
   <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">😊 Mood test</div>
   <div style="font-size:9px;color:var(--txt3);margin-bottom:6px">Setea las stats para forzar cada mood:</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
@@ -2945,7 +2956,8 @@ function initPetSprite(){
   /* Phase 2: cats classical, dogs golden (black for Vlacky ID), bunnies grey */
   var category=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':'bunnies';
   var variant;
-  if(category==='cats')variant='classical';
+  if(_devVariantOverride)variant=_devVariantOverride;
+  else if(category==='cats')variant='classical';
   else if(category==='dogs'){
     /* Special case: Vlacky homenaje — ID 5088635103 gets black dog */
     variant=(U&&String(U.id)==='5088635103')?'black':'golden';
@@ -3580,6 +3592,16 @@ function devSetStat(stat,val){
   savePet();renderPetCard();updateDevState();
   toast('🛠️ '+stat+' = '+val);
 }
+var _devVariantOverride=null;
+function devSwitchPet(tipo,variant){
+  var pet=P&&P.mascota;if(!pet){toast('No hay mascota');return}
+  pet.tipo=tipo;
+  _devVariantOverride=variant||null;
+  savePet();
+  renderPetCard();
+  toast('🔄 Cambiada a '+tipo+(variant?' ('+variant+')':''));
+}
+
 function devSetMood(mood){
   var pet=P&&P.mascota;if(!pet)return;
   /* Set stats to match the mood logic in getMood() */

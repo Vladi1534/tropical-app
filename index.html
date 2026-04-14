@@ -158,7 +158,18 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--txt);min-h
 .sit{display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--card2);border-radius:var(--rs);margin-bottom:5px;font-size:12px;animation:fadeIn .3s ease both}
 .sd{color:var(--txt2)}.sc{color:var(--gold);font-weight:700}.sh{color:var(--txt3);font-size:10px}
 .stb{font-size:8px;padding:2px 5px;border-radius:4px;font-weight:700;text-transform:uppercase}
-.stb.org{background:rgba(52,211,153,.15);color:var(--green)}.stb.fan{background:rgba(251,191,36,.15);color:var(--gold)}.stb.mix{background:rgba(168,85,247,.15);color:var(--purple)}
+.stb.org{background:rgba(52,211,153,.15);color:var(--green)}.stb.fan{background:rgba(251,191,36,.15);color:var(--gold)}.stb.mix{background:rgba(168,85,247,.15);color:var(--purple)}.stb.pv{background:rgba(236,72,153,.15);color:var(--pink)}.stb.legacy{background:rgba(148,163,184,.15);color:var(--txt3)}
+/* v10.10 Modality toggle */
+.modality-toggle{display:flex;gap:0;margin-bottom:12px;background:var(--card2);border-radius:25px;padding:3px}
+.modality-toggle .mt-btn{flex:1;padding:10px;border:none;background:transparent;color:var(--txt3);font-size:12px;font-weight:700;cursor:pointer;border-radius:22px;font-family:Nunito,sans-serif;transition:all .2s}
+.modality-toggle .mt-btn.a{background:var(--grad-b);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.mixta-split{background:rgba(168,85,247,.05);border:1px solid rgba(168,85,247,.15);border-radius:var(--rs);padding:10px;margin-top:6px}
+.mixta-split-row{margin-bottom:8px}
+.mixta-split-row:last-child{margin-bottom:0}
+.mixta-split-label{font-size:11px;color:var(--txt2);margin-bottom:4px;font-weight:700}
+.mixta-total{text-align:center;font-size:11px;color:var(--purple);font-weight:700;padding-top:6px;border-top:1px dashed rgba(168,85,247,.2);margin-top:6px}
+.pv-hint{background:rgba(236,72,153,.08);border-left:3px solid var(--pink);padding:8px 10px;border-radius:0 8px 8px 0;font-size:10px;color:var(--txt2);line-height:1.5;margin-bottom:10px}
+.ghost-warning{background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(239,68,68,.06));border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--txt);line-height:1.5;display:flex;align-items:flex-start;gap:8px}
 .expand-btn{width:100%;padding:9px;background:var(--card2);border:1px solid rgba(168,85,247,.15);border-radius:var(--rs);color:var(--txt2);font-size:11px;font-weight:700;cursor:pointer;text-align:center;margin-top:5px;font-family:'Nunito',sans-serif;transition:all .2s}
 .expand-btn:active{opacity:.8}
 
@@ -1405,15 +1416,43 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <div class="rc" style="border-color:rgba(251,191,36,.25);background:linear-gradient(180deg,rgba(251,191,36,.04),rgba(168,85,247,.02))">
       <div class="rct" style="color:var(--gold);font-size:15px">✨ ¿Cómo te fue hoy?</div>
       <div style="font-size:11px;color:var(--txt2);margin-bottom:10px;line-height:1.4">Registra tu sesión para sumar al mes y ganar puntitos para tu mascota 🐾</div>
+      <!-- v10.10 Modality toggle -->
+      <div class="modality-toggle">
+        <button class="mt-btn a" id="mod-tx" onclick="setModality('transmision')">🎥 Transmisión</button>
+        <button class="mt-btn" id="mod-pv" onclick="setModality('sala_pv')">🔒 Sala Privada</button>
+      </div>
+      <div id="pv-hint-box" class="pv-hint" style="display:none">💡 En sala privada solo cuentan las monedas. El tiempo no suma al contador de horas del mes.</div>
+      <div id="ghost-warning-box" style="display:none"></div>
       <div class="rf"><label>🪙 Monedas ganadas</label><input type="number" class="ni" id="r-coins" placeholder="0" inputmode="numeric"></div>
-      <div class="rf"><label>⏱️ Duración</label>
+      <!-- Simple duration (shown when NOT mixta and NOT PV) -->
+      <div class="rf" id="r-duration-simple"><label>⏱️ Duración</label>
         <div style="display:flex;gap:8px;align-items:center">
           <div style="flex:1;position:relative"><input type="number" class="ni" id="r-hours" placeholder="0" inputmode="numeric" min="0" max="24" step="1" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">h</span></div>
           <div style="flex:1;position:relative"><input type="number" class="ni" id="r-minutes" placeholder="0" inputmode="numeric" min="0" max="59" step="5" style="font-size:15px;color:var(--txt)"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--txt3);pointer-events:none">min</span></div>
         </div>
         <div id="r-contract-hint" style="font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.4;display:none"></div>
       </div>
-      <div class="rf"><label>📡 Tipo de horas</label><div class="htc"><div class="hc sel" id="ht-org" onclick="selHT('Orgánica')">🟢 Orgánica</div><div class="hc" id="ht-fan" onclick="selHT('Fantasma')">👻 Fantasma</div><div class="hc" id="ht-mix" onclick="selHT('Mixta')">🔀 Mixta</div></div></div>
+      <!-- Mixta split (shown only when tipo=Mixta AND modality=transmision) -->
+      <div class="rf" id="r-duration-mixta" style="display:none"><label>⏱️ Desglose de horas</label>
+        <div class="mixta-split">
+          <div class="mixta-split-row">
+            <div class="mixta-split-label" style="color:var(--green)">🟢 Orgánicas</div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;position:relative"><input type="number" class="ni" id="r-org-h" placeholder="0" inputmode="numeric" min="0" max="24" step="1" oninput="updateMixtaTotal()" style="font-size:14px"><span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--txt3);pointer-events:none">h</span></div>
+              <div style="flex:1;position:relative"><input type="number" class="ni" id="r-org-m" placeholder="0" inputmode="numeric" min="0" max="59" step="5" oninput="updateMixtaTotal()" style="font-size:14px"><span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--txt3);pointer-events:none">min</span></div>
+            </div>
+          </div>
+          <div class="mixta-split-row">
+            <div class="mixta-split-label" style="color:var(--gold)">👻 Fantasma</div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;position:relative"><input type="number" class="ni" id="r-fan-h" placeholder="0" inputmode="numeric" min="0" max="24" step="1" oninput="updateMixtaTotal()" style="font-size:14px"><span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--txt3);pointer-events:none">h</span></div>
+              <div style="flex:1;position:relative"><input type="number" class="ni" id="r-fan-m" placeholder="0" inputmode="numeric" min="0" max="59" step="5" oninput="updateMixtaTotal()" style="font-size:14px"><span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--txt3);pointer-events:none">min</span></div>
+            </div>
+          </div>
+          <div class="mixta-total" id="r-mixta-total">Total: 0h 0min</div>
+        </div>
+      </div>
+      <div class="rf" id="r-tipo-horas"><label>📡 Tipo de horas</label><div class="htc"><div class="hc sel" id="ht-org" onclick="selHT('Orgánica')">🟢 Orgánica</div><div class="hc" id="ht-fan" onclick="selHT('Fantasma')">👻 Fantasma</div><div class="hc" id="ht-mix" onclick="selHT('Mixta')">🔀 Mixta</div></div></div>
       <div class="rf"><label>💬 ¿Cómo estuvo? (opcional)</label><input type="text" class="ti" id="r-desc" placeholder="Ej: Buen show, muchos regalos..."></div>
       <div id="r-date-toggle" style="text-align:center;margin:0 0 10px"><a href="javascript:toggleDateField()" style="font-size:11px;color:var(--cyan);text-decoration:none" id="r-date-link">📅 ¿Es de otro día? Cambiar fecha</a></div>
       <div class="rf" id="r-date-field" style="display:none"><label>📅 Fecha de la sesión</label><input type="date" class="ni" id="r-date" style="font-size:14px;color:var(--txt);font-family:'Nunito',sans-serif"></div>
@@ -1925,7 +1964,7 @@ var SB='https://lqbdxzjmxgjlozdoqixx.supabase.co';
 var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxYmR4empteGdqbG96ZG9xaXh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMTI3NjEsImV4cCI6MjA4NDg4ODc2MX0.gScJWh77OTWr8twODeVLkaBsZkG9l79QqMpWerWUPbo';
 var SAL=[{m:1000,s:5,b:4,t:9},{m:5000,s:25,b:20,t:45},{m:10000,s:50,b:36,t:86},{m:20000,s:100,b:60,t:160},{m:35000,s:175,b:96,t:271},{m:50000,s:250,b:125,t:375},{m:60000,s:300,b:150,t:450},{m:80000,s:400,b:173,t:573},{m:100000,s:500,b:224,t:724},{m:150000,s:750,b:300,t:1050},{m:220000,s:1100,b:360,t:1460},{m:300000,s:1500,b:440,t:1940},{m:400000,s:2000,b:560,t:2560},{m:500000,s:2500,b:640,t:3140},{m:700000,s:3500,b:800,t:4300},{m:1000000,s:5000,b:1040,t:6040},{m:1400000,s:7000,b:1200,t:8200},{m:2000000,s:10000,b:1500,t:11500},{m:3000000,s:15000,b:2000,t:17000}];
 var FLAGS={VE:'🇻🇪',CL:'🇨🇱',CO:'🇨🇴',MX:'🇲🇽',PE:'🇵🇪',AR:'🇦🇷',EC:'🇪🇨',US:'🇺🇸'};
-var U=null,P=null,htype='Orgánica',sMeta=null,svT=null,allS=[],hExp=false;
+var U=null,P=null,htype='Orgánica',modality='transmision',sMeta=null,svT=null,allS=[],hExp=false;
 var catAll=[],catFilt=[],catTier='all',catQ='';
 var qzLvl='facil',qzBank=[],qzCur=0,qzOk=0,qzFail=0,qzScore=0,qzAns=false,qzTimer=null,qzSecs=30,qzActive=false,qzStartTime=0;
 
@@ -4166,9 +4205,30 @@ function renderSes(){
 
   if(!visible.length){el.innerHTML='<div style="text-align:center;color:var(--txt3);font-size:12px;padding:20px">Sin sesiones registradas aún</div>';eb.style.display='none';return}
   var n=hExp?visible.length:Math.min(5,visible.length),h='';
-  for(var i=0;i<n;i++){var s=visible[i],dt=s.created_at?s.created_at.slice(0,10):'—';var tp=(s.tipo_horas||'Orgánica').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');var cl=tp==='organica'?'org':tp==='fantasma'?'fan':'mix';var isInit=s.tipo_sesion==='ajuste_inicial';h+='<div class="sit"><div><div class="sd">'+dt+(isInit?' <span style="font-size:9px;color:var(--cyan)">(base)</span>':'')+'</div><span class="stb '+cl+'">'+(s.tipo_horas||'Orgánica')+'</span>';if(s.show_descrito&&!isInit)h+='<div style="font-size:9px;color:var(--txt3);margin-top:1px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s.show_descrito+'</div>';h+='</div><div style="text-align:right"><div class="sc">🪙 '+fmt(s.monedas_reportadas||0)+'</div><div class="sh">'+(s.horas_transmitidas||0)+'h</div></div></div>'}
+  for(var i=0;i<n;i++){
+    var s=visible[i],dt=s.created_at?s.created_at.slice(0,10):'—';
+    var isPv=s.tipo_sesion==='sala_pv'||s.tipo_horas==='Sala PV';
+    var tp=(s.tipo_horas||'Orgánica').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var cl=isPv?'pv':tp==='organica'?'org':tp==='fantasma'?'fan':'mix';
+    var chipLabel=isPv?'🔒 Sala PV':(s.tipo_horas||'Orgánica');
+    var isInit=s.tipo_sesion==='ajuste_inicial';
+    var legacyBadge='';
+    var mixBreakdown='';
+    if(s.tipo_horas==='Mixta'&&s.desglose_mixta){
+      if(s.desglose_mixta.legacy){legacyBadge=' <span class="stb legacy" style="font-size:8px;margin-left:3px">📜 Legacy</span>'}
+      else if(typeof s.desglose_mixta.organica==='number'){
+        mixBreakdown=' <span style="font-size:8px;color:var(--txt3);margin-left:4px">('+s.desglose_mixta.organica+'h org + '+s.desglose_mixta.fantasma+'h fan)</span>';
+      }
+    }
+    var hoursDisplay=isPv?'—':((s.horas_transmitidas||0)+'h');
+    h+='<div class="sit"><div><div class="sd">'+dt+(isInit?' <span style="font-size:9px;color:var(--cyan)">(base)</span>':'')+'</div><span class="stb '+cl+'">'+chipLabel+'</span>'+legacyBadge+mixBreakdown;
+    if(s.show_descrito&&!isInit)h+='<div style="font-size:9px;color:var(--txt3);margin-top:1px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s.show_descrito+'</div>';
+    h+='</div><div style="text-align:right"><div class="sc">🪙 '+fmt(s.monedas_reportadas||0)+'</div><div class="sh">'+hoursDisplay+'</div></div></div>';
+  }
   el.innerHTML=h;
   if(visible.length>5&&!hExp){eb.style.display='block';eb.querySelector('button').textContent='Ver '+(visible.length-5)+' más ▼'}else{eb.style.display='none'}
+  /* v10.10: refresh ghost warning whenever session list re-renders */
+  if(typeof updateGhostWarning==='function')updateGhostWarning();
 }
 function expandHist(){hExp=true;renderSes()}
 function syncFromSessions(){
@@ -4308,60 +4368,135 @@ function toggleDateField(){
 
 function regSession(){
   var c=parseInt(document.getElementById('r-coins').value)||0;
-  var hInput=parseInt(document.getElementById('r-hours').value)||0;
-  var mInput=parseInt(document.getElementById('r-minutes').value)||0;
-  var hr=Math.round((hInput+mInput/60)*100)/100;
   var desc=document.getElementById('r-desc').value.trim();
-  if(!c&&!hr){alert('Ingresa monedas o duración');return}
-  if(mInput>59){alert('Los minutos no pueden ser más de 59');return}
+  
+  /* v10.10: compute hours based on modality + tipo_horas */
+  var hr=0, desgloseMixta=null, tipoHoras=htype, tipoSesion='manual';
+  var orgHr=0, fanHr=0;
+  
+  if(modality==='sala_pv'){
+    /* Sala PV: only coins matter, no hours */
+    if(!c){alert('Ingresa las monedas ganadas en sala privada');return}
+    hr=0;
+    tipoHoras='Sala PV';
+    tipoSesion='sala_pv';
+  }else{
+    /* Transmisión: requires at least coins or hours */
+    if(htype==='Mixta'){
+      var oh=parseInt((document.getElementById('r-org-h')||{}).value)||0;
+      var om=parseInt((document.getElementById('r-org-m')||{}).value)||0;
+      var fh=parseInt((document.getElementById('r-fan-h')||{}).value)||0;
+      var fm2=parseInt((document.getElementById('r-fan-m')||{}).value)||0;
+      if(om>59||fm2>59){alert('Los minutos no pueden ser más de 59');return}
+      orgHr=Math.round((oh+om/60)*100)/100;
+      fanHr=Math.round((fh+fm2/60)*100)/100;
+      hr=Math.round((orgHr+fanHr)*100)/100;
+      if(!c&&!hr){alert('Ingresa monedas o al menos una duración');return}
+      if(hr===0){alert('En modalidad Mixta debes ingresar al menos una hora (orgánica o fantasma)');return}
+      desgloseMixta={organica:orgHr,fantasma:fanHr};
+    }else{
+      var hInput=parseInt(document.getElementById('r-hours').value)||0;
+      var mInput=parseInt(document.getElementById('r-minutes').value)||0;
+      if(mInput>59){alert('Los minutos no pueden ser más de 59');return}
+      hr=Math.round((hInput+mInput/60)*100)/100;
+      if(!c&&!hr){alert('Ingresa monedas o duración');return}
+    }
+  }
+  
   /* Optional custom date — defaults to today */
   var customDate=document.getElementById('r-date').value;
   var sessionTs=null;
   if(customDate){
-    /* Validate date is not in future */
     var picked=new Date(customDate+'T12:00:00');
     var today=new Date();today.setHours(23,59,59,999);
     if(picked>today){alert('No puedes registrar sesiones de fechas futuras');return}
-    /* Check date is in current month for stat updates */
     sessionTs=picked.toISOString();
   }
+  
   var btn=document.getElementById('btn-reg');btn.disabled=true;btn.textContent='Guardando...';
-  var ses={emisora_id:U.id,tipo_sesion:'manual',monedas_reportadas:c,horas_transmitidas:hr,tipo_horas:htype,show_descrito:desc||null,resumen:desc||'Sesión registrada desde Mi Carrera'};
+  var ses={emisora_id:U.id,tipo_sesion:tipoSesion,monedas_reportadas:c,horas_transmitidas:hr,tipo_horas:tipoHoras,show_descrito:desc||null,resumen:desc||(modality==='sala_pv'?'Sesión de sala privada':'Sesión registrada desde Mi Carrera')};
+  if(desgloseMixta)ses.desglose_mixta=desgloseMixta;
   if(sessionTs)ses.created_at=sessionTs;
+  
   sbq('historial_sesiones',{m:'POST',b:ses,h:{'Prefer':'return=representation'}}).then(function(r){
     if(!r.ok)return r.text().then(function(t){throw new Error('HTTP '+r.status+': '+t)});
     return r.json();
   }).then(function(d){
-    /* Only update current month stats if session is in current month */
     var sesDate=sessionTs?new Date(sessionTs):new Date();
     var now=new Date();
     var sameMonth=(sesDate.getFullYear()===now.getFullYear()&&sesDate.getMonth()===now.getMonth());
     if(sameMonth){
       P.monedas_acumuladas=(P.monedas_acumuladas||0)+c;
-      P.horas_mes=Math.round(((P.horas_mes||0)+hr)*10)/10;
-      P.horas_contables=Math.round(((P.horas_contables||0)+Math.min(3,hr))*10)/10;
+      /* Sala PV: no suma horas. Mixta: suma todas las horas al total. */
+      if(modality!=='sala_pv'){
+        P.horas_mes=Math.round(((P.horas_mes||0)+hr)*10)/10;
+        P.horas_contables=Math.round(((P.horas_contables||0)+Math.min(3,hr))*10)/10;
+      }
     }
     P.monedas_cuenta_total=(P.monedas_cuenta_total||0)+c;
     save({monedas_acumuladas:P.monedas_acumuladas,horas_mes:P.horas_mes,horas_contables:P.horas_contables,monedas_cuenta_total:P.monedas_cuenta_total,monedas_actuales_fecha:new Date().toISOString().slice(0,10)});
     var ns=Array.isArray(d)?d[0]:d;if(!ns)ns=ses;ns.created_at=ns.created_at||sessionTs||new Date().toISOString();allS.unshift(ns);
     refreshAll();renderSes();
-    document.getElementById('r-coins').value='';document.getElementById('r-hours').value='';document.getElementById('r-minutes').value='';document.getElementById('r-desc').value='';
-    /* Reset date field */
+    /* Reset form */
+    document.getElementById('r-coins').value='';
+    document.getElementById('r-hours').value='';
+    document.getElementById('r-minutes').value='';
+    document.getElementById('r-desc').value='';
+    var orgH=document.getElementById('r-org-h');if(orgH)orgH.value='';
+    var orgM=document.getElementById('r-org-m');if(orgM)orgM.value='';
+    var fanH=document.getElementById('r-fan-h');if(fanH)fanH.value='';
+    var fanM=document.getElementById('r-fan-m');if(fanM)fanM.value='';
+    updateMixtaTotal();
     document.getElementById('r-date').value='';
     document.getElementById('r-date-field').style.display='none';
     document.getElementById('r-date-link').textContent='📅 ¿Es de otro día? Cambiar fecha';
-    var croq=awardCroquetas(c,hr);
+    /* v10.10: Sala PV gets 3x coins bonus, normal gets 2x + hours bonus */
+    var croq;
+    if(modality==='sala_pv'){
+      croq=awardCroquetas(Math.round(c*1.5),0); /* 3x total (base 2x * 1.5) */
+    }else{
+      croq=awardCroquetas(c,hr);
+    }
     btn.disabled=false;btn.textContent='+ Registrar sesión';
     var extraMsg='';
-    if(P.contrato_tipo==='antigua'&&hr<1){
-      extraMsg=' · '+Math.round(hr*60)+' min (suma para el día)';
-    }
+    if(modality==='sala_pv')extraMsg=' · 🔒 Sala PV';
+    else if(htype==='Mixta'&&desgloseMixta)extraMsg=' · 🟢'+orgHr+'h + 👻'+fanHr+'h';
+    else if(P.contrato_tipo==='antigua'&&hr<1)extraMsg=' · '+Math.round(hr*60)+' min (suma para el día)';
     if(sessionTs){
       var fechaStr=sesDate.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
       extraMsg+=' · 📅 '+fechaStr;
     }
     toast('✓ Sesión registrada'+(croq?' · +'+croq+' 🐾':'')+extraMsg);
+    /* Check if ghost hours threshold exceeded after save */
+    updateGhostWarning();
   }).catch(function(e){console.error('Session save error:',e);btn.disabled=false;btn.textContent='+ Registrar sesión';alert('Error: '+e.message)});
+}
+
+/* v10.10: Ghost hours warning — triggers when fantasma > 30% of total this month */
+function updateGhostWarning(){
+  var box=document.getElementById('ghost-warning-box');
+  if(!box||!allS||!allS.length){if(box)box.style.display='none';return}
+  var now=new Date();
+  var totalHr=0, fanHr=0;
+  for(var i=0;i<allS.length;i++){
+    var s=allS[i];
+    if(!s.created_at)continue;
+    var d=new Date(s.created_at);
+    if(d.getFullYear()!==now.getFullYear()||d.getMonth()!==now.getMonth())continue;
+    if(s.tipo_sesion==='sala_pv')continue; /* exclude PV from ratio */
+    var sh=parseFloat(s.horas_transmitidas)||0;
+    totalHr+=sh;
+    if(s.tipo_horas==='Fantasma'){fanHr+=sh}
+    else if(s.tipo_horas==='Mixta'&&s.desglose_mixta&&typeof s.desglose_mixta.fantasma==='number'){
+      fanHr+=s.desglose_mixta.fantasma;
+    }
+  }
+  if(totalHr<5){box.style.display='none';return} /* too few hours to evaluate */
+  var pct=(fanHr/totalHr)*100;
+  if(pct<30){box.style.display='none';return}
+  box.className='ghost-warning';
+  box.innerHTML='<span style="font-size:18px">⚠️</span><div><strong>Tus horas fantasma son el '+Math.round(pct)+'% del mes</strong><br>Las apps suelen descontar las horas fantasma la última semana. Intenta balancear con más horas orgánicas.</div>';
+  box.style.display='flex';
 }
 
 /* ===== CHIPS ===== */
@@ -4372,7 +4507,63 @@ function updateContractHint(){var hint=document.getElementById('r-contract-hint'
 var mm={idioma:'idioma',dias:'dias_pref',fortalezas:'fortalezas',debilidades:'debilidades',temas:'temas_frecuentes'};
 function togMulti(g,v,el){el.classList.toggle('sel');if(mm[g]){var f=mm[g];if(!P[f])P[f]=[];var idx=P[f].indexOf(v);if(idx>-1)P[f].splice(idx,1);else P[f].push(v);var u={};u[f]=P[f];save(u)}}
 function tog(id){var el=document.getElementById('t-'+id);el.classList.toggle('on');save({nivel_18:el.classList.contains('on')})}
-function selHT(t){htype=t;var mp={Orgánica:'ht-org',Fantasma:'ht-fan',Mixta:'ht-mix'};for(var k in mp)document.getElementById(mp[k]).classList.toggle('sel',k===t)}
+function selHT(t){
+  htype=t;
+  var mp={Orgánica:'ht-org',Fantasma:'ht-fan',Mixta:'ht-mix'};
+  for(var k in mp)document.getElementById(mp[k]).classList.toggle('sel',k===t);
+  /* v10.10: toggle mixta split form */
+  var simple=document.getElementById('r-duration-simple');
+  var mixta=document.getElementById('r-duration-mixta');
+  if(t==='Mixta'){
+    if(simple)simple.style.display='none';
+    if(mixta)mixta.style.display='';
+    updateMixtaTotal();
+  }else{
+    if(simple)simple.style.display='';
+    if(mixta)mixta.style.display='none';
+  }
+}
+
+function setModality(mode){
+  modality=mode;
+  var btnTx=document.getElementById('mod-tx');
+  var btnPv=document.getElementById('mod-pv');
+  var pvHint=document.getElementById('pv-hint-box');
+  var durS=document.getElementById('r-duration-simple');
+  var durM=document.getElementById('r-duration-mixta');
+  var tipoH=document.getElementById('r-tipo-horas');
+  if(btnTx)btnTx.classList.toggle('a',mode==='transmision');
+  if(btnPv)btnPv.classList.toggle('a',mode==='sala_pv');
+  if(mode==='sala_pv'){
+    if(pvHint)pvHint.style.display='block';
+    if(durS)durS.style.display='none';
+    if(durM)durM.style.display='none';
+    if(tipoH)tipoH.style.display='none';
+  }else{
+    if(pvHint)pvHint.style.display='none';
+    if(tipoH)tipoH.style.display='';
+    /* Restore appropriate duration input based on tipo */
+    if(htype==='Mixta'){
+      if(durS)durS.style.display='none';
+      if(durM)durM.style.display='';
+    }else{
+      if(durS)durS.style.display='';
+      if(durM)durM.style.display='none';
+    }
+  }
+}
+
+function updateMixtaTotal(){
+  var oh=parseInt((document.getElementById('r-org-h')||{}).value)||0;
+  var om=parseInt((document.getElementById('r-org-m')||{}).value)||0;
+  var fh=parseInt((document.getElementById('r-fan-h')||{}).value)||0;
+  var fm=parseInt((document.getElementById('r-fan-m')||{}).value)||0;
+  var totalMin=oh*60+om+fh*60+fm;
+  var tH=Math.floor(totalMin/60);
+  var tM=totalMin%60;
+  var el=document.getElementById('r-mixta-total');
+  if(el)el.textContent='Total: '+tH+'h '+tM+'min';
+}
 function autoSave(f){if(svT)clearTimeout(svT);svT=setTimeout(function(){if(f==='buzzcast_id'){var v=document.getElementById('f-bzid').value.trim();document.getElementById('d-bzid').textContent=v||'—';save({buzzcast_id:v})}},800)}
 
 /* Best show handlers */

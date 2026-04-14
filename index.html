@@ -1232,9 +1232,12 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devSwitchPet('gato')">🐱 Gato</button>
     <button class="bs" onclick="devSwitchPet('perro')">🐶 Perro</button>
     <button class="bs" onclick="devSwitchPet('conejo')">🐰 Conejo</button>
-    <button class="bs" onclick="devSwitchPet('perro','black')">🖤 Vlacky</button>
+    <button class="bs" onclick="devSwitchPet('gato','retro')">😺 Retro</button>
+    <button class="bs" onclick="devSwitchPet('gato','classical')">🐈 Classical</button>
+    <button class="bs" onclick="devSwitchPet('perro','black')">🖤 Vlaky</button>
     <button class="bs" onclick="devSwitchPet('perro','golden')">🦮 Golden</button>
     <button class="bs" onclick="devSwitchPet('conejo','grey')">🐇 Grey</button>
+    <button class="bs" onclick="devTestSprite('dance')" title="Solo funciona en RetroCats">💃 Dance</button>
   </div>
   
   <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">😊 Mood test</div>
@@ -2757,6 +2760,21 @@ var SPRITE_ANIMS={
       excited:{file:'excited.png',frames:12,fps:10,loop:true},
       laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
       sad:{file:'sad.png',frames:9,fps:5,loop:true}
+    },
+    retro:{
+      frameW:64,frameH:64,
+      /* Derived from Cats/RetroCats/Sprites — 64x64, 20 animations with real walk cycle */
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:4,fps:3,loop:true},
+      sleepy:{file:'sleepy.png',frames:4,fps:4,loop:true},
+      eating:{file:'eating.png',frames:10,fps:8,loop:true}, /* uses happy sprite */
+      excited:{file:'excited.png',frames:10,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:8,fps:5,loop:true},
+      sad:{file:'sad.png',frames:4,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}, /* REAL walk cycle from Running.png */
+      dance:{file:'dance.png',frames:4,fps:8,loop:true}, /* bonus: dance animation */
+      tickle:{file:'tickle.png',frames:4,fps:8,loop:true},
+      jump:{file:'jump.png',frames:12,fps:10,loop:false}
     }
   },
   dogs:{
@@ -2879,9 +2897,12 @@ function PetController(el,category,variant){
   this.variant=variant;
   this.config=SPRITE_ANIMS[category]&&SPRITE_ANIMS[category][variant];
   if(!this.config){console.warn('No sprite config for',category,variant);return}
-  /* Scale tuned per category to keep visual size consistent */
-  var scale=2; /* Cats/bunnies 32x32 → 64px tall (~17% of scene) */
-  if(this.config.frameH===64)scale=1; /* Dogs 64x64 → 64px tall */
+  /* Scale tuned per category+variant for visual consistency */
+  var scale=2; /* Classical cats/bunnies 32x32 → 64px tall (~17% of scene) */
+  if(this.config.frameH===64){
+    /* 64x64 sprites: RetroCats at 1.2 (slightly bigger, more expressive), dogs at 1 */
+    scale=(category==='cats'&&variant==='retro')?1.2:1;
+  }
   this.sprite=new PetSprite({
     el:el,
     frameW:this.config.frameW,
@@ -2992,11 +3013,11 @@ function initPetSprite(){
   if(!el)return;
   var pet=P&&P.mascota;
   if(!pet)return;
-  /* Phase 2: cats classical, dogs golden (black for Vlacky ID), bunnies grey */
+  /* Phase 2: cats retro (v10.11 default, more animations + walk cycle), dogs golden (black for Vlacky ID), bunnies grey */
   var category=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':'bunnies';
   var variant;
   if(_devVariantOverride)variant=_devVariantOverride;
-  else if(category==='cats')variant='classical';
+  else if(category==='cats')variant='retro';
   else if(category==='dogs'){
     /* Special case: Vlacky homenaje — ID 5088635103 gets black dog */
     variant=(U&&String(U.id)==='5088635103')?'black':'golden';
@@ -3531,7 +3552,8 @@ function petWalkTo(targetPct,callback){
   w.classList.add('walking');
   /* v10.9: trigger real walk animation for dogs/bunnies that have walk cycle */
   var pet=P&&P.mascota;
-  var hasWalkCycle=pet&&(pet.tipo==='perro'||pet.tipo==='conejo');
+  /* v10.11: walk cycle if the active sprite controller has a 'walk' animation defined */
+  var hasWalkCycle=_currentPetController&&_currentPetController.config&&_currentPetController.config.walk;
   if(hasWalkCycle&&_currentPetController){
     _currentPetController.setState('walk');
   }
@@ -3586,7 +3608,7 @@ function petWander(){
   /* Add walking bounce for the duration of the slow wander (4.5s) */
   w.classList.add('walking');
   /* v10.9: walk animation for dogs/bunnies */
-  var hasW=pet&&(pet.tipo==='perro'||pet.tipo==='conejo');
+  var hasW=_currentPetController&&_currentPetController.config&&_currentPetController.config.walk;
   if(hasW&&_currentPetController)_currentPetController.setState('walk');
   w.style.left=newLeft+'%';
   _lastWalkerLeft=newLeft;

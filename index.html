@@ -919,7 +919,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-time-overlay.night{background:linear-gradient(to bottom,rgba(80,90,140,.5),rgba(60,70,120,.55));opacity:1}
 .pet-time-overlay.dawn{background:linear-gradient(to bottom,rgba(255,210,160,.4),rgba(255,225,190,.3));opacity:1}
 .pet-time-badge{position:absolute;top:10px;left:10px;z-index:10;font-size:10px;color:#fff;background:rgba(15,15,30,.75);padding:4px 9px;border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;font-weight:700;letter-spacing:.3px;border:1px solid rgba(255,255,255,.1);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-.pet-facing{display:inline-block;transition:transform .25s ease}
+.pet-facing{display:inline-block;transition:transform .25s ease;position:relative}
 .pet-facing.face-left{transform:scaleX(-1)}
 .pet-shadow{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:75px;height:14px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 40%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
 @keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1)}50%{transform:translateX(-50%) scale(.95,.85)}}
@@ -3053,34 +3053,44 @@ function petSpritePlayOnce(state,onDone){
   if(_currentPetController)_currentPetController.playOnce(state,onDone);
 }
 
-/* v10.11.2: Render owned accessories as emoji overlays on the pet sprite.
-   Positioned relative to pet-walker so they move WITH the pet. */
+/* v10.11.2b: Positions are PERCENTAGES of sprite height. 0%=top of head, 100%=feet.
+   Accessories go INSIDE pet-facing so they flip when cat faces left.
+   Max 3 visible at a time (first 3 in the accesorios array). */
 var ACC_POSITIONS={
-  corona:     {emoji:'👑',top:'-18px',left:'50%',transform:'translateX(-50%)',fontSize:'16px'},
-  sombrero:   {emoji:'👒',top:'-16px',left:'50%',transform:'translateX(-50%)',fontSize:'18px'},
-  lentes_sol: {emoji:'🕶️',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'12px'},
-  collar_flores:{emoji:'🌺',top:'28px',left:'50%',transform:'translateX(-50%)',fontSize:'11px'},
-  collar_diamante:{emoji:'💎',top:'28px',left:'50%',transform:'translateX(-50%)',fontSize:'11px'},
-  bandana:    {emoji:'🧣',top:'22px',left:'55%',transform:'translateX(-50%)',fontSize:'11px'},
-  moño:       {emoji:'🎀',top:'-12px',left:'65%',transform:'translateX(-50%)',fontSize:'13px'},
-  alas:       {emoji:'🦋',top:'6px',left:'-8px',fontSize:'16px',transform:'scaleX(-1)'}
+  corona:         {emoji:'👑',yPct:-8, xPct:50, fontSize:'16px'},
+  sombrero:       {emoji:'👒',yPct:-10,xPct:50, fontSize:'18px'},
+  lentes_sol:     {emoji:'🕶️',yPct:18, xPct:50, fontSize:'13px'},
+  collar_flores:  {emoji:'🌺',yPct:55, xPct:50, fontSize:'12px'},
+  collar_diamante:{emoji:'💎',yPct:55, xPct:50, fontSize:'12px'},
+  bandana:        {emoji:'🧣',yPct:45, xPct:55, fontSize:'12px'},
+  moño:           {emoji:'🎀',yPct:-5, xPct:70, fontSize:'14px'},
+  alas:           {emoji:'🦋',yPct:25, xPct:-10,fontSize:'16px'}
 };
+var MAX_VISIBLE_ACCS=3;
 function renderAccessoriesOverlay(){
-  var walker=document.querySelector('.pet-walker');
-  if(!walker)return;
+  var facing=document.getElementById('pet-facing-el');
+  if(!facing)return;
   /* Remove previous overlays */
-  var old=walker.querySelectorAll('.acc-overlay');
+  var old=facing.querySelectorAll('.acc-overlay');
   for(var i=0;i<old.length;i++)old[i].remove();
   var pet=P&&P.mascota;if(!pet||!pet.accesorios||!pet.accesorios.length)return;
-  for(var j=0;j<pet.accesorios.length;j++){
+  /* Get actual sprite height for position calculation */
+  var spriteEl=document.getElementById('pet-sprite-el');
+  var sprH=spriteEl?spriteEl.offsetHeight:64;
+  var sprW=spriteEl?spriteEl.offsetWidth:64;
+  var count=0;
+  for(var j=0;j<pet.accesorios.length&&count<MAX_VISIBLE_ACCS;j++){
     var accId=pet.accesorios[j];
     var pos=ACC_POSITIONS[accId];
     if(!pos)continue;
     var d=document.createElement('div');
     d.className='acc-overlay';
     d.textContent=pos.emoji;
-    d.style.cssText='position:absolute;z-index:8;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));top:'+pos.top+';left:'+(pos.left||'auto')+';transform:'+(pos.transform||'none')+';font-size:'+(pos.fontSize||'14px');
-    walker.appendChild(d);
+    var topPx=Math.round(sprH*pos.yPct/100);
+    var leftPx=Math.round(sprW*pos.xPct/100);
+    d.style.cssText='position:absolute;z-index:8;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));font-size:'+(pos.fontSize||'14px')+';top:'+topPx+'px;left:'+leftPx+'px;transform:translateX(-50%)';
+    facing.appendChild(d);
+    count++;
   }
 }
 

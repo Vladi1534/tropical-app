@@ -887,16 +887,16 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
 .pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
-.pet-bowl{position:absolute;right:20%;bottom:8%;width:34px;height:34px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .3s}
+.pet-bowl{position:absolute;right:20%;bottom:8%;width:38px;height:38px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .3s}
 .pet-bowl:active{transform:scale(.92)}
 .pet-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.2),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
 .pet-bowl.hide-for-eating{opacity:0;pointer-events:none}
-.water-bowl{position:absolute;right:5%;bottom:8%;width:38px;height:38px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.water-bowl{position:absolute;right:5%;bottom:8%;width:38px;height:38px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:62%;bottom:7%;width:30px;height:30px;z-index:4;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.toy-ball{position:absolute;left:62%;bottom:7%;width:32px;height:32px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
@@ -904,11 +904,11 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
-.pet-decor.bed{left:5%;bottom:7%;width:44px;height:44px}
-.pet-decor.brush{left:18%;bottom:8%;width:16px;height:16px}
-.pet-decor.flower{left:27%;bottom:9%;width:14px;height:14px}
+.pet-decor.bed{left:4%;bottom:7%;width:62px;height:62px}
+.pet-decor.brush{left:24%;bottom:8%;width:18px;height:18px}
+.pet-decor.flower{left:32%;bottom:9%;width:16px;height:16px}
 .pet-decor.snack{display:none}
-.pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:3;will-change:left;display:inline-flex;flex-direction:column;align-items:center}
+.pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left;display:inline-block;text-align:center}
 .pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
 .pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
 .pet-walker.fast{transition:left 1.5s cubic-bezier(.4,0,.6,1)}
@@ -921,8 +921,8 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-time-badge{position:absolute;top:10px;left:10px;z-index:10;font-size:10px;color:#fff;background:rgba(15,15,30,.75);padding:4px 9px;border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;font-weight:700;letter-spacing:.3px;border:1px solid rgba(255,255,255,.1);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .pet-facing{display:inline-block;transition:transform .25s ease;position:relative}
 .pet-facing.face-left{transform:scaleX(-1)}
-.pet-shadow{position:relative;width:80%;max-width:75px;height:8px;margin-top:-4px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.22) 45%,transparent 75%);pointer-events:none;animation:petShadowBreathe 3s ease-in-out infinite}
-@keyframes petShadowBreathe{0%,100%{transform:scale(1,1);opacity:.85}50%{transform:scale(.92,.85);opacity:.7}}
+.pet-shadow{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:62px;height:9px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.22) 45%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
+@keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1);opacity:.85}50%{transform:translateX(-50%) scale(.92,.85);opacity:.7}}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 .pet-card{margin:10px 16px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(251,191,36,.2);background:linear-gradient(180deg,rgba(251,191,36,.06),rgba(168,85,247,.04));position:relative}
 .pet-card.no-pet{cursor:pointer;text-align:center;padding:20px;border-style:dashed}

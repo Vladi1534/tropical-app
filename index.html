@@ -589,9 +589,9 @@ label{display:block;font-size:11px;color:var(--txt2);margin-bottom:4px;font-weig
 
 /* ===== MODE SWITCH CSS ===== */
 #app-emisora,#app-admin{transition:opacity .3s ease}
-.fab{position:fixed;top:50px;right:10px;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;border:none;cursor:pointer;z-index:450;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:4px;opacity:.85;transition:all .25s}
-.fab:hover{opacity:1;transform:scale(1.05)}
-.fab:active{opacity:1;transform:scale(.95)}
+.fab{padding:4px 9px;border-radius:8px;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-family:'Nunito',sans-serif;display:inline-flex;align-items:center;gap:3px;transition:all .2s;line-height:1;color:var(--txt2);background:none;margin-right:4px}
+.fab:hover{transform:scale(1.05)}
+.fab:active{transform:scale(.95)}
 .fab-emisora{background:linear-gradient(135deg,#239b56,#2ecc71);color:#fff;border:1px solid rgba(255,255,255,.25)}
 .fab-admin{background:linear-gradient(135deg,#d4a017,var(--pink));color:#2d1b09;border:1px solid rgba(255,255,255,.25)}
 .fab-pulse{animation:pulse 2s infinite}
@@ -701,9 +701,6 @@ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' vie
 
 /* Rank top items golden glow */
 .rank-item.top1{border:1px solid rgba(251,191,36,.4);box-shadow:0 4px 20px rgba(251,191,36,.1)}
-
-/* FAB upgrade */
-.fab{box-shadow:0 2px 10px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.18)}
 
 /* Gift items polish */
 .gift-item{transition:all .3s;box-shadow:0 2px 10px rgba(0,0,0,.2)}
@@ -895,7 +892,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.2),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
 .pet-bowl.hide-for-eating{opacity:0;pointer-events:none}
-.water-bowl{position:absolute;right:5%;bottom:8%;width:28px;height:28px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.water-bowl{position:absolute;right:5%;bottom:8%;width:38px;height:38px;z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
@@ -912,9 +909,11 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-decor.flower{left:27%;bottom:9%;width:14px;height:14px}
 .pet-decor.snack{display:none}
 .pet-walker{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:3;will-change:left}
-.pet-walker.walking{animation:petWalkBounce .42s ease-in-out infinite}
+.pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
+.pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
 .pet-walker.fast{transition:left 1.5s cubic-bezier(.4,0,.6,1)}
-@keyframes petWalkBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+@keyframes petWalkBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes petWalkBounceLeft{0%,100%{transform:scaleX(-1) translateY(0)}50%{transform:scaleX(-1) translateY(-3px)}}
 .pet-time-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;mix-blend-mode:multiply;transition:background-color 2s ease,opacity 2s ease;opacity:0}
 .pet-time-overlay.dusk{background:linear-gradient(to bottom,rgba(255,180,120,.45),rgba(220,140,170,.4));opacity:1}
 .pet-time-overlay.night{background:linear-gradient(to bottom,rgba(80,90,140,.5),rgba(60,70,120,.55));opacity:1}
@@ -1095,6 +1094,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <img src="https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/public-web/tropical-logo.png" alt="Tropical">
   <span class="sl-text" id="sl-mode">Mi Carrera</span>
   <span style="flex:1"></span>
+  <button id="fab" class="fab fab-emisora" style="display:none" onclick="toggleMode()">🌴 Mi Carrera</button>
   <div style="position:relative;display:inline-block" id="color-picker-wrap">
     <button id="color-btn" onclick="toggleColorPicker()" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--txt2)">🎨</button>
     <div id="color-dropdown" style="display:none;position:absolute;right:0;top:32px;background:var(--card);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:8px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:nowrap">
@@ -1106,7 +1106,6 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 <div id="event-banner" style="display:none;width:100%"></div>
 <div id="ld"><div class="ld-p"><img src="https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/public-web/tropical-logo.png" alt=""></div><div class="ld-t">Cargando...</div></div>
 <div id="toast">✓</div>
-<button id="fab" class="fab fab-emisora" style="display:none" onclick="toggleMode()">🌴 Mi Carrera</button>
 
 <!-- APP EMISORA -->
 <div id="app-emisora" style="display:none">
@@ -1221,6 +1220,8 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devSetStat('felicidad',10)">😢 Drenar felicidad</button>
     <button class="bs" onclick="devSetStat('hambre',100)">🍽️ Full hambre</button>
     <button class="bs" onclick="devSetStat('hambre',10)">🥺 Drenar hambre</button>
+    <button class="bs" onclick="devSetStat('sed',100)">💧 Full sed</button>
+    <button class="bs" onclick="devSetStat('sed',10)">🏜️ Drenar sed</button>
   </div>
   
   <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">🐾 Cambiar mascota</div>
@@ -3042,12 +3043,45 @@ function initPetSprite(){
   }
   /* Update day/night overlay */
   updateTimeOverlay();
+  /* Show accessories */
+  renderAccessoriesOverlay();
 }
 function petSpriteSetState(state){
   if(_currentPetController)_currentPetController.setState(state);
 }
 function petSpritePlayOnce(state,onDone){
   if(_currentPetController)_currentPetController.playOnce(state,onDone);
+}
+
+/* v10.11.2: Render owned accessories as emoji overlays on the pet sprite.
+   Positioned relative to pet-walker so they move WITH the pet. */
+var ACC_POSITIONS={
+  corona:     {emoji:'👑',top:'-18px',left:'50%',transform:'translateX(-50%)',fontSize:'16px'},
+  sombrero:   {emoji:'👒',top:'-16px',left:'50%',transform:'translateX(-50%)',fontSize:'18px'},
+  lentes_sol: {emoji:'🕶️',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'12px'},
+  collar_flores:{emoji:'🌺',top:'28px',left:'50%',transform:'translateX(-50%)',fontSize:'11px'},
+  collar_diamante:{emoji:'💎',top:'28px',left:'50%',transform:'translateX(-50%)',fontSize:'11px'},
+  bandana:    {emoji:'🧣',top:'22px',left:'55%',transform:'translateX(-50%)',fontSize:'11px'},
+  moño:       {emoji:'🎀',top:'-12px',left:'65%',transform:'translateX(-50%)',fontSize:'13px'},
+  alas:       {emoji:'🦋',top:'6px',left:'-8px',fontSize:'16px',transform:'scaleX(-1)'}
+};
+function renderAccessoriesOverlay(){
+  var walker=document.querySelector('.pet-walker');
+  if(!walker)return;
+  /* Remove previous overlays */
+  var old=walker.querySelectorAll('.acc-overlay');
+  for(var i=0;i<old.length;i++)old[i].remove();
+  var pet=P&&P.mascota;if(!pet||!pet.accesorios||!pet.accesorios.length)return;
+  for(var j=0;j<pet.accesorios.length;j++){
+    var accId=pet.accesorios[j];
+    var pos=ACC_POSITIONS[accId];
+    if(!pos)continue;
+    var d=document.createElement('div');
+    d.className='acc-overlay';
+    d.textContent=pos.emoji;
+    d.style.cssText='position:absolute;z-index:8;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));top:'+pos.top+';left:'+(pos.left||'auto')+';transform:'+(pos.transform||'none')+';font-size:'+(pos.fontSize||'14px');
+    walker.appendChild(d);
+  }
 }
 
 function petBgSVG(habitat){
@@ -3126,18 +3160,31 @@ function renderPetCard(){
     h+='</div>';
   }
 
-  /* Mood message (TropicalBot voice) */
+  /* Contextual hint — prioriza la necesidad más urgente con acción directa */
   var nombreP=pet.nombre||'tu mascota';
-  var moodMsgs={
-    happy:['🤖 TropicalBot: "¡Mira cómo '+nombreP+' rebota de felicidad!"','🤖 "'+nombreP+' está radiante, bien hecho mi querida"'],
-    content:['🤖 "'+nombreP+' está tranquila y contenta, buen trabajo"','🤖 "Todo va bien con '+nombreP+'"'],
-    neutral:['🤖 "'+nombreP+' te observa esperando algo..."','🤖 "¿Le darás de comer a '+nombreP+'?"'],
-    sad:['🤖 "'+nombreP+' está triste, dale cariño 💙"','🤖 "Necesita que la consientas, aliméntala"'],
-    hungry:['🤖 "¡'+nombreP+' tiene hambre! Dale de comer 🐾"','🤖 "Escucho sus tripas, ¡alimentala!"'],
-    sleeping:['🤖 "Shh... '+nombreP+' está durmiendo 💤"','🤖 "Déjala descansar, volverá pronto"']
-  };
-  var msgs=moodMsgs[mood]||moodMsgs.neutral;var randMsg=msgs[Math.floor(Date.now()/60000)%msgs.length];
-  h+='<div style="text-align:center;padding:4px 14px 8px;font-size:10px;color:var(--txt3);font-style:italic;line-height:1.4">'+randMsg+'</div>';
+  var hintMsg='';var hintAction='';
+  if(isSleep){
+    hintMsg='💤 '+nombreP+' está durmiendo, volverá pronto';
+  }else if((pet.hambre||0)<25){
+    hintMsg='🍽️ ¡'+nombreP+' tiene hambre! Toca el plato para darle de comer';
+    hintAction='openBowl()';
+  }else if((pet.sed||0)<30){
+    hintMsg='💧 '+nombreP+' tiene sed — toca el cuenco azul para darle agua';
+    hintAction='openWaterBowl()';
+  }else if((pet.felicidad||0)<30){
+    hintMsg='😢 '+nombreP+' está triste, ¡tócala para darle cariño!';
+  }else if((pet.energia||0)<20){
+    hintMsg='⚡ '+nombreP+' necesita descansar, la energía se recupera sola';
+  }else if((pet.felicidad||0)>80&&(pet.hambre||0)>60){
+    hintMsg='🌟 ¡'+nombreP+' está feliz y bien cuidada!';
+  }else{
+    hintMsg='🐾 '+nombreP+' te observa esperando mimos...';
+  }
+  if(hintAction){
+    h+='<div onclick="'+hintAction+'" style="text-align:center;padding:6px 14px 8px;font-size:11px;color:var(--cyan);line-height:1.4;cursor:pointer;font-weight:600">'+hintMsg+'</div>';
+  }else{
+    h+='<div style="text-align:center;padding:4px 14px 8px;font-size:10px;color:var(--txt3);font-style:italic;line-height:1.4">'+hintMsg+'</div>';
+  }
 
   h+='<div class="pet-actions">';
   h+='<button class="pet-btn shop" onclick="openM(\'m-pet-shop\');shopTab(\'comida\')" title="Tropi Shop" style="flex:1">🛍️ Tropi Shop</button>';
@@ -3199,6 +3246,47 @@ function checkPetLevelUp(pet){
     else if(lvl===18)toast('🔥 ¡'+(pet.nombre)+' evolucionó a Adulta!');
     else if(lvl===28)toast('👑 ¡'+(pet.nombre)+' alcanzó nivel Tropical!');
   }pet.nivel=lvl;
+}
+
+/* v10.11.2: inline stats update — actualiza barras y XP SIN destruir el DOM
+   del cuarto. Usar después de petPlay/consumeFood/openWaterBowl/petTap.
+   Si el pet sube de nivel, evoluciona o no existe el card, cae en renderPetCard. */
+function updatePetStatsInline(){
+  var pet=P&&P.mascota;if(!pet)return;
+  var card=document.querySelector('.pet-card');
+  if(!card){renderPetCard();return}
+  /* Update XP bar */
+  var lvl=pet.nivel||1;var xp=pet.xp||0;
+  var nxt=xpForLevel(lvl);var prev=xpForLevel(lvl-1);
+  var xpInLevel=xp-prev;var xpNeeded=nxt-prev;
+  var xpPct=xpNeeded>0?Math.min(100,Math.round((xpInLevel/xpNeeded)*100)):0;
+  var xpFill=card.querySelector('.pet-xp-fill');if(xpFill)xpFill.style.width=xpPct+'%';
+  var xpTxt=card.querySelector('.pet-xp-txt');
+  if(xpTxt)xpTxt.innerHTML='<span>XP '+fmt(xp)+'/'+fmt(nxt)+'</span><span>Nv.'+(lvl+1)+'</span>';
+  /* Update stat bars */
+  var fills=card.querySelectorAll('.pet-stat-fill');
+  if(fills&&fills.length>=4){
+    fills[0].style.width=Math.max(0,pet.felicidad||0)+'%';
+    fills[0].style.background=pet.felicidad>50?'var(--green)':'var(--red)';
+    fills[1].style.width=Math.max(0,pet.hambre||0)+'%';
+    fills[1].style.background=pet.hambre>40?'var(--gold)':'var(--red)';
+    fills[2].style.width=Math.max(0,pet.sed||0)+'%';
+    fills[2].style.background=(pet.sed||0)>40?'var(--cyan)':'var(--red)';
+    fills[3].style.width=Math.max(0,pet.energia||0)+'%';
+  }
+  /* Update mood text */
+  var mood=getMood(pet);
+  var lvlEl=card.querySelector('.pet-level');
+  if(lvlEl){
+    lvlEl.innerHTML='Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood);
+  }
+  /* Update croquetas */
+  var crEl=card.querySelector('.pet-croquetas');
+  if(crEl)crEl.innerHTML='🐾 '+fmt(pet.croquetas||0);
+  /* Update bowl visuals (full/empty state) */
+  if(typeof updatePetBowl==='function')updatePetBowl();
+  /* Update accessories overlay */
+  if(typeof renderAccessoriesOverlay==='function')renderAccessoriesOverlay();
 }
 
 var selectedPetType=null,selectedPetGender='hembra';
@@ -3263,6 +3351,18 @@ function updatePetBowl(){
       var wantsPlay=(pet.felicidad||100)<70;
       tbEl.classList.toggle('disabled',!canPlay);
       tbEl.classList.toggle('ready',canPlay&&wantsPlay);
+      /* Show active toy emoji badge */
+      var oldBadge=tbEl.querySelector('.toy-active-badge');
+      if(oldBadge)oldBadge.remove();
+      if(pet.juguete_activo){
+        var toyIcon='🎾';
+        for(var ti=0;ti<PET_TOYS.length;ti++)if(PET_TOYS[ti].id===pet.juguete_activo)toyIcon=PET_TOYS[ti].icon;
+        var badge=document.createElement('div');
+        badge.className='toy-active-badge';
+        badge.textContent=toyIcon;
+        badge.style.cssText='position:absolute;top:-8px;right:-8px;font-size:14px;z-index:5;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));animation:bowlPulse 2s ease-in-out infinite';
+        tbEl.appendChild(badge);
+      }
     }
   }
   /* === STATIC DECORATIONS === */
@@ -3305,7 +3405,7 @@ function openWaterBowl(){
   pet.water_last_refill=now;
   pet.felicidad=Math.min(100,(pet.felicidad||0)+5); /* small happiness boost */
   pet.xp=(pet.xp||0)+2;
-  savePet();renderPetCard();
+  savePet();updatePetStatsInline();
   /* Walk to water bowl, then play drinking animation */
   setTimeout(function(){
     petWalkTo(POS_WATER,function(){
@@ -3369,7 +3469,7 @@ function consumeFood(foodId){
   pet.bowl_food=foodId;
   checkPetLevelUp(pet);savePet();
   closeM('m-pet-feed');
-  renderPetCard();
+  updatePetStatsInline();
   /* Walk to food bowl, then play eating animation.
      NOTE: The ToffeeCraft eating sprite has a bowl drawn INSIDE the animation
      frames, so we hide the scene bowl during eating to avoid the "double bowl"
@@ -3415,7 +3515,7 @@ function petPlay(){
   pet.ultima_energia_ts=Date.now(); /* Reset energy regen timer */
   /* Track plays for stats but no daily limit */
   pet.juegos_total=(pet.juegos_total||0)+1;
-  checkPetLevelUp(pet);savePet();renderPetCard();
+  checkPetLevelUp(pet);savePet();updatePetStatsInline();
   /* Walk to toy ball, then play excited + show ball animation */
   setTimeout(function(){
     petWalkTo(POS_TOY,function(){
@@ -3496,7 +3596,7 @@ function petTap(e){
   /* Debounced save (don't hammer API) */
   if(rewarded){
     if(_petTapSaveTimer)clearTimeout(_petTapSaveTimer);
-    _petTapSaveTimer=setTimeout(function(){savePet();renderPetCard()},2000);
+    _petTapSaveTimer=setTimeout(function(){savePet();updatePetStatsInline()},2000);
   }
 }
 function showTapParticle(e,text,color){

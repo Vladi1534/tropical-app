@@ -3028,6 +3028,17 @@ function moodToState(mood){
   return 'idle';
 }
 
+/* v10.12-fase1c: SINGLE SOURCE OF TRUTH for "what should the pet be doing right now?"
+   Llamar después de cualquier cambio de stats o cuando termina una animación
+   (walk, eat, play, drink). Asegura que la mascota refleje su mood actual
+   en lugar de quedar atascada en idle. */
+function applyPetMoodState(){
+  if(!P||!P.mascota||!_currentPetController)return;
+  var mood=getMood(P.mascota);
+  var state=moodToState(mood);
+  _currentPetController.setState(state);
+}
+
 function closeTutorialV2(){
   closeM('m-tutorial-v2');
   if(P&&P.mascota){P.mascota.mostrar_tutorial_v2=false;savePet()}
@@ -3118,7 +3129,14 @@ function petSpriteSetState(state){
   if(_currentPetController)_currentPetController.setState(state);
 }
 function petSpritePlayOnce(state,onDone){
-  if(_currentPetController)_currentPetController.playOnce(state,onDone);
+  if(!_currentPetController)return;
+  _currentPetController.playOnce(state,function(){
+    /* v10.12-fase1c: tras la animación one-shot (eat/excited/etc),
+       refleja el mood actualizado. Si comió y ya no tiene hambre,
+       pasa de sleepy → idle. Si jugó y subió felicidad, queda contenta. */
+    applyPetMoodState();
+    if(onDone)onDone();
+  });
 }
 
 /* v10.12 Fase 1: Accesorios visuales DESHABILITADOS.
@@ -3343,6 +3361,8 @@ function updatePetStatsInline(){
   if(typeof updatePetBowl==='function')updatePetBowl();
   /* Update accessories overlay */
   if(typeof renderAccessoriesOverlay==='function')renderAccessoriesOverlay();
+  /* v10.12-fase1c: refresh sprite state to reflect new mood (unless walking) */
+  if(typeof applyPetMoodState==='function'&&!_walkPaused)applyPetMoodState();
 }
 
 var selectedPetType=null,selectedPetGender='hembra';
@@ -3674,11 +3694,15 @@ function showTapHeart(e,emoji){showTapParticle(e,emoji||'💕','#ec4899')}
 
 /* ===== PET WANDERING — pet moves naturally around the room ===== */
 /* ===== PET WALKER & POSITION TRACKING ===== */
-/* Object positions in % — centers of each interactive item, matches CSS */
-var POS_BED=10;    /* bed at left:5% + width 44px */
-var POS_TOY=64;    /* toy ball at left:62% + width 24px */
-var POS_FOOD=78;   /* food bowl at right:20% */
-var POS_WATER=93;  /* water bowl at right:5% */
+/* Object positions in % — centers of each interactive item, matches CSS.
+   v10.12-fase1c: BED ahora 62px en left:4% → centro real ~13%
+   pero el sprite acostado mide ~77px ancho, así que centro del walker
+   debe estar más a la derecha para que el sprite no salga del cuarto.
+   18% deja el sprite cubriendo cama (4-22%) sin salir por la izquierda. */
+var POS_BED=18;    /* bed at left:4% + width 62px, sprite ancho ~77px */
+var POS_TOY=64;    /* toy ball at left:62% + width 32px */
+var POS_FOOD=72;   /* food bowl at right:20% (sprite ancho compensa) */
+var POS_WATER=88;  /* water bowl at right:5% */
 /* Walker remembers its position across re-renders since renderPetCard rewrites the DOM */
 var _lastWalkerLeft=50;
 var _lastWalkerFace='right'; /* 'left' or 'right' */
@@ -3718,9 +3742,12 @@ function petWalkTo(targetPct,callback){
   setTimeout(function(){
     var wMid=document.querySelector('.pet-walker');
     if(wMid)wMid.classList.remove('walking');
-    /* Return to idle after walk, unless callback sets a specific state */
+    /* v10.12-fase1c: respetar mood al llegar (NO forzar idle).
+       Si la mascota fue a la cama y mood='sleeping', se acuesta a dormir.
+       Si va a comer y mood='hungry', queda comiendo. El callback puede
+       sobreescribir con un estado específico (como petSpritePlayOnce('eating')). */
     if(hasWalkCycle&&_currentPetController){
-      _currentPetController.setState('idle');
+      applyPetMoodState();
     }
     if(callback)callback();
     /* Resume wander after enough time for action animation */
@@ -3768,7 +3795,9 @@ function petWander(){
   setTimeout(function(){
     var wEnd=document.querySelector('.pet-walker');
     if(wEnd)wEnd.classList.remove('walking');
-    if(hasW&&_currentPetController)_currentPetController.setState('idle');
+    /* v10.12-fase1c: tras pasear, refleja mood actual (no idle forzado).
+       Si está triste vuelve a sad, si está hambrienta vuelve a sleepy. */
+    if(hasW&&_currentPetController)applyPetMoodState();
   },4600);
 }
 

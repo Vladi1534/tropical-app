@@ -1230,11 +1230,16 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devSwitchPet('gato')">🐱 Gato</button>
     <button class="bs" onclick="devSwitchPet('perro')">🐶 Perro</button>
     <button class="bs" onclick="devSwitchPet('conejo')">🐰 Conejo</button>
+    <button class="bs" onclick="devSwitchPet('pajaro')">🐦 Pájaro</button>
     <button class="bs" onclick="devSwitchPet('gato','retro')">😺 Retro</button>
     <button class="bs" onclick="devSwitchPet('gato','classical')">🐈 Classical</button>
     <button class="bs" onclick="devSwitchPet('perro','black')">🖤 Vlaky</button>
     <button class="bs" onclick="devSwitchPet('perro','golden')">🦮 Golden</button>
     <button class="bs" onclick="devSwitchPet('conejo','grey')">🐇 Grey</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','green')">💚 Green</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','blue')">💙 Blue</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','yellow')">💛 Yellow</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','parrot')">🦜 Loro</button>
     <button class="bs" onclick="devTestSprite('dance')" title="Solo funciona en RetroCats">💃 Dance</button>
   </div>
   
@@ -2305,7 +2310,8 @@ function togCat(el){var body=el.nextElementSibling;if(!body)return;if(body.style
 var PET_TYPES={
   gato:{name:'Gatita',nameM:'Gatito',desc:'Curiosa y cariñosa',emoji:'🐱'},
   perro:{name:'Perrita',nameM:'Perrito',desc:'Fiel y juguetona',emoji:'🐶'},
-  conejo:{name:'Conejita',nameM:'Conejito',desc:'Tierna y saltarina',emoji:'🐰'}
+  conejo:{name:'Conejita',nameM:'Conejito',desc:'Tierna y saltarina',emoji:'🐰'},
+  pajaro:{name:'Pajarita',nameM:'Pajarito',desc:'Alegre y cantarina',emoji:'🐦'}
 };
 /* Species-specific food: each pet type eats what's natural for them */
 /* ===== PET FOODS V2 — Tiered + Specialized (consumibles del inventario) =====
@@ -2331,6 +2337,12 @@ var PET_FOOD_BY_TYPE={
     {id:'zanahoria',name:'Zanahoria',icon:'🥕',tier:'standard',cost:12,hunger:40,happy:10,energy:5,xp:10,desc:'Crujiente y dulce'},
     {id:'lechuga',name:'Lechuga',icon:'🥬',tier:'premium',cost:25,hunger:30,happy:35,energy:5,xp:15,desc:'¡La pone súper feliz!'},
     {id:'flores',name:'Flores',icon:'🌸',tier:'premium-plus',cost:40,hunger:60,happy:25,energy:20,xp:25,desc:'Banquete completo'}
+  ],
+  pajaro:[
+    {id:'semillas',name:'Semillas',icon:'🌻',tier:'basic',cost:5,hunger:20,happy:5,energy:5,xp:5,desc:'Semillas frescas del día'},
+    {id:'mijo',name:'Mijo',icon:'🌾',tier:'standard',cost:12,hunger:40,happy:10,energy:5,xp:10,desc:'Su grano favorito'},
+    {id:'fruta',name:'Fruta Tropical',icon:'🥭',tier:'premium',cost:25,hunger:30,happy:35,energy:5,xp:15,desc:'¡Lo pone a cantar!'},
+    {id:'nectar',name:'Néctar',icon:'🍯',tier:'premium-plus',cost:40,hunger:60,happy:25,energy:20,xp:25,desc:'Banquete tropical completo'}
   ]
 };
 function getPetFood(type){return PET_FOOD_BY_TYPE[type]||PET_FOOD_BY_TYPE.gato}
@@ -2386,9 +2398,9 @@ function generatePetColors(type){
   var col={};
 
   /* Base hue ranges per type */
-  var hueRanges={gato:[20,45],perro:[15,40],conejo:[0,360]};
-  var satRanges={gato:[40,75],perro:[30,60],conejo:[5,30]};
-  var litRanges={gato:[60,80],perro:[50,70],conejo:[80,95]};
+  var hueRanges={gato:[20,45],perro:[15,40],conejo:[0,360],pajaro:[80,180]};
+  var satRanges={gato:[40,75],perro:[30,60],conejo:[5,30],pajaro:[50,90]};
+  var litRanges={gato:[60,80],perro:[50,70],conejo:[80,95],pajaro:[45,70]};
 
   var hr=hueRanges[type]||[20,45];
   var sr=satRanges[type]||[40,75];
@@ -2500,7 +2512,7 @@ function getPetSVG(type,stage,mood,size,gender,accs,col){
   /* Shared defs: gradients + shadow */
   /* Use custom colors if col provided, else defaults */
   var cc=col||{};
-  var defColors={gato:{body:'#ffcb8a',dark:'#e8954a',light:'#ffd4a0',belly:'#ffe4c4',nose:'#e8a090'},perro:{body:'#d4a87a',dark:'#a0734e',light:'#d4a87a',belly:'#f0dcc8',nose:'#3d2a1a'},conejo:{body:'#f8f2ee',dark:'#e0d4cc',light:'#f8f2ee',belly:'#fff',nose:'#ffb6c1'}};
+  var defColors={gato:{body:'#ffcb8a',dark:'#e8954a',light:'#ffd4a0',belly:'#ffe4c4',nose:'#e8a090'},perro:{body:'#d4a87a',dark:'#a0734e',light:'#d4a87a',belly:'#f0dcc8',nose:'#3d2a1a'},conejo:{body:'#f8f2ee',dark:'#e0d4cc',light:'#f8f2ee',belly:'#fff',nose:'#ffb6c1'},pajaro:{body:'#7bc96f',dark:'#4a8a3f',light:'#a8e09a',belly:'#d4f0cc',nose:'#e8a030'}};
   var dc=defColors[type]||defColors.gato;
   var cBody=cc.body||dc.body,cDark=cc.dark||dc.dark,cLight=cc.light||dc.light,cBelly=cc.belly||dc.belly,cNose=cc.nose||dc.nose;
   var cEye=cc.eyeColor||'#2a1a0a',cEyeL=cc.eyeLight||'#4a3520';
@@ -2705,7 +2717,7 @@ function getPetSVG(type,stage,mood,size,gender,accs,col){
 function petEggSVG(s,type,_pid,col){
   _pid=_pid||0;
   var h=s/2;
-  var defColors={gato:['#ffd9b3','#e8954a','#f4a460'],perro:['#e8cdb5','#a0734e','#c4956a'],conejo:['#f5f0ec','#ddd0c8','#e8ddd4']};
+  var defColors={gato:['#ffd9b3','#e8954a','#f4a460'],perro:['#e8cdb5','#a0734e','#c4956a'],conejo:['#f5f0ec','#ddd0c8','#e8ddd4'],pajaro:['#a8e09a','#4a8a3f','#7bc96f']};
   var c;
   if(col&&col.body){
     /* Use the pet's actual colors so the egg hints at the future mascot */
@@ -2811,6 +2823,52 @@ var SPRITE_ANIMS={
       sad:{file:'laydown.png',frames:6,fps:4,loop:true},
       walk:{file:'walk.png',frames:8,fps:12,loop:true}
     }
+  },
+  birds:{
+    green:{
+      frameW:16,frameH:16,
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    blue:{
+      frameW:16,frameH:16,
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    yellow:{
+      frameW:16,frameH:16,
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    parrot:{
+      frameW:16,frameH:16,
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    }
   }
 };
 
@@ -2900,6 +2958,9 @@ function PetController(el,category,variant){
   if(this.config.frameH===64){
     /* 64x64 sprites: RetroCats at 1.2 (slightly bigger, more expressive), dogs at 1 */
     scale=(category==='cats'&&variant==='retro')?1.2:1;
+  }else if(this.config.frameH===16){
+    /* 16x16 sprites: birds at scale 3 → 48px tall */
+    scale=3;
   }
   this.sprite=new PetSprite({
     el:el,
@@ -3011,15 +3072,16 @@ function initPetSprite(){
   if(!el)return;
   var pet=P&&P.mascota;
   if(!pet)return;
-  /* Phase 2: cats retro (v10.11 default, more animations + walk cycle), dogs golden (black for Vlacky ID), bunnies grey */
-  var category=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':'bunnies';
+  /* Phase 3: cats retro, dogs golden/black, bunnies grey, birds green/blue/yellow/parrot */
+  var category=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':pet.tipo==='pajaro'?'birds':'bunnies';
   var variant;
   if(_devVariantOverride)variant=_devVariantOverride;
   else if(category==='cats')variant='retro';
   else if(category==='dogs'){
     /* Special case: Vlacky homenaje — ID 5088635103 gets black dog */
     variant=(U&&String(U.id)==='5088635103')?'black':'golden';
-  }else variant='grey';
+  }else if(category==='birds')variant='green';
+  else variant='grey';
   if(_currentPetController)_currentPetController.destroy();
   _currentPetController=new PetController(el,category,variant);
   var mood=getMood(pet);
@@ -3301,7 +3363,7 @@ function updatePetStatsInline(){
 
 var selectedPetType=null,selectedPetGender='hembra';
 function initPetSelect(){
-  var grid=document.getElementById('pet-select-grid');var h='';var types=['gato','perro','conejo'];
+  var grid=document.getElementById('pet-select-grid');var h='';var types=['gato','perro','conejo','pajaro'];
   for(var i=0;i<types.length;i++){var t=types[i];var info=PET_TYPES[t];h+='<div class="pet-option" onclick="selectPetType(\''+t+'\',this)">'+getPetSVG(t,2,'happy',75,selectedPetGender)+'<div class="pet-opt-name">'+info.emoji+' '+info.name+'</div><div class="pet-opt-desc">'+info.desc+'</div></div>';}
   grid.innerHTML=h;selectedPetType=null;validateAdopt();
   document.getElementById('pg-f').classList.add('sel');document.getElementById('pg-m').classList.remove('sel');

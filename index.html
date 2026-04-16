@@ -2982,36 +2982,44 @@ PetSprite.prototype.play=function(opts){
   this.loop=opts.loop!==false;
   this.onComplete=opts.onComplete||null;
   this.currentFrame=0;
-  /* v10.13.1b: verificar que la imagen esté cargada ANTES de aplicarla
-     como background. Si no está cargada aún, esperar al load para no
-     dejar gap visual de "mascota invisible". Si ya está en caché
-     (pre-loaded en PetController), se aplica sincrónico.
-
-     También hace defensive check de frame count (igual que v10.12-fase1d):
-     si declaredFrames > realFrames, clampea. */
+  /* Parar tick anterior — evita que siga cambiando frame sobre el sprite viejo */
+  this.stop();
+  /* Versionado: si se llama play() de nuevo antes de que termine el
+     probe anterior, incrementamos version. Solo el onload de la versión
+     ACTUAL aplica el background. Evita race conditions donde un probe
+     tardío pisa el sprite correcto con uno viejo. */
+  this._loadVersion=(this._loadVersion||0)+1;
+  var myVersion=this._loadVersion;
   var self=this;
+  var targetUrl=this.url;
+  var targetFrames=this.totalFrames;
   var probe=new Image();
   probe.onload=function(){
+    /* Si ya se disparó otro play() después de este, ignorar */
+    if(myVersion!==self._loadVersion)return;
     var realFrames=Math.floor(probe.naturalWidth/self.frameW);
-    if(realFrames>0&&realFrames<self.totalFrames){
-      console.warn('PetSprite frame mismatch:',self.url,
-        'declared='+self.totalFrames,'actual='+realFrames,'→ clamped');
+    if(realFrames>0&&realFrames<targetFrames){
+      console.warn('PetSprite frame mismatch:',targetUrl,
+        'declared='+targetFrames,'actual='+realFrames,'→ clamped');
       self.totalFrames=realFrames;
     }
-    /* Only NOW apply the background — image is guaranteed ready */
-    self.el.style.backgroundImage='url("'+self.url+'")';
-    self._draw();
-    self._start();
+    /* Aplicar el background solo si seguimos queriendo ESTE sprite */
+    if(self.url===targetUrl){
+      self.el.style.backgroundImage='url("'+targetUrl+'")';
+      self._draw();
+      self._start();
+    }
   };
   probe.onerror=function(){
-    /* If image fails to load, fallback: try to apply anyway and
-       hope browser retries. Don't leave element invisible. */
-    console.warn('PetSprite image failed:',self.url);
-    self.el.style.backgroundImage='url("'+self.url+'")';
-    self._draw();
-    self._start();
+    if(myVersion!==self._loadVersion)return;
+    console.warn('PetSprite image failed:',targetUrl);
+    if(self.url===targetUrl){
+      self.el.style.backgroundImage='url("'+targetUrl+'")';
+      self._draw();
+      self._start();
+    }
   };
-  probe.src=this.url;
+  probe.src=targetUrl;
   /* Fast path: if image is already in browser cache, onload fires sync.
      If NOT cached, el keeps current background until probe.onload fires
      (no gap of empty sprite). */
@@ -3151,6 +3159,19 @@ function applyPetMoodState(){
   var mood=getMood(P.mascota);
   var state=moodToState(mood);
   _currentPetController.setState(state);
+  /* v10.13.2b: si la mascota se durmió lejos de la cama, caminar hasta
+     ahí. No hacer esto si ya está caminando (_walkPaused=true indica
+     acción en curso — dejar que esa acción termine antes). */
+  if(mood==='sleeping'&&!_walkPaused&&typeof POS_BED==='number'){
+    if(Math.abs(_lastWalkerLeft-POS_BED)>3){
+      setTimeout(function(){
+        /* Verificar de nuevo antes de mover — el estado puede haber cambiado */
+        if(P&&P.mascota&&getMood(P.mascota)==='sleeping'&&!_walkPaused){
+          petWalkTo(POS_BED);
+        }
+      },500);
+    }
+  }
 }
 
 function closeTutorialV2(){
@@ -3769,10 +3790,11 @@ function showPlayAnimation(){
   ballEl.style.bottom='auto';
   ballEl.style.right='auto';
 
-  /* Velocidad inicial aleatoria — tiende a la izquierda (donde está la mascota)
-     para que la persecución sea natural */
-  var angleDeg=140+Math.random()*80; /* 140-220 grados = hacia izquierda-arriba */
-  var speed=450+Math.random()*200; /* px/sec */
+  /* Velocidad inicial aleatoria en CUALQUIER dirección hacia arriba.
+     Rango 180°-360° = hemisferio superior del círculo (arriba y a los lados).
+     Evitamos 0-180° (hacia abajo) porque la pelota ya está en el piso. */
+  var angleDeg=180+Math.random()*180; /* 180-360° = arco completo hacia arriba */
+  var speed=550+Math.random()*250; /* 550-800 px/sec, más potente */
   var angle=angleDeg*Math.PI/180;
   var vx=Math.cos(angle)*speed;
   var vy=Math.sin(angle)*speed;
@@ -3824,11 +3846,22 @@ function showPlayAnimation(){
     /* Mover walker */
     walker.style.left=ballPct+'%';
     _lastWalkerLeft=ballPct;
+    /* v10.13.2b: drenar energía mientras persigue (~2 por segundo).
+       dt es el tiempo del frame en segundos. */
+    var pet=P&&P.mascota;
+    if(pet&&dt){
+      pet.energia=Math.max(0,(pet.energia||0)-2*dt);
+      /* Si se quedó sin energía, cortar el chase inmediatamente */
+      if(pet.energia<=0){
+        stop();
+      }
+    }
   }
 
+  var dt=0; /* accesible desde updateChase */
   function frame(now){
     if(stopped)return;
-    var dt=Math.min(.05,(now-lastTime)/1000); /* seconds, clamp para tabs inactivas */
+    dt=Math.min(.05,(now-lastTime)/1000); /* seconds, clamp para tabs inactivas */
     lastTime=now;
 
     /* Aplicar física */
@@ -3856,7 +3889,7 @@ function showPlayAnimation(){
     ballEl.style.left=x+'px';
     ballEl.style.top=y+'px';
 
-    /* Actualizar chase */
+    /* Actualizar chase (drena energía internamente) */
     updateChase();
 
     /* Detener si la pelota está casi quieta en el piso */

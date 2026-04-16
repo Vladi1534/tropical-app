@@ -2799,15 +2799,18 @@ var SPRITE_ANIMS={
       walk:{file:'walk.png',frames:6,fps:10,loop:true}
     },
     black:{
+      /* v10.12-fase1d: sprites reemplazados por Cane Corso del pack ToffeeCraft
+         (perro negro/oscuro, homenaje a Vlaky ID 5088635103). Frame counts
+         verificados contra el pack original. */
       frameW:64,frameH:64,
       idle:{file:'idle.png',frames:7,fps:6,loop:true},
-      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
-      sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
-      eating:{file:'eating.png',frames:7,fps:7,loop:true},
-      excited:{file:'excited.png',frames:6,fps:10,loop:true},
-      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
-      sad:{file:'laydown.png',frames:12,fps:4,loop:true},
-      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+      sleep:{file:'sleep.png',frames:3,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:7,fps:5,loop:true},
+      eating:{file:'eating.png',frames:9,fps:8,loop:true},
+      excited:{file:'excited.png',frames:12,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:7,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:7,fps:4,loop:true},
+      walk:{file:'walk.png',frames:7,fps:10,loop:true}
     }
   },
   bunnies:{
@@ -2921,6 +2924,22 @@ PetSprite.prototype.play=function(opts){
   this.el.style.backgroundImage='url("'+this.url+'")';
   this._draw();
   this._start();
+  /* v10.12-fase1d: defensive check — si la imagen cargada tiene menos frames
+     de los que dice SPRITE_ANIMS, ajustar totalFrames para evitar "sprite
+     fantasma" (lee pixels fuera de los bounds de la imagen real). */
+  var self=this;
+  var probe=new Image();
+  probe.onload=function(){
+    var realFrames=Math.floor(probe.naturalWidth/self.frameW);
+    if(realFrames>0&&realFrames<self.totalFrames){
+      console.warn('PetSprite frame mismatch:',self.url,
+        'declared='+self.totalFrames,'actual='+realFrames,'→ clamped');
+      self.totalFrames=realFrames;
+      /* Si currentFrame ya estaba fuera de rango, reset a 0 */
+      if(self.currentFrame>=self.totalFrames){self.currentFrame=0;self._draw()}
+    }
+  };
+  probe.src=this.url;
 };
 PetSprite.prototype._start=function(){
   if(this.timer)clearInterval(this.timer);
@@ -2937,6 +2956,11 @@ PetSprite.prototype._tick=function(){
   this._draw();
 };
 PetSprite.prototype._draw=function(){
+  /* v10.12-fase1d: clamp defensivo — si por cualquier motivo currentFrame
+     está fuera de rango, forzar a 0 en vez de leer pixels inválidos */
+  if(this.currentFrame<0||this.currentFrame>=this.totalFrames){
+    this.currentFrame=0;
+  }
   var x=-(this.currentFrame*this.frameW*this.scale);
   this.el.style.backgroundPositionX=x+'px';
 };

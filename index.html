@@ -2982,12 +2982,13 @@ PetSprite.prototype.play=function(opts){
   this.loop=opts.loop!==false;
   this.onComplete=opts.onComplete||null;
   this.currentFrame=0;
-  this.el.style.backgroundImage='url("'+this.url+'")';
-  this._draw();
-  this._start();
-  /* v10.12-fase1d: defensive check — si la imagen cargada tiene menos frames
-     de los que dice SPRITE_ANIMS, ajustar totalFrames para evitar "sprite
-     fantasma" (lee pixels fuera de los bounds de la imagen real). */
+  /* v10.13.1b: verificar que la imagen esté cargada ANTES de aplicarla
+     como background. Si no está cargada aún, esperar al load para no
+     dejar gap visual de "mascota invisible". Si ya está en caché
+     (pre-loaded en PetController), se aplica sincrónico.
+
+     También hace defensive check de frame count (igual que v10.12-fase1d):
+     si declaredFrames > realFrames, clampea. */
   var self=this;
   var probe=new Image();
   probe.onload=function(){
@@ -2996,11 +2997,24 @@ PetSprite.prototype.play=function(opts){
       console.warn('PetSprite frame mismatch:',self.url,
         'declared='+self.totalFrames,'actual='+realFrames,'→ clamped');
       self.totalFrames=realFrames;
-      /* Si currentFrame ya estaba fuera de rango, reset a 0 */
-      if(self.currentFrame>=self.totalFrames){self.currentFrame=0;self._draw()}
     }
+    /* Only NOW apply the background — image is guaranteed ready */
+    self.el.style.backgroundImage='url("'+self.url+'")';
+    self._draw();
+    self._start();
+  };
+  probe.onerror=function(){
+    /* If image fails to load, fallback: try to apply anyway and
+       hope browser retries. Don't leave element invisible. */
+    console.warn('PetSprite image failed:',self.url);
+    self.el.style.backgroundImage='url("'+self.url+'")';
+    self._draw();
+    self._start();
   };
   probe.src=this.url;
+  /* Fast path: if image is already in browser cache, onload fires sync.
+     If NOT cached, el keeps current background until probe.onload fires
+     (no gap of empty sprite). */
 };
 PetSprite.prototype._start=function(){
   if(this.timer)clearInterval(this.timer);
@@ -3060,6 +3074,21 @@ function PetController(el,category,variant){
     scale:scale
   });
   this.currentState='';
+  /* v10.13.1b: pre-cargar TODOS los sprites de esta variante.
+     Cuando la mascota cambia de animación (idle→walk→excited→idle),
+     el browser ya tiene la imagen en caché, así NO hay gap visual de
+     "mascota invisible" mientras carga el nuevo sprite sheet.
+     Las imágenes se cachean automáticamente por el browser tras
+     el primer load. */
+  this._preloadedImages=[];
+  var self=this;
+  for(var animName in this.config){
+    var anim=this.config[animName];
+    if(!anim||typeof anim!=='object'||!anim.file)continue;
+    var img=new Image();
+    img.src=getSpriteUrl(this.category,this.variant,anim.file);
+    this._preloadedImages.push(img);
+  }
 }
 PetController.prototype.setState=function(state){
   if(!this.config)return;

@@ -3930,11 +3930,18 @@ function showPlayAnimation(){
         if(typeof applyPetMoodState==='function')applyPetMoodState();
       },300);
     }
-    /* Reanudar wander tras el chase */
+    /* Reanudar wander tras el chase Y re-chequear mood.
+       v10.13.2c: si terminó sin energía, applyPetMoodState debe correr
+       DESPUÉS de _walkPaused=false para que pueda caminar a la cama.
+       El primer applyPetMoodState (ms 300) encuentra _walkPaused=true
+       y NO dispara el walkTo. Este segundo re-check (ms 1250) sí puede. */
     setTimeout(function(){
       _walkPaused=prevWalkPaused;
       if(walker)walker.classList.remove('fast');
-    },1200);
+      /* Re-aplicar mood state AHORA que _walkPaused está libre.
+         Si mood=sleeping, esto dispara petWalkTo(POS_BED). */
+      if(typeof applyPetMoodState==='function')applyPetMoodState();
+    },1250);
     if(onStop)onStop();
     _ballPhysics=null;
   }
@@ -4113,7 +4120,15 @@ function petWander(){
   var pet=P&&P.mascota;
   if(!pet)return;
   var mood=getMood(pet);
-  if(mood==='sleeping')return; /* dormir = quieta en la cama */
+  if(mood==='sleeping'){
+    /* v10.13.2c: si se durmió lejos de la cama (p.ej. tras quedar sin
+       energía en medio del cuarto), caminar a la cama. Si ya está cerca
+       de la cama, quedarse quieta. */
+    if(typeof POS_BED==='number'&&Math.abs(_lastWalkerLeft-POS_BED)>3){
+      petWalkTo(POS_BED);
+    }
+    return;
+  }
   /* Free zone: 35% to 58% — between left decorations (5-30%) and right items (62-93%) */
   var newLeft=35+Math.random()*23;
   /* Set facing direction based on movement */

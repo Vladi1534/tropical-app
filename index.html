@@ -2888,6 +2888,67 @@ function getItemUrl(file){
   return SPRITE_BUCKET_URL+'items/'+file+'?v='+SPRITE_VERSION;
 }
 
+/* v10.13.1: items específicos por especie.
+   Estructura en Supabase:
+     dogs/accessories/     → bed, food_bowl, water_bowl, ball, bone, house
+     bunnies/accessories/  → bed, food_bowl, water_bowl, ball, carrot
+     birds/accessories/    → perch, food_bowl, water_bowl, bell
+   Gatos siguen usando items/ (pack original, ya subido).
+   Si un slot no existe para la especie, fallback a items/ genérico.
+*/
+var PET_ACCESSORIES={
+  gato:{
+    bed:      {url:'items/bed.png'},
+    food_full:{url:'items/bowl_full.png'},
+    food_empty:{url:'items/bowl_empty.png'},
+    water_full:{url:'items/water_full.png'},
+    water_empty:{url:'items/water_empty.png'},
+    toy_ball: {url:'items/toy_ball.png'},
+    decor1:   {url:'items/brush.png'},
+    decor2:   {url:'items/flower.png'}
+  },
+  perro:{
+    bed:      {url:'dogs/accessories/bed.png'},
+    food_full:{url:'dogs/accessories/food_bowl.png'},
+    food_empty:{url:'dogs/accessories/food_bowl.png'},
+    water_full:{url:'dogs/accessories/water_bowl.png'},
+    water_empty:{url:'dogs/accessories/water_bowl.png'},
+    toy_ball: {url:'dogs/accessories/ball.png'},
+    decor1:   {url:'dogs/accessories/bone.png'},
+    decor2:   {url:'items/flower.png'}
+  },
+  conejo:{
+    bed:      {url:'bunnies/accessories/bed.png'},
+    food_full:{url:'bunnies/accessories/food_bowl.png'},
+    food_empty:{url:'bunnies/accessories/food_bowl.png'},
+    water_full:{url:'bunnies/accessories/water_bowl.png'},
+    water_empty:{url:'bunnies/accessories/water_bowl.png'},
+    toy_ball: {url:'bunnies/accessories/ball.png'},
+    decor1:   {url:'bunnies/accessories/carrot.png'},
+    decor2:   {url:'items/flower.png'}
+  },
+  pajaro:{
+    bed:      {url:'birds/accessories/perch.png'},
+    food_full:{url:'birds/accessories/food_bowl.png'},
+    food_empty:{url:'birds/accessories/food_bowl.png'},
+    water_full:{url:'birds/accessories/water_bowl.png'},
+    water_empty:{url:'birds/accessories/water_bowl.png'},
+    toy_ball: {url:'birds/accessories/bell.png'},
+    decor1:   {url:'items/flower.png'},
+    decor2:   {url:'items/flower.png'}
+  }
+};
+function getAccessoryUrl(petTipo,slot){
+  var species=PET_ACCESSORIES[petTipo]||PET_ACCESSORIES.gato;
+  var item=species[slot];
+  if(!item){
+    /* Fallback genérico */
+    item=PET_ACCESSORIES.gato[slot];
+    if(!item)return '';
+  }
+  return SPRITE_BUCKET_URL+item.url+'?v='+SPRITE_VERSION;
+}
+
 /* Low-level sprite animator using CSS background-position */
 function PetSprite(opts){
   this.el=opts.el;
@@ -3418,11 +3479,12 @@ function adoptPet(){
 function updatePetBowl(){
   /* Renders all room sprites: food bowl, water bowl, decorations, toy ball */
   var pet=P&&P.mascota;if(!pet)return;
+  var tipo=pet.tipo||'gato';
   /* === FOOD BOWL === */
   var foodEl=document.getElementById('bowl-sprite-el');
   if(foodEl){
     var isFull=!!pet.bowl_filled_at;
-    foodEl.style.backgroundImage='url("'+getItemUrl(isFull?'bowl_full.png':'bowl_empty.png')+'")';
+    foodEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,isFull?'food_full':'food_empty')+'")';
     var bowlEl=document.getElementById('pet-bowl-el');
     if(bowlEl){
       var hambreLow=(pet.hambre||100)<50;
@@ -3434,7 +3496,7 @@ function updatePetBowl(){
   if(waterEl){
     var sedLevel=pet.sed||0;
     var waterIsFull=sedLevel>=30;
-    waterEl.style.backgroundImage='url("'+getItemUrl(waterIsFull?'water_full.png':'water_empty.png')+'")';
+    waterEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,waterIsFull?'water_full':'water_empty')+'")';
     var wbEl=document.getElementById('water-bowl-el');
     if(wbEl){
       var sedLow=sedLevel<50;
@@ -3444,7 +3506,7 @@ function updatePetBowl(){
   /* === TOY BALL (interactive play) === */
   var toyEl=document.getElementById('toy-ball-sprite');
   if(toyEl){
-    toyEl.style.backgroundImage='url("'+getItemUrl('toy_ball.png')+'")';
+    toyEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'toy_ball')+'")';
     var tbEl=document.getElementById('toy-ball-el');
     if(tbEl){
       var canPlay=(pet.energia||0)>=15&&getMood(pet)!=='sleeping';
@@ -3465,13 +3527,13 @@ function updatePetBowl(){
       }
     }
   }
-  /* === STATIC DECORATIONS === */
+  /* === STATIC DECORATIONS (species-aware) === */
   var bedEl=document.getElementById('pet-decor-bed');
-  if(bedEl)bedEl.style.backgroundImage='url("'+getItemUrl('bed.png')+'")';
+  if(bedEl)bedEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'bed')+'")';
   var brushEl=document.getElementById('pet-decor-brush');
-  if(brushEl)brushEl.style.backgroundImage='url("'+getItemUrl('brush.png')+'")';
+  if(brushEl)brushEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'decor1')+'")';
   var flowerEl=document.getElementById('pet-decor-flower');
-  if(flowerEl)flowerEl.style.backgroundImage='url("'+getItemUrl('flower.png')+'")';
+  if(flowerEl)flowerEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'decor2')+'")';
   var snackEl=document.getElementById('pet-decor-snack');
   if(snackEl)snackEl.style.backgroundImage='url("'+getItemUrl('snack.png')+'")';
 }

@@ -3707,35 +3707,221 @@ function petPlay(){
   /* Track plays for stats but no daily limit */
   pet.juegos_total=(pet.juegos_total||0)+1;
   checkPetLevelUp(pet);savePet();updatePetStatsInline();
-  /* Walk to toy ball, then play excited + show ball animation */
+  /* v10.13.2a: la pelota sale disparada con física, la mascota la persigue
+     en tiempo real (dentro de showPlayAnimation). NO hacemos petWalkTo a
+     un POS_TOY fijo — el chase toma control del walker hasta que la
+     pelota se detiene. */
   setTimeout(function(){
-    petWalkTo(POS_TOY,function(){
-      petSpritePlayOnce('excited');
-      showPlayAnimation();
-    });
-  },100);
+    showPlayAnimation();
+  },80);
   toast('🎾 ¡'+(pet.nombre)+' va a jugar! +'+xpGain+' XP'+(toy?' con '+toy.name:''));
 }
+/* v10.13.2a: BALL PHYSICS SYSTEM
+   La pelota sale disparada con velocidad aleatoria, rebota contra las
+   paredes del cuarto con pérdida de energía, y eventualmente se detiene
+   por fricción. La mascota la persigue en tiempo real.
+
+   Coordenadas: usa el elemento #toy-ball-el como la pelota física.
+   Durante la animación, el elemento pasa de position:absolute fijo a
+   position:absolute con top/left actualizados cada frame.
+   Cuando la animación termina, vuelve a su posición original.
+
+   Se usa requestAnimationFrame para fluidez. La mascota en cada frame
+   ajusta su posición hacia donde está la pelota (chase).
+*/
+var _ballPhysics=null;
+
 function showPlayAnimation(){
   var scene=document.querySelector('.pet-scene');
   if(!scene)return;
-  var ball=document.createElement('div');
-  ball.textContent='🎾';
-  ball.style.cssText='position:absolute;font-size:32px;left:-40px;bottom:20%;z-index:5;pointer-events:none;animation:playBall 1.6s ease-in-out forwards;text-shadow:0 4px 8px rgba(0,0,0,.4)';
-  scene.appendChild(ball);
-  /* Sparkles */
-  for(var i=0;i<5;i++){
+  var ballEl=document.getElementById('toy-ball-el');
+  if(!ballEl)return;
+
+  /* Si ya hay una animación corriendo, la detenemos primero */
+  if(_ballPhysics){
+    _ballPhysics.stop();
+    _ballPhysics=null;
+  }
+
+  /* Medir dimensiones reales del cuarto */
+  var rect=scene.getBoundingClientRect();
+  var sceneW=rect.width;
+  var sceneH=rect.height;
+
+  /* Posición inicial de la pelota: left:62%, bottom:7% (CSS default) */
+  var ballSize=32;
+  var startX=sceneW*0.62;
+  var startY=sceneH-ballSize-sceneH*0.07;
+
+  /* Guardar posición/estilo original para restaurar después */
+  var originalStyle={
+    left:ballEl.style.left,
+    top:ballEl.style.top,
+    bottom:ballEl.style.bottom,
+    right:ballEl.style.right,
+    transition:ballEl.style.transition
+  };
+
+  /* Transformar a coords absolutas x/y */
+  ballEl.style.transition='none';
+  ballEl.style.left=startX+'px';
+  ballEl.style.top=startY+'px';
+  ballEl.style.bottom='auto';
+  ballEl.style.right='auto';
+
+  /* Velocidad inicial aleatoria — tiende a la izquierda (donde está la mascota)
+     para que la persecución sea natural */
+  var angleDeg=140+Math.random()*80; /* 140-220 grados = hacia izquierda-arriba */
+  var speed=450+Math.random()*200; /* px/sec */
+  var angle=angleDeg*Math.PI/180;
+  var vx=Math.cos(angle)*speed;
+  var vy=Math.sin(angle)*speed;
+
+  /* Physics constants */
+  var GRAVITY=1400;     /* px/sec² */
+  var FRICTION=0.985;   /* velocidad se multiplica por esto cada frame (aire) */
+  var BOUNCE=0.55;      /* coeficiente de rebote (pierde 45% de velocidad) */
+  var FLOOR_FRICTION=0.94; /* fricción extra al tocar piso */
+  var MIN_VELOCITY=30;  /* px/sec — velocidad mínima antes de parar */
+
+  var floorY=sceneH-ballSize-sceneH*0.07;
+  var wallLeft=5;
+  var wallRight=sceneW-ballSize-5;
+
+  var x=startX,y=startY;
+  var lastTime=performance.now();
+  var rafId=null;
+  var stopped=false;
+  var onStop=null;
+
+  /* ===== PET CHASE =====
+     La mascota persigue la pelota. En cada frame ajusta el walker.left
+     hacia donde está la pelota. Solo se mueve si está en modo "play". */
+  var walker=document.querySelector('.pet-walker');
+  var chaseEnabled=!!walker;
+  /* Pausar wander mientras dure el chase */
+  var prevWalkPaused=_walkPaused;
+  _walkPaused=true;
+  if(walker){
+    walker.classList.add('walking');
+    walker.classList.add('fast');
+    walker.style.transition='left .15s linear'; /* actualización rápida */
+  }
+  /* Forzar animación walk en la mascota durante el chase */
+  if(_currentPetController&&_currentPetController.config&&_currentPetController.config.walk){
+    _currentPetController.setState('walk');
+  }
+
+  function updateChase(){
+    if(!chaseEnabled||!walker)return;
+    /* Calcular % de la pelota en el cuarto */
+    var ballPct=((x+ballSize/2)/sceneW)*100;
+    /* Clamp a zona caminable 8%-92% */
+    ballPct=Math.max(8,Math.min(92,ballPct));
+    /* Actualizar dirección de la mascota */
+    if(ballPct<_lastWalkerLeft-2)setPetFacing('left');
+    else if(ballPct>_lastWalkerLeft+2)setPetFacing('right');
+    /* Mover walker */
+    walker.style.left=ballPct+'%';
+    _lastWalkerLeft=ballPct;
+  }
+
+  function frame(now){
+    if(stopped)return;
+    var dt=Math.min(.05,(now-lastTime)/1000); /* seconds, clamp para tabs inactivas */
+    lastTime=now;
+
+    /* Aplicar física */
+    vy+=GRAVITY*dt;
+    vx*=FRICTION;
+    vy*=FRICTION;
+
+    x+=vx*dt;
+    y+=vy*dt;
+
+    /* Colisión con piso */
+    if(y>=floorY){
+      y=floorY;
+      vy=-vy*BOUNCE;
+      vx*=FLOOR_FRICTION;
+      /* Si el rebote es muy chico, cancelar el bounce (evitar jitter) */
+      if(Math.abs(vy)<60)vy=0;
+    }
+
+    /* Colisión con paredes */
+    if(x<wallLeft){x=wallLeft;vx=-vx*BOUNCE}
+    if(x>wallRight){x=wallRight;vx=-vx*BOUNCE}
+
+    /* Aplicar posición */
+    ballEl.style.left=x+'px';
+    ballEl.style.top=y+'px';
+
+    /* Actualizar chase */
+    updateChase();
+
+    /* Detener si la pelota está casi quieta en el piso */
+    var totalVel=Math.sqrt(vx*vx+vy*vy);
+    if(y>=floorY-1&&totalVel<MIN_VELOCITY){
+      stop();
+      return;
+    }
+
+    rafId=requestAnimationFrame(frame);
+  }
+
+  function stop(){
+    if(stopped)return;
+    stopped=true;
+    if(rafId)cancelAnimationFrame(rafId);
+    /* Restaurar ball a su slot original */
+    setTimeout(function(){
+      ballEl.style.transition='left .5s ease-out,top .5s ease-out';
+      setTimeout(function(){
+        ballEl.style.left=originalStyle.left;
+        ballEl.style.top=originalStyle.top;
+        ballEl.style.bottom=originalStyle.bottom;
+        ballEl.style.right=originalStyle.right;
+        setTimeout(function(){
+          ballEl.style.transition=originalStyle.transition;
+        },550);
+      },50);
+    },400);
+    /* Restaurar walker */
+    if(walker){
+      walker.classList.remove('walking');
+      walker.style.transition='';
+    }
+    /* Volver al mood natural */
+    if(_currentPetController){
+      setTimeout(function(){
+        if(typeof applyPetMoodState==='function')applyPetMoodState();
+      },300);
+    }
+    /* Reanudar wander tras el chase */
+    setTimeout(function(){
+      _walkPaused=prevWalkPaused;
+      if(walker)walker.classList.remove('fast');
+    },1200);
+    if(onStop)onStop();
+    _ballPhysics=null;
+  }
+
+  _ballPhysics={stop:stop};
+
+  rafId=requestAnimationFrame(frame);
+
+  /* Sparkles arriba de la pelota (mantenemos el efecto alegre) */
+  for(var i=0;i<4;i++){
     (function(idx){
       setTimeout(function(){
         var sp=document.createElement('div');
-        sp.textContent=['✨','💫','⭐','🌟','💖'][idx];
-        sp.style.cssText='position:absolute;font-size:20px;left:'+(20+idx*15)+'%;top:'+(30+idx*5)+'%;z-index:6;pointer-events:none;animation:sparklePop .8s ease-out forwards';
+        sp.textContent=['✨','💫','⭐','🌟'][idx];
+        sp.style.cssText='position:absolute;font-size:18px;left:'+(25+idx*18)+'%;top:'+(35+idx*6)+'%;z-index:6;pointer-events:none;animation:sparklePop .8s ease-out forwards';
         scene.appendChild(sp);
         setTimeout(function(){if(sp.parentNode)sp.remove()},800);
-      },idx*100);
+      },idx*120);
     })(i);
   }
-  setTimeout(function(){if(ball.parentNode)ball.remove()},1600);
 }
 
 /* ===== TAP-TO-PET (Tom Cat style interaction) ===== */

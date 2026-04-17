@@ -904,10 +904,15 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
-.pet-decor.bed{left:4%;bottom:7%;width:62px;height:62px}
-.pet-decor.brush{left:24%;bottom:8%;width:18px;height:18px}
-.pet-decor.flower{left:32%;bottom:9%;width:16px;height:16px}
+.pet-decor.bed{left:3%;bottom:5%;width:76px;height:38px}
+.pet-decor.house{right:3%;bottom:28%;width:72px;height:72px;display:none;z-index:0}
+.pet-decor.house.active{display:block}
+.pet-decor.brush{left:42%;bottom:7%;width:18px;height:18px}
+.pet-decor.flower{left:50%;bottom:8%;width:16px;height:16px}
 .pet-decor.snack{display:none}
+/* v10.13.3d: ventana en la pared — sin gravedad, vive en la pared alta */
+.pet-wall-window{position:absolute;left:50%;top:14%;transform:translateX(-50%);width:72px;height:82px;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));z-index:1;pointer-events:none;display:none}
+.pet-wall-window.active{display:block}
 .pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left;display:inline-block;text-align:center}
 .pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
 .pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
@@ -3052,10 +3057,10 @@ var TROPISHOP_CATALOG={
 /* Default items que TODAS las mascotas tienen sin comprar nada.
    Representan los sprites actuales de PET_ACCESSORIES. */
 var DEFAULT_EQUIPPED={
-  gato:    {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null},
-  perro:   {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null},
-  conejo:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null},
-  pajaro:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null}
+  gato:    {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null},
+  perro:   {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null},
+  conejo:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null},
+  pajaro:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null}
 };
 
 /* Migración: asegura que toda pet tenga inventario_items y equipado.
@@ -3617,6 +3622,8 @@ function renderPetCard(){
   if(devModeActive())h+='<button onclick="devOpen()" style="position:absolute;top:10px;right:42px;z-index:5;background:rgba(168,85,247,.6);border:1px solid rgba(168,85,247,.4);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Dev panel">🛠️</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'<div class="pet-time-overlay" id="pet-time-overlay"></div></div>';
   h+='<div class="pet-time-badge" id="pet-time-badge"></div>';
+  h+='<div class="pet-wall-window" id="pet-wall-window"></div>';
+  h+='<div class="pet-decor house" id="pet-decor-house"></div>';
   h+='<div class="pet-decor bed" id="pet-decor-bed"></div>';
   h+='<div class="pet-decor brush" id="pet-decor-brush"></div>';
   h+='<div class="pet-decor flower" id="pet-decor-flower"></div>';
@@ -3885,6 +3892,32 @@ function updatePetBowl(){
   if(flowerEl)flowerEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'decor2')+'")';
   var snackEl=document.getElementById('pet-decor-snack');
   if(snackEl)snackEl.style.backgroundImage='url("'+getItemUrl('snack.png')+'")';
+  /* v10.13.3d: caseta de perro — solo visible si hay una equipada */
+  var houseEl=document.getElementById('pet-decor-house');
+  if(houseEl){
+    var casetaId=pet.equipado&&pet.equipado.caseta;
+    var casetaItem=casetaId&&TROPISHOP_CATALOG[casetaId];
+    if(casetaItem&&casetaItem.url){
+      houseEl.style.backgroundImage='url("'+SPRITE_BUCKET_URL+casetaItem.url+'?v='+SPRITE_VERSION+'")';
+      houseEl.classList.add('active');
+    }else{
+      houseEl.classList.remove('active');
+      houseEl.style.backgroundImage='';
+    }
+  }
+  /* v10.13.3d: ventana en la pared — solo visible si hay una equipada */
+  var windowEl=document.getElementById('pet-wall-window');
+  if(windowEl){
+    var ventanaId=pet.equipado&&pet.equipado.ventana;
+    var ventanaItem=ventanaId&&TROPISHOP_CATALOG[ventanaId];
+    if(ventanaItem&&ventanaItem.url){
+      windowEl.style.backgroundImage='url("'+SPRITE_BUCKET_URL+ventanaItem.url+'?v='+SPRITE_VERSION+'")';
+      windowEl.classList.add('active');
+    }else{
+      windowEl.classList.remove('active');
+      windowEl.style.backgroundImage='';
+    }
+  }
 }
 
 function openBowl(){
@@ -4345,7 +4378,7 @@ function showTapHeart(e,emoji){showTapParticle(e,emoji||'💕','#ec4899')}
    pero el sprite acostado mide ~77px ancho, así que centro del walker
    debe estar más a la derecha para que el sprite no salga del cuarto.
    18% deja el sprite cubriendo cama (4-22%) sin salir por la izquierda. */
-var POS_BED=18;    /* bed at left:4% + width 62px, sprite ancho ~77px */
+var POS_BED=14;    /* bed at left:3% + width 76px → centro ~14% (rectangular) */
 var POS_TOY=64;    /* toy ball at left:62% + width 32px */
 var POS_FOOD=72;   /* food bowl at right:20% (sprite ancho compensa) */
 var POS_WATER=88;  /* water bowl at right:5% */

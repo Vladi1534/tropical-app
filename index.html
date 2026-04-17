@@ -887,16 +887,16 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
 .pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
-.pet-bowl{position:absolute;right:28%;bottom:5%;width:38px;height:38px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .3s}
+.pet-bowl{position:absolute;right:28%;bottom:2%;width:38px;height:38px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .3s}
 .pet-bowl:active{transform:scale(.92)}
 .pet-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.2),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
 .pet-bowl.hide-for-eating{opacity:0;pointer-events:none}
-.water-bowl{position:absolute;right:16%;bottom:5%;width:38px;height:38px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.water-bowl{position:absolute;right:16%;bottom:2%;width:38px;height:38px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:47%;bottom:6%;width:45px;height:45px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.toy-ball{position:absolute;left:47%;bottom:3%;width:45px;height:45px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
@@ -4110,7 +4110,7 @@ function showPlayAnimation(){
   /* Posición inicial de la pelota: left:62%, bottom:7% (CSS default) */
   var ballSize=45;
   var startX=sceneW*0.47;
-  var startY=sceneH-ballSize-sceneH*0.06;
+  var startY=sceneH-ballSize-sceneH*0.03;
 
   /* Guardar posición/estilo original para restaurar después */
   var originalStyle={
@@ -4144,7 +4144,7 @@ function showPlayAnimation(){
   var FLOOR_FRICTION=0.94; /* fricción extra al tocar piso */
   var MIN_VELOCITY=30;  /* px/sec — velocidad mínima antes de parar */
 
-  var floorY=sceneH-ballSize-sceneH*0.06;
+  var floorY=sceneH-ballSize-sceneH*0.03;
   var wallLeft=5;
   var wallRight=sceneW-ballSize-5;
 

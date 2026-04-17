@@ -2976,21 +2976,63 @@ function getAccessoryUrl(petTipo,slot){
    Migración automática en petDailyUpdate preserva retro-compat.
 */
 var TROPISHOP_CATALOG={
-  /* Estructura de un item:
-     {
-       id: 'cama_red',               // ID único
-       slot: 'cama',                 // tipo de slot que ocupa
-       nombre: 'Cama Roja',
-       desc: 'Acolchada y cómoda',
-       url: 'dogs/accessories/bed_red.png',  // path en Supabase
-       especies: ['perro'],          // qué especies pueden usarla
-       tier: 'premium',              // basic | premium | premium-plus
-       cost: 350,
-       unlock_level: 1,              // nivel mínimo para comprarla
-       bonus: null                   // {tipo:'energia_regen', value:0.1} o null
-     }
-     Push 2 va a llenar este catálogo.
+  /* ========================================
+     v10.13.3b: CATÁLOGO COMPLETO DE ITEMS
+     ========================================
+     Precios: 100-2000 puntitos
+     Unlocks: nivel 1 (básicos), 5/10/15 (premium)
+     Bonuses: solo algunos items premium tienen boost sutil
+     Items disponibles: camas (perro/conejo), pelotas (perro),
+     casetas (perro), ventanas (todas), comidas pixel art.
   */
+
+  /* === CAMAS DE PERRO (8 variantes) === */
+  'cama_perro_red':{id:'cama_perro_red',slot:'cama',nombre:'Cama Roja',desc:'Clásica y cómoda',url:'dogs/beds/bed_red.png',especies:['perro'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_perro_blue':{id:'cama_perro_blue',slot:'cama',nombre:'Cama Azul',desc:'Refrescante',url:'dogs/beds/bed_blue.png',especies:['perro'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_perro_green':{id:'cama_perro_green',slot:'cama',nombre:'Cama Verde',desc:'Natural y suave',url:'dogs/beds/bed_green.png',especies:['perro'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_perro_pink':{id:'cama_perro_pink',slot:'cama',nombre:'Cama Rosa',desc:'Dulce y tierna',url:'dogs/beds/bed_pink.png',especies:['perro'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_perro_orange':{id:'cama_perro_orange',slot:'cama',nombre:'Cama Naranja',desc:'Tropical vibrante',url:'dogs/beds/bed_orange.png',especies:['perro'],tier:'premium',cost:450,unlock_level:5,bonus:{tipo:'energia_regen',value:0.05}},
+  'cama_perro_cyan':{id:'cama_perro_cyan',slot:'cama',nombre:'Cama Cyan',desc:'Fresca como el mar',url:'dogs/beds/bed_cyan.png',especies:['perro'],tier:'premium',cost:450,unlock_level:5,bonus:{tipo:'energia_regen',value:0.05}},
+  'cama_perro_purple':{id:'cama_perro_purple',slot:'cama',nombre:'Cama Púrpura',desc:'Real y majestuosa',url:'dogs/beds/bed_purple.png',especies:['perro'],tier:'premium-plus',cost:900,unlock_level:10,bonus:{tipo:'energia_regen',value:0.10}},
+  'cama_perro_grey':{id:'cama_perro_grey',slot:'cama',nombre:'Cama Gris',desc:'Elegante minimalista',url:'dogs/beds/bed_grey.png',especies:['perro'],tier:'premium-plus',cost:900,unlock_level:10,bonus:{tipo:'energia_regen',value:0.10}},
+
+  /* === CAMAS DE CONEJO (8 variantes) === */
+  'cama_conejo_brown':{id:'cama_conejo_brown',slot:'cama',nombre:'Cama Marrón',desc:'Madera natural',url:'bunnies/beds/bed_brown.png',especies:['conejo'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_conejo_blue':{id:'cama_conejo_blue',slot:'cama',nombre:'Cama Azul',desc:'Fresca y suave',url:'bunnies/beds/bed_blue.png',especies:['conejo'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_conejo_green':{id:'cama_conejo_green',slot:'cama',nombre:'Cama Verde',desc:'Estilo jardín',url:'bunnies/beds/bed_green.png',especies:['conejo'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_conejo_white':{id:'cama_conejo_white',slot:'cama',nombre:'Cama Blanca',desc:'Pureza y calma',url:'bunnies/beds/bed_white.png',especies:['conejo'],tier:'basic',cost:180,unlock_level:1,bonus:null},
+  'cama_conejo_pink':{id:'cama_conejo_pink',slot:'cama',nombre:'Cama Rosa',desc:'Favorita de las conejitas',url:'bunnies/beds/bed_pink.png',especies:['conejo'],tier:'premium',cost:450,unlock_level:5,bonus:{tipo:'energia_regen',value:0.05}},
+  'cama_conejo_grey':{id:'cama_conejo_grey',slot:'cama',nombre:'Cama Gris',desc:'Simple y moderna',url:'bunnies/beds/bed_grey.png',especies:['conejo'],tier:'premium',cost:450,unlock_level:5,bonus:{tipo:'energia_regen',value:0.05}},
+  'cama_conejo_purple':{id:'cama_conejo_purple',slot:'cama',nombre:'Cama Púrpura',desc:'Real conejita',url:'bunnies/beds/bed_purple.png',especies:['conejo'],tier:'premium-plus',cost:900,unlock_level:10,bonus:{tipo:'energia_regen',value:0.10}},
+  'cama_conejo_red':{id:'cama_conejo_red',slot:'cama',nombre:'Cama Roja',desc:'Pasión acolchada',url:'bunnies/beds/bed_red.png',especies:['conejo'],tier:'premium-plus',cost:900,unlock_level:10,bonus:{tipo:'energia_regen',value:0.10}},
+
+  /* === PELOTAS DE PERRO (10 variantes) === */
+  'pelota_blue':{id:'pelota_blue',slot:'pelota',nombre:'Pelota Azul',desc:'Clásica y firme',url:'dogs/balls/ball_blue.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_gold':{id:'pelota_gold',slot:'pelota',nombre:'Pelota Dorada',desc:'Brillante y ligera',url:'dogs/balls/ball_gold.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_red':{id:'pelota_red',slot:'pelota',nombre:'Pelota Roja',desc:'Clásica',url:'dogs/balls/ball_red.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_green':{id:'pelota_green',slot:'pelota',nombre:'Pelota Verde',desc:'Tenis style',url:'dogs/balls/ball_green.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_pink':{id:'pelota_pink',slot:'pelota',nombre:'Pelota Rosa',desc:'Suave al morder',url:'dogs/balls/ball_pink.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:3,bonus:{tipo:'play_energy_cost',value:-0.10}},
+  'pelota_orange':{id:'pelota_orange',slot:'pelota',nombre:'Pelota Naranja',desc:'Visible al anochecer',url:'dogs/balls/ball_orange.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:3,bonus:{tipo:'play_energy_cost',value:-0.10}},
+  'pelota_purple':{id:'pelota_purple',slot:'pelota',nombre:'Pelota Púrpura',desc:'Aerodinámica',url:'dogs/balls/ball_purple.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.10}},
+  'pelota_white':{id:'pelota_white',slot:'pelota',nombre:'Pelota Blanca',desc:'De cuero sintético',url:'dogs/balls/ball_white.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.10}},
+  'pelota_black':{id:'pelota_black',slot:'pelota',nombre:'Pelota Negra',desc:'Misteriosa y veloz',url:'dogs/balls/ball_black.png',especies:['perro','gato','conejo'],tier:'premium-plus',cost:700,unlock_level:10,bonus:{tipo:'play_energy_cost',value:-0.20}},
+  'pelota_brown':{id:'pelota_brown',slot:'pelota',nombre:'Pelota Marrón',desc:'Cuero premium',url:'dogs/balls/ball_brown.png',especies:['perro','gato','conejo'],tier:'premium-plus',cost:700,unlock_level:10,bonus:{tipo:'felicidad_regen',value:0.15}},
+
+  /* === CASETAS DE PERRO (4 variantes) === */
+  'caseta_brown':{id:'caseta_brown',slot:'caseta',nombre:'Caseta Marrón',desc:'Refugio clásico',url:'dogs/houses/house_brown.png',especies:['perro'],tier:'premium',cost:800,unlock_level:8,bonus:{tipo:'energia_regen',value:0.15}},
+  'caseta_blue':{id:'caseta_blue',slot:'caseta',nombre:'Caseta Azul',desc:'Moderna',url:'dogs/houses/house_blue.png',especies:['perro'],tier:'premium',cost:800,unlock_level:8,bonus:{tipo:'energia_regen',value:0.15}},
+  'caseta_red':{id:'caseta_red',slot:'caseta',nombre:'Caseta Roja',desc:'Llamativa',url:'dogs/houses/house_red.png',especies:['perro'],tier:'premium-plus',cost:1500,unlock_level:15,bonus:{tipo:'energia_regen',value:0.25}},
+  'caseta_purple':{id:'caseta_purple',slot:'caseta',nombre:'Caseta Púrpura',desc:'De lujo',url:'dogs/houses/house_purple.png',especies:['perro'],tier:'premium-plus',cost:2000,unlock_level:15,bonus:{tipo:'energia_regen',value:0.30}},
+
+  /* === VENTANAS (ya en Supabase items/v11/, todas especies) === */
+  'ventana_1':{id:'ventana_1',slot:'ventana',nombre:'Ventana Clásica',desc:'Vista al jardín',url:'items/v11/window_1.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:250,unlock_level:1,bonus:null},
+  'ventana_2':{id:'ventana_2',slot:'ventana',nombre:'Ventana con Flores',desc:'Macetero incluido',url:'items/v11/window_2.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:250,unlock_level:1,bonus:null},
+  'ventana_3':{id:'ventana_3',slot:'ventana',nombre:'Ventana Vintage',desc:'Cortinas rojas',url:'items/v11/window_3.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:500,unlock_level:5,bonus:null},
+  'ventana_4':{id:'ventana_4',slot:'ventana',nombre:'Ventana Marina',desc:'Cortinas azules',url:'items/v11/window_4.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:500,unlock_level:5,bonus:null},
+  'ventana_5':{id:'ventana_5',slot:'ventana',nombre:'Ventana Jardín',desc:'Cortinas verdes',url:'items/v11/window_5.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:500,unlock_level:7,bonus:null},
+  'ventana_6':{id:'ventana_6',slot:'ventana',nombre:'Ventana Dorada',desc:'Lujo y brillo',url:'items/v11/window_6.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:1200,unlock_level:12,bonus:{tipo:'felicidad_regen',value:0.10}},
+  'ventana_7':{id:'ventana_7',slot:'ventana',nombre:'Ventana Tropical',desc:'Vista paradisíaca',url:'items/v11/window_7.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:1500,unlock_level:15,bonus:{tipo:'felicidad_regen',value:0.15}},
+  'ventana_8':{id:'ventana_8',slot:'ventana',nombre:'Ventana Nocturna',desc:'Estrellas visibles',url:'items/v11/window_8.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:2000,unlock_level:20,bonus:{tipo:'felicidad_regen',value:0.20}}
 };
 
 /* Default items que TODAS las mascotas tienen sin comprar nada.
@@ -3133,6 +3175,47 @@ function getEquippedBonuses(pet){
     }
   }
   return bonuses;
+}
+
+/* v10.13.3b: helpers para UI de TropiShop (Push 3 los va a usar).
+   Filtra items del catálogo según especie y nivel de la mascota. */
+function getShopItemsByCategory(pet,slotType){
+  if(!pet)return [];
+  var result=[];
+  for(var id in TROPISHOP_CATALOG){
+    var item=TROPISHOP_CATALOG[id];
+    if(item.slot!==slotType)continue;
+    if(item.especies&&item.especies.indexOf(pet.tipo)<0)continue;
+    result.push(item);
+  }
+  /* Sort: primero los desbloqueados por tier, luego los bloqueados */
+  result.sort(function(a,b){
+    var tierOrder={'basic':0,'premium':1,'premium-plus':2};
+    var ta=tierOrder[a.tier]||3;
+    var tb=tierOrder[b.tier]||3;
+    if(ta!==tb)return ta-tb;
+    return (a.unlock_level||0)-(b.unlock_level||0);
+  });
+  return result;
+}
+function isItemOwned(pet,itemId){
+  if(!pet||!pet.inventario_items)return false;
+  var item=TROPISHOP_CATALOG[itemId];
+  if(!item)return false;
+  var inv=pet.inventario_items[item.slot]||[];
+  return inv.indexOf(itemId)>=0;
+}
+function isItemEquipped(pet,itemId){
+  if(!pet||!pet.equipado)return false;
+  var item=TROPISHOP_CATALOG[itemId];
+  if(!item)return false;
+  return pet.equipado[item.slot]===itemId;
+}
+function isItemUnlocked(pet,itemId){
+  if(!pet)return false;
+  var item=TROPISHOP_CATALOG[itemId];
+  if(!item)return false;
+  return (pet.nivel||1)>=(item.unlock_level||1);
 }
 
 /* Low-level sprite animator using CSS background-position */

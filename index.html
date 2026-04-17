@@ -959,14 +959,27 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-opt-name{font-family:'Fredoka',sans-serif;font-size:13px;font-weight:700;color:#fff}
 .pet-opt-desc{font-size:9px;color:var(--txt3);margin-top:2px}
 .feed-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.feed-item{text-align:center;padding:12px 6px;border-radius:var(--rs);background:var(--card2);border:1.5px solid rgba(168,85,247,.1);cursor:pointer;transition:all .2s}
+.feed-item{text-align:center;padding:12px 6px;border-radius:var(--rs);background:var(--card2);border:1.5px solid rgba(168,85,247,.1);cursor:pointer;transition:all .2s;position:relative}
 .feed-item:active{transform:scale(.95)}
 .feed-item.bought{border-color:var(--green);background:rgba(52,211,153,.08)}
+.feed-item.equipped{border-color:var(--gold);background:rgba(251,191,36,.1);box-shadow:0 0 0 2px rgba(251,191,36,.25)}
+.feed-item.locked{opacity:.45;cursor:not-allowed;filter:grayscale(.6)}
 .feed-item .fi-icon{font-size:24px}
-.feed-item .fi-name{font-size:10px;font-weight:700;margin-top:4px}
+.feed-item .fi-sprite{width:56px;height:48px;margin:0 auto;background-repeat:no-repeat;background-position:center;background-size:contain;image-rendering:pixelated;image-rendering:crisp-edges}
+.feed-item .fi-name{font-size:10px;font-weight:700;margin-top:4px;line-height:1.2}
 .feed-item .fi-cost{font-size:9px;color:var(--gold);margin-top:2px}
 .feed-item .fi-xp{font-size:8px;color:var(--green)}
+.feed-item .fi-bonus{display:inline-block;font-size:7px;color:var(--cyan);margin-top:2px;padding:1px 5px;background:rgba(34,211,238,.12);border-radius:6px;border:1px solid rgba(34,211,238,.2);font-weight:700}
+.feed-item .fi-badge{position:absolute;top:4px;right:4px;font-size:8px;padding:2px 5px;border-radius:5px;font-weight:700;letter-spacing:.3px}
+.feed-item .fi-badge.equip{background:var(--gold);color:#2d1b09}
+.feed-item .fi-badge.own{background:rgba(52,211,153,.9);color:#0a2b1a}
+.feed-item .fi-badge.lock{background:rgba(100,100,130,.8);color:#fff}
 .feed-item:disabled,.feed-item.disabled{opacity:.3;pointer-events:none}
+/* Tier indicators */
+.feed-item .fi-tier{position:absolute;top:4px;left:4px;font-size:8px;padding:2px 5px;border-radius:5px;font-weight:700;letter-spacing:.3px}
+.feed-item .fi-tier.basic{background:rgba(148,163,184,.2);color:#94a3b8}
+.feed-item .fi-tier.premium{background:rgba(34,211,238,.2);color:var(--cyan)}
+.feed-item .fi-tier.premium-plus{background:rgba(251,191,36,.2);color:var(--gold)}
 
 /* ===== BADGES & INSPIRATION ===== */
 .badge-grid{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px}
@@ -1166,7 +1179,8 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <div style="display:flex;gap:0;margin-bottom:12px;background:var(--card2);border-radius:25px;padding:3px;flex-wrap:wrap">
     <button class="cmt-btn a" onclick="shopTab('comida')" id="st-food">🍱 Comida</button>
     <button class="cmt-btn" onclick="shopTab('juguetes')" id="st-toy">🎾 Juguetes</button>
-    <button class="cmt-btn" onclick="shopTab('habitat')" id="st-hab">🏠 Hábitat</button>
+    <button class="cmt-btn" onclick="shopTab('decoracion')" id="st-hab">🛋️ Decor</button>
+    <button class="cmt-btn" onclick="shopTab('micuarto')" id="st-room">🏠 Mi Cuarto</button>
     <button class="cmt-btn" onclick="shopTab('adoptar')" id="st-adopt">🐣 Adoptar</button>
   </div>
   <div id="shop-grid" class="feed-grid"></div>
@@ -4576,15 +4590,25 @@ function devDeletePet(){
 /* ===== SHOP ===== */
 var shopMode='comida';
 function shopTab(tab){
-  shopMode=tab;var tabs=['food','acc','toy','hab','adopt'];var names=['comida','accesorios','juguetes','habitat','adoptar'];
-  for(var i=0;i<tabs.length;i++){var btn=document.getElementById('st-'+tabs[i]);if(btn){btn.classList.toggle('a',names[i]===tab)}}
+  shopMode=tab;
+  /* v10.13.3c: tabs rediseñadas. 'habitat' legacy mapea a 'decoracion'. */
+  if(tab==='habitat')shopMode='decoracion';
+  var tabIds=['st-food','st-toy','st-hab','st-room','st-adopt'];
+  var tabNames=['comida','juguetes','decoracion','micuarto','adoptar'];
+  for(var i=0;i<tabIds.length;i++){
+    var btn=document.getElementById(tabIds[i]);
+    if(btn)btn.classList.toggle('a',tabNames[i]===shopMode);
+  }
   renderShop();
 }
 function renderShop(){
   var pet=P.mascota;if(!pet)return;
+  if(typeof ensureInventoryStructure==='function')ensureInventoryStructure(pet);
   document.getElementById('shop-croquetas').textContent=fmt(pet.croquetas||0);
-  var h='';var accs=pet.accesorios||[];
+  var h='';
+
   if(shopMode==='comida'){
+    /* Tab Comida: sin cambios estructurales (sigue con consumibles por especie) */
     if(!pet.inventario_comida)pet.inventario_comida={};
     var foods=getPetFood(pet.tipo||'gato');
     h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Comidas consumibles · se acumulan en tu inventario · úsalas tocando el plato</div>';
@@ -4598,37 +4622,63 @@ function renderShop(){
       h+='<div class="fi-cost">🐾 '+f.cost+(owned>0?' <span style="color:var(--cyan);font-size:9px">×'+owned+'</span>':'')+'</div>';
       h+='<div class="fi-xp">'+(f.hunger?'+'+f.hunger+' 🍽️ ':'')+(f.happy?'+'+f.happy+' 😊 ':'')+(f.energy?'+'+f.energy+' ⚡':'')+'</div></div>';
     }
-  }else if(shopMode==='accesorios'){
-    for(var i=0;i<PET_ACCS.length;i++){var a=PET_ACCS[i];var owned=accs.indexOf(a.id)>-1;var canBuy=(pet.croquetas||0)>=a.cost&&!owned;
-      h+='<div class="feed-item'+(owned?' bought':'')+((!canBuy&&!owned)?' disabled':'')+'" onclick="'+(canBuy?'buyAcc(\''+a.id+'\')':owned?'togAcc(\''+a.id+'\')':'')+'">';
-      h+='<div class="fi-icon">'+a.icon+'</div><div class="fi-name">'+a.name+'</div>';
-      h+='<div class="fi-cost">'+(owned?'✅ Usar':'🐾 '+a.cost)+'</div>';
-      h+='<div class="fi-xp">'+a.desc+'</div></div>';
-    }
   }else if(shopMode==='juguetes'){
-    for(var j=0;j<PET_TOYS.length;j++){var t=PET_TOYS[j];var isActive=pet.juguete_activo===t.id;var canBuyT=(pet.croquetas||0)>=t.cost&&!isActive;
-      h+='<div class="feed-item'+(isActive?' bought':'')+((!canBuyT&&!isActive)?' disabled':'')+'" onclick="'+(canBuyT?'buyToy(\''+t.id+'\')':'')+'">';
-      h+='<div class="fi-icon">'+t.icon+'</div><div class="fi-name">'+t.name+'</div>';
-      h+='<div class="fi-cost">'+(isActive?'✅ Activo':'🐾 '+t.cost)+'</div>';
-      h+='<div class="fi-xp">'+t.desc+(isActive?' · hasta '+(pet.juguete_expira||'?'):'')+'</div></div>';
+    /* Tab Juguetes: items del catálogo slot='pelota' con sprites reales */
+    var items=typeof getShopItemsByCategory==='function'?getShopItemsByCategory(pet,'pelota'):[];
+    h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Pelotas para jugar · se ven en tu cuarto · algunas dan bonus al jugar</div>';
+    if(items.length===0){
+      h+='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--txt3);font-size:10px">No hay pelotas disponibles para tu mascota</div>';
     }
-  }else if(shopMode==='habitat'){
-    if(!pet.habitats_owned)pet.habitats_owned=[];
-    /* Migration: ensure default and current habitat are in owned list */
-    if(pet.habitats_owned.indexOf('default')<0)pet.habitats_owned.push('default');
-    if(pet.habitat&&pet.habitats_owned.indexOf(pet.habitat)<0)pet.habitats_owned.push(pet.habitat);
-    for(var k=0;k<PET_HABITATS.length;k++){var hb=PET_HABITATS[k];
-      var isCur=pet.habitat===hb.id;
-      var isOwned=pet.habitats_owned.indexOf(hb.id)>=0;
-      var canBuyH=(pet.croquetas||0)>=hb.cost;
-      var clickable=isCur?false:(isOwned||hb.cost===0||canBuyH);
-      var clickHandler='';
-      if(isOwned&&!isCur)clickHandler='useHabitat(\''+hb.id+'\')';
-      else if(!isOwned&&canBuyH)clickHandler='buyHabitat(\''+hb.id+'\','+hb.cost+')';
-      h+='<div class="feed-item'+(isCur?' bought':'')+(!clickable&&!isCur?' disabled':'')+'" onclick="'+clickHandler+'">';
-      h+='<div class="fi-icon">'+hb.icon+'</div><div class="fi-name">'+hb.name+'</div>';
-      h+='<div class="fi-cost">'+(isCur?'✅ Actual':isOwned?'🏠 Usar':hb.cost===0?'Gratis':'🐾 '+hb.cost)+'</div>';
-      h+='<div class="fi-xp">'+hb.desc+'</div></div>';
+    for(var ji=0;ji<items.length;ji++){
+      h+=renderShopItemCard(items[ji],pet);
+    }
+  }else if(shopMode==='decoracion'){
+    /* Tab Decoración: camas, casetas, ventanas */
+    h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Decora el cuarto de tu mascota · camas, casetas y ventanas</div>';
+    var camas=typeof getShopItemsByCategory==='function'?getShopItemsByCategory(pet,'cama'):[];
+    var casetas=typeof getShopItemsByCategory==='function'?getShopItemsByCategory(pet,'caseta'):[];
+    var ventanas=typeof getShopItemsByCategory==='function'?getShopItemsByCategory(pet,'ventana'):[];
+    if(camas.length>0){
+      h+='<div style="grid-column:1/-1;font-size:10px;font-weight:700;color:var(--gold);margin:8px 0 4px">🛏️ Camas</div>';
+      for(var ci=0;ci<camas.length;ci++)h+=renderShopItemCard(camas[ci],pet);
+    }
+    if(casetas.length>0){
+      h+='<div style="grid-column:1/-1;font-size:10px;font-weight:700;color:var(--gold);margin:12px 0 4px">🏠 Casetas</div>';
+      for(var ki=0;ki<casetas.length;ki++)h+=renderShopItemCard(casetas[ki],pet);
+    }
+    if(ventanas.length>0){
+      h+='<div style="grid-column:1/-1;font-size:10px;font-weight:700;color:var(--gold);margin:12px 0 4px">🪟 Ventanas</div>';
+      for(var vi=0;vi<ventanas.length;vi++)h+=renderShopItemCard(ventanas[vi],pet);
+    }
+  }else if(shopMode==='micuarto'){
+    /* Tab Mi Cuarto: muestra items que POSEE y permite equipar */
+    h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Tus items comprados · toca para equipar</div>';
+    var slots=[
+      {key:'cama',label:'🛏️ Camas'},
+      {key:'pelota',label:'🎾 Pelotas'},
+      {key:'caseta',label:'🏠 Casetas'},
+      {key:'ventana',label:'🪟 Ventanas'}
+    ];
+    var hasAny=false;
+    for(var si=0;si<slots.length;si++){
+      var slot=slots[si];
+      var inv=pet.inventario_items&&pet.inventario_items[slot.key]||[];
+      /* Filtrar los que sí existen en el catálogo (los defaults no están) */
+      var owned=[];
+      for(var oi=0;oi<inv.length;oi++){
+        if(TROPISHOP_CATALOG[inv[oi]])owned.push(TROPISHOP_CATALOG[inv[oi]]);
+      }
+      if(owned.length===0)continue;
+      hasAny=true;
+      h+='<div style="grid-column:1/-1;font-size:10px;font-weight:700;color:var(--gold);margin:8px 0 4px">'+slot.label+'</div>';
+      for(var mi=0;mi<owned.length;mi++)h+=renderShopItemCard(owned[mi],pet);
+    }
+    if(!hasAny){
+      h+='<div style="grid-column:1/-1;text-align:center;padding:30px 16px">';
+      h+='<div style="font-size:42px;margin-bottom:8px;opacity:.5">🛍️</div>';
+      h+='<div style="font-family:Fredoka,sans-serif;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">Tu cuarto está por llenarse</div>';
+      h+='<div style="font-size:10px;color:var(--txt2);line-height:1.5;max-width:260px;margin:0 auto">Todavía no compraste items decorativos. Andá a <strong>Decoración</strong> o <strong>Juguetes</strong> para elegir los primeros.</div>';
+      h+='</div>';
     }
   }else if(shopMode==='adoptar'){
     /* Coming Soon — multi-pet feature placeholder */
@@ -4644,6 +4694,109 @@ function renderShop(){
     h+='</div>';
   }
   document.getElementById('shop-grid').innerHTML=h;
+}
+
+/* v10.13.3c: render reusable de un item del catálogo.
+   Genera la tarjeta HTML con sprite pixel art, badges de estado,
+   precio, bonus y click handler apropiado según el estado. */
+function renderShopItemCard(item,pet){
+  if(!item||!pet)return '';
+  var owned=typeof isItemOwned==='function'?isItemOwned(pet,item.id):false;
+  var equipped=typeof isItemEquipped==='function'?isItemEquipped(pet,item.id):false;
+  var unlocked=typeof isItemUnlocked==='function'?isItemUnlocked(pet,item.id):true;
+  var canBuy=(pet.croquetas||0)>=item.cost;
+
+  /* Clases dinámicas según estado */
+  var cls='feed-item';
+  if(equipped)cls+=' equipped';
+  else if(owned)cls+=' bought';
+  if(!unlocked)cls+=' locked';
+  else if(!owned&&!canBuy)cls+=' disabled';
+
+  /* Click handler: si es propio y no está equipado → equipar
+     si es comprable → comprar
+     si está bloqueado o no se puede → nada */
+  var handler='';
+  if(equipped){
+    handler=''; /* click sobre equipado no hace nada */
+  }else if(owned){
+    handler='equipShopItem(\''+item.id+'\')';
+  }else if(unlocked&&canBuy){
+    handler='buyShopItem(\''+item.id+'\')';
+  }
+
+  /* Badges */
+  var badges='';
+  if(equipped)badges+='<div class="fi-badge equip">✓ EQUIPADO</div>';
+  else if(owned)badges+='<div class="fi-badge own">EN INV</div>';
+  else if(!unlocked)badges+='<div class="fi-badge lock">🔒 Nv.'+item.unlock_level+'</div>';
+
+  /* Tier indicator */
+  var tierLabels={basic:'BÁSICA',premium:'PREMIUM',premium_plus:'PREMIUM+'};
+  var tierKey=item.tier==='premium-plus'?'premium_plus':(item.tier||'basic');
+  var tierCls=item.tier==='premium-plus'?'premium-plus':(item.tier||'basic');
+  var tierBadge='<div class="fi-tier '+tierCls+'">'+(tierLabels[tierKey]||'BÁSICA')+'</div>';
+
+  /* Sprite pixel art */
+  var spriteUrl=SPRITE_BUCKET_URL+item.url+'?v='+SPRITE_VERSION;
+
+  /* Bonus visible */
+  var bonusHtml='';
+  if(item.bonus&&item.bonus.tipo){
+    var bonusLabels={
+      energia_regen:'⚡ +'+Math.round(item.bonus.value*100)+'% regen',
+      play_energy_cost:item.bonus.value<0?'⚡ '+Math.round(item.bonus.value*100)+'% costo':'',
+      felicidad_regen:'😊 +'+Math.round(item.bonus.value*100)+'% felicidad'
+    };
+    var lbl=bonusLabels[item.bonus.tipo]||'';
+    if(lbl)bonusHtml='<div class="fi-bonus">'+lbl+'</div>';
+  }
+
+  /* Cost display */
+  var costHtml='';
+  if(equipped)costHtml='✅ Equipado';
+  else if(owned)costHtml='🏠 Equipar';
+  else if(!unlocked)costHtml='Nv.'+item.unlock_level+' requerido';
+  else costHtml='🐾 '+item.cost;
+
+  var onclickAttr=handler?'onclick="'+handler+'"':'';
+  var html='<div class="'+cls+'" '+onclickAttr+'>';
+  html+=tierBadge+badges;
+  html+='<div class="fi-sprite" style="background-image:url(\''+spriteUrl+'\')"></div>';
+  html+='<div class="fi-name">'+item.nombre+'</div>';
+  html+='<div class="fi-cost">'+costHtml+'</div>';
+  html+='<div class="fi-xp">'+(item.desc||'')+'</div>';
+  html+=bonusHtml;
+  html+='</div>';
+  return html;
+}
+
+/* Wrappers para llamar desde onclick del HTML generado. */
+function buyShopItem(itemId){
+  if(typeof buyTropishopItem!=='function'){toast('Error interno');return}
+  var result=buyTropishopItem(itemId);
+  if(result.ok){
+    var item=TROPISHOP_CATALOG[itemId];
+    toast('🎉 ¡'+item.nombre+' comprado y equipado!');
+    renderShop();
+    if(typeof updatePetBowl==='function')updatePetBowl();
+    if(typeof updatePetStatsInline==='function')updatePetStatsInline();
+  }else{
+    toast(result.reason||'No se pudo comprar');
+  }
+}
+function equipShopItem(itemId){
+  if(typeof equipTropishopItem!=='function'){toast('Error interno');return}
+  var ok=equipTropishopItem(itemId);
+  if(ok){
+    var item=TROPISHOP_CATALOG[itemId];
+    toast('✨ '+item.nombre+' equipado');
+    renderShop();
+    if(typeof updatePetBowl==='function')updatePetBowl();
+    if(typeof updatePetStatsInline==='function')updatePetStatsInline();
+  }else{
+    toast('No se pudo equipar');
+  }
 }
 function buyAcc(id){var pet=P.mascota;if(!pet)return;var a=null;for(var i=0;i<PET_ACCS.length;i++)if(PET_ACCS[i].id===id)a=PET_ACCS[i];if(!a||(pet.croquetas||0)<a.cost)return;pet.croquetas-=a.cost;if(!pet.accesorios)pet.accesorios=[];pet.accesorios.push(id);pet.xp=(pet.xp||0)+15;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎀 ¡'+a.name+' comprado!')}
 function buyFoodConsumable(id){

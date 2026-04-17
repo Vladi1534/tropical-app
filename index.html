@@ -887,16 +887,16 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes sparklePop{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(.6) rotate(360deg)}}
 .pet-svg{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));pointer-events:auto}
 .pet-sprite{position:relative;z-index:3;transition:transform .15s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));pointer-events:auto;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
-.pet-bowl{position:absolute;right:20%;bottom:8%;width:25px;height:25px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .3s}
+.pet-bowl{position:absolute;right:30%;bottom:6%;width:25px;height:25px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .3s}
 .pet-bowl:active{transform:scale(.92)}
 .pet-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(251,191,36,.2),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .pet-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
 .pet-bowl.hide-for-eating{opacity:0;pointer-events:none}
-.water-bowl{position:absolute;right:5%;bottom:8%;width:25px;height:25px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.water-bowl{position:absolute;right:20%;bottom:6%;width:25px;height:25px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:62%;bottom:7%;width:21px;height:21px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.toy-ball{position:absolute;left:48%;bottom:6%;width:21px;height:21px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
@@ -904,11 +904,11 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
-.pet-decor.bed{left:3%;bottom:5%;width:49px;height:25px}
-.pet-decor.house{right:3%;bottom:28%;width:47px;height:47px;display:none;z-index:0}
+.pet-decor.bed{left:5%;bottom:4%;width:49px;height:25px}
+.pet-decor.house{right:17%;bottom:20%;width:47px;height:47px;display:none;z-index:0}
 .pet-decor.house.active{display:block}
-.pet-decor.brush{left:42%;bottom:7%;width:12px;height:12px}
-.pet-decor.flower{left:50%;bottom:8%;width:10px;height:10px}
+.pet-decor.brush{left:32%;bottom:6%;width:12px;height:12px}
+.pet-decor.flower{left:37%;bottom:6%;width:10px;height:10px}
 .pet-decor.snack{display:none}
 /* v10.13.3d: ventana en la pared — sin gravedad, vive en la pared alta */
 .pet-wall-window{position:absolute;left:50%;top:14%;transform:translateX(-50%);width:47px;height:53px;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));z-index:1;pointer-events:none;display:none}
@@ -4109,8 +4109,8 @@ function showPlayAnimation(){
 
   /* Posición inicial de la pelota: left:62%, bottom:7% (CSS default) */
   var ballSize=21;
-  var startX=sceneW*0.62;
-  var startY=sceneH-ballSize-sceneH*0.07;
+  var startX=sceneW*0.48;
+  var startY=sceneH-ballSize-sceneH*0.06;
 
   /* Guardar posición/estilo original para restaurar después */
   var originalStyle={
@@ -4144,7 +4144,7 @@ function showPlayAnimation(){
   var FLOOR_FRICTION=0.94; /* fricción extra al tocar piso */
   var MIN_VELOCITY=30;  /* px/sec — velocidad mínima antes de parar */
 
-  var floorY=sceneH-ballSize-sceneH*0.07;
+  var floorY=sceneH-ballSize-sceneH*0.06;
   var wallLeft=5;
   var wallRight=sceneW-ballSize-5;
 
@@ -4378,10 +4378,10 @@ function showTapHeart(e,emoji){showTapParticle(e,emoji||'💕','#ec4899')}
    pero el sprite acostado mide ~58px ancho, así que centro del walker
    debe estar más a la derecha para que el sprite no salga del cuarto.
    10% deja el sprite cubriendo cama (3-16%) sin salir por la izquierda. */
-var POS_BED=10;    /* bed at left:3% + width 49px → centro ~10% (reducido v10.13.4) */
-var POS_TOY=64;    /* toy ball at left:62% + width 21px */
-var POS_FOOD=72;   /* food bowl at right:20% */
-var POS_WATER=88;  /* water bowl at right:5% */
+var POS_BED=10;    /* bed at left:5% + width 49px → centro ~10% */
+var POS_TOY=50;    /* toy ball at left:48% + width 21px */
+var POS_FOOD=68;   /* food bowl at right:30% = left:70% */
+var POS_WATER=78;  /* water bowl at right:20% = left:80% */
 /* Walker remembers its position across re-renders since renderPetCard rewrites the DOM */
 var _lastWalkerLeft=50;
 var _lastWalkerFace='right'; /* 'left' or 'right' */

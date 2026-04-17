@@ -2949,6 +2949,192 @@ function getAccessoryUrl(petTipo,slot){
   return SPRITE_BUCKET_URL+item.url+'?v='+SPRITE_VERSION;
 }
 
+/* ============================================================
+   v10.13.3a — TROPISHOP INFRASTRUCTURE (Push 1)
+   ============================================================
+   Sistema de inventario + equipamiento para items comprables.
+
+   ESTRUCTURA en pet.mascota:
+     inventario_items: {
+       cama:  ['cama_default', 'cama_red'],
+       pelota:['pelota_default'],
+       comedero:[...],
+       bebedero:[...],
+       caseta:[...],     // solo perro
+       ventana:[...]     // todas las especies
+     }
+     equipado: {
+       cama: 'cama_red',
+       pelota: 'pelota_default',
+       ...
+     }
+
+   CATALOG define TODOS los items comprables (Push 2 lo va a poblar).
+   Por ahora vacío — funciona con defaults de PET_ACCESSORIES.
+
+   Cuando una mascota no tiene inventario (o es nueva), usa los defaults.
+   Migración automática en petDailyUpdate preserva retro-compat.
+*/
+var TROPISHOP_CATALOG={
+  /* Estructura de un item:
+     {
+       id: 'cama_red',               // ID único
+       slot: 'cama',                 // tipo de slot que ocupa
+       nombre: 'Cama Roja',
+       desc: 'Acolchada y cómoda',
+       url: 'dogs/accessories/bed_red.png',  // path en Supabase
+       especies: ['perro'],          // qué especies pueden usarla
+       tier: 'premium',              // basic | premium | premium-plus
+       cost: 350,
+       unlock_level: 1,              // nivel mínimo para comprarla
+       bonus: null                   // {tipo:'energia_regen', value:0.1} o null
+     }
+     Push 2 va a llenar este catálogo.
+  */
+};
+
+/* Default items que TODAS las mascotas tienen sin comprar nada.
+   Representan los sprites actuales de PET_ACCESSORIES. */
+var DEFAULT_EQUIPPED={
+  gato:    {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null},
+  perro:   {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null},
+  conejo:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null},
+  pajaro:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:null,caseta:null}
+};
+
+/* Migración: asegura que toda pet tenga inventario_items y equipado.
+   Se llama desde petDailyUpdate. */
+function ensureInventoryStructure(pet){
+  if(!pet)return;
+  if(!pet.inventario_items)pet.inventario_items={};
+  if(!pet.equipado)pet.equipado={};
+  var defaults=DEFAULT_EQUIPPED[pet.tipo]||DEFAULT_EQUIPPED.gato;
+  var slots=['cama','pelota','comedero','bebedero','ventana','caseta'];
+  for(var i=0;i<slots.length;i++){
+    var slot=slots[i];
+    if(!pet.inventario_items[slot])pet.inventario_items[slot]=[];
+    /* Si el slot tiene default, asegurar que esté en el inventario */
+    var def=defaults[slot];
+    if(def&&pet.inventario_items[slot].indexOf(def)===-1){
+      pet.inventario_items[slot].unshift(def);
+    }
+    /* Si no hay nada equipado en este slot, equipar el default */
+    if(!pet.equipado[slot]&&def){
+      pet.equipado[slot]=def;
+    }
+  }
+}
+
+/* Dado un pet y un slot, devuelve la URL del sprite equipado.
+   FALLBACK chain:
+     1. Si el slot tiene un item equipado con id distinto al default
+        → buscar en CATALOG el url
+     2. Si es 'cama_default' (o similar) → usar getAccessoryUrl tradicional
+     3. Si no hay nada → getAccessoryUrl genérico
+*/
+function getEquippedItemUrl(pet,slot){
+  if(!pet)return '';
+  /* Mapeo de slot interno → slot visual usado por updatePetBowl
+     slot interno 'cama' → visual 'bed'
+     slot interno 'pelota' → visual 'toy_ball'
+     slot interno 'comedero' → visual 'food_full' / 'food_empty'
+     slot interno 'bebedero' → visual 'water_full' / 'water_empty'
+  */
+  if(!pet.equipado)ensureInventoryStructure(pet);
+  var equippedId=pet.equipado&&pet.equipado[slot];
+  if(equippedId&&TROPISHOP_CATALOG[equippedId]){
+    var item=TROPISHOP_CATALOG[equippedId];
+    if(item&&item.url)return SPRITE_BUCKET_URL+item.url+'?v='+SPRITE_VERSION;
+  }
+  /* Fallback a PET_ACCESSORIES — mapeo slot interno → slot visual */
+  var visualSlotMap={
+    cama:'bed',
+    pelota:'toy_ball',
+    comedero_full:'food_full',
+    comedero_empty:'food_empty',
+    bebedero_full:'water_full',
+    bebedero_empty:'water_empty'
+  };
+  var visualSlot=visualSlotMap[slot]||slot;
+  return getAccessoryUrl(pet.tipo||'gato',visualSlot);
+}
+
+/* Comprar un item del catálogo.
+   - Verifica: item existe, mascota tiene plata, especie coincide, nivel cumplido
+   - Descuenta puntitos, agrega a inventario
+   - Retorna {ok:true} o {ok:false, reason:'...'}
+*/
+function buyTropishopItem(itemId){
+  if(!P||!P.mascota)return {ok:false,reason:'Sin mascota'};
+  var pet=P.mascota;
+  var item=TROPISHOP_CATALOG[itemId];
+  if(!item)return {ok:false,reason:'Item no existe'};
+  /* Verificar especie */
+  if(item.especies&&item.especies.indexOf(pet.tipo)<0){
+    return {ok:false,reason:'No es para tu mascota'};
+  }
+  /* Verificar nivel */
+  if(item.unlock_level&&(pet.nivel||1)<item.unlock_level){
+    return {ok:false,reason:'Necesitas nivel '+item.unlock_level};
+  }
+  /* Ya lo tiene */
+  ensureInventoryStructure(pet);
+  if(pet.inventario_items[item.slot]&&pet.inventario_items[item.slot].indexOf(itemId)>=0){
+    return {ok:false,reason:'Ya lo tienes'};
+  }
+  /* Verificar plata */
+  if((pet.croquetas||0)<item.cost){
+    return {ok:false,reason:'Te faltan '+(item.cost-(pet.croquetas||0))+' 🐾'};
+  }
+  /* Ejecutar compra */
+  pet.croquetas-=item.cost;
+  if(!pet.inventario_items[item.slot])pet.inventario_items[item.slot]=[];
+  pet.inventario_items[item.slot].push(itemId);
+  /* Auto-equipar el nuevo item (reemplaza el viejo pero el viejo queda en inventario) */
+  if(!pet.equipado)pet.equipado={};
+  pet.equipado[item.slot]=itemId;
+  savePet();
+  return {ok:true};
+}
+
+/* Equipar un item que ya está en el inventario.
+   Valida que el item exista en el inventario antes de equiparlo. */
+function equipTropishopItem(itemId){
+  if(!P||!P.mascota)return false;
+  var pet=P.mascota;
+  var item=TROPISHOP_CATALOG[itemId];
+  if(!item)return false;
+  ensureInventoryStructure(pet);
+  if(!pet.inventario_items[item.slot]||pet.inventario_items[item.slot].indexOf(itemId)<0){
+    return false; /* no lo posee */
+  }
+  pet.equipado[item.slot]=itemId;
+  savePet();
+  return true;
+}
+
+/* Bonus aplicados por items equipados.
+   Devuelve un objeto con los multiplicadores actuales.
+   Se usa en calc de energy_regen, play_cost, etc. */
+function getEquippedBonuses(pet){
+  var bonuses={
+    energia_regen:1.0,   /* multiplicador de regen/hora */
+    play_energy_cost:1.0,/* multiplicador de costo al jugar */
+    felicidad_regen:1.0  /* multiplicador de boost de felicidad */
+  };
+  if(!pet||!pet.equipado)return bonuses;
+  for(var slot in pet.equipado){
+    var itemId=pet.equipado[slot];
+    if(!itemId)continue;
+    var item=TROPISHOP_CATALOG[itemId];
+    if(!item||!item.bonus)continue;
+    if(item.bonus.tipo&&bonuses[item.bonus.tipo]!==undefined){
+      bonuses[item.bonus.tipo]*=(1+item.bonus.value);
+    }
+  }
+  return bonuses;
+}
+
 /* Low-level sprite animator using CSS background-position */
 function PetSprite(opts){
   this.el=opts.el;
@@ -3420,13 +3606,21 @@ function petDailyUpdate(pet){
   }
   /* === MIGRATION v2.2: ensure pet has sed (thirst) stat === */
   if(typeof pet.sed!=='number'){pet.sed=100;pet.water_last_refill=null}
+  /* === MIGRATION v3 (v10.13.3a): inventory + equipamiento === */
+  if(!pet.migracion_v3){
+    if(typeof ensureInventoryStructure==='function')ensureInventoryStructure(pet);
+    pet.migracion_v3=true;
+  }
   var nowTs=Date.now();
   var nowDate=new Date().toISOString().slice(0,10);
-  /* Hourly energy regeneration based on ultima_energia_ts */
+  /* Hourly energy regeneration based on ultima_energia_ts.
+     v10.13.3a: se aplica el bonus de items equipados (cama premium p.ej.) */
+  var bonuses=typeof getEquippedBonuses==='function'?getEquippedBonuses(pet):{energia_regen:1};
   if(pet.ultima_energia_ts){
     var hoursSince=Math.floor((nowTs-pet.ultima_energia_ts)/3600000);
     if(hoursSince>0){
-      pet.energia=Math.min(100,(pet.energia||0)+hoursSince*10); /* +10 per hour */
+      var regen=Math.floor(hoursSince*10*bonuses.energia_regen); /* +10/hora * bonus */
+      pet.energia=Math.min(100,(pet.energia||0)+regen);
       pet.ultima_energia_ts=nowTs;
     }
   }else{pet.ultima_energia_ts=nowTs}
@@ -3516,7 +3710,9 @@ function adoptPet(){
   var name=document.getElementById('pet-name-input').value.trim()||'Mascota';
   var colores=generatePetColors(selectedPetType);
   var inventario={};inventario[getBasicFoodId(selectedPetType)]=5;
-  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,sed:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0,inventario_comida:inventario,bowl_filled_at:null,bowl_food:null,water_last_refill:null,migracion_v2:true};
+  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,sed:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0,inventario_comida:inventario,bowl_filled_at:null,bowl_food:null,water_last_refill:null,migracion_v2:true,migracion_v3:true};
+  /* v10.13.3a: inicializar estructura de inventario + equipamiento */
+  if(typeof ensureInventoryStructure==='function')ensureInventoryStructure(pet);
   P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();
   var rareMsg=colores.rare?' ¡Color raro: '+colores.rare+'! ✨':'';
   toast('🐾 ¡Adoptaste a '+name+'!'+rareMsg);
@@ -3527,13 +3723,19 @@ function adoptPet(){
 /* ===== BOWL & FEEDING v2 — Diegetic interface ===== */
 
 function updatePetBowl(){
-  /* Renders all room sprites: food bowl, water bowl, decorations, toy ball */
+  /* Renders all room sprites: food bowl, water bowl, decorations, toy ball.
+     v10.13.3a: ahora usa getEquippedItemUrl que respeta los items equipados
+     del inventario. Si la mascota no compró items premium, cae al default
+     por especie (PET_ACCESSORIES tradicional). */
   var pet=P&&P.mascota;if(!pet)return;
   var tipo=pet.tipo||'gato';
+  /* Asegurar estructura de inventario (idempotente) */
+  if(typeof ensureInventoryStructure==='function')ensureInventoryStructure(pet);
   /* === FOOD BOWL === */
   var foodEl=document.getElementById('bowl-sprite-el');
   if(foodEl){
     var isFull=!!pet.bowl_filled_at;
+    /* TODO Push 2: usar item equipado si tiene variantes full/empty */
     foodEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,isFull?'food_full':'food_empty')+'")';
     var bowlEl=document.getElementById('pet-bowl-el');
     if(bowlEl){
@@ -3553,10 +3755,10 @@ function updatePetBowl(){
       wbEl.classList.toggle('empty-hint',sedLow);
     }
   }
-  /* === TOY BALL (interactive play) === */
+  /* === TOY BALL === */
   var toyEl=document.getElementById('toy-ball-sprite');
   if(toyEl){
-    toyEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'toy_ball')+'")';
+    toyEl.style.backgroundImage='url("'+getEquippedItemUrl(pet,'pelota')+'")';
     var tbEl=document.getElementById('toy-ball-el');
     if(tbEl){
       var canPlay=(pet.energia||0)>=15&&getMood(pet)!=='sleeping';
@@ -3577,9 +3779,9 @@ function updatePetBowl(){
       }
     }
   }
-  /* === STATIC DECORATIONS (species-aware) === */
+  /* === STATIC DECORATIONS (species-aware + equipped) === */
   var bedEl=document.getElementById('pet-decor-bed');
-  if(bedEl)bedEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'bed')+'")';
+  if(bedEl)bedEl.style.backgroundImage='url("'+getEquippedItemUrl(pet,'cama')+'")';
   var brushEl=document.getElementById('pet-decor-brush');
   if(brushEl)brushEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,'decor1')+'")';
   var flowerEl=document.getElementById('pet-decor-flower');
@@ -3721,8 +3923,14 @@ function petPlay(){
     for(var t=0;t<PET_TOYS.length;t++)if(PET_TOYS[t].id===pet.juguete_activo)toy=PET_TOYS[t];
     if(toy){xpGain+=toy.xp_day;energyCost=toy.energy_cost||15}
   }
+  /* v10.13.3a: aplicar bonus de items equipados.
+     play_energy_cost: pelota premium puede reducir consumo de energía
+     felicidad_regen: items premium pueden dar boost mayor de felicidad */
+  var bonuses=typeof getEquippedBonuses==='function'?getEquippedBonuses(pet):{play_energy_cost:1,felicidad_regen:1};
+  energyCost=Math.round(energyCost*bonuses.play_energy_cost);
+  var felicidadGain=Math.round(15*bonuses.felicidad_regen);
   pet.energia=Math.max(0,(pet.energia||0)-energyCost);
-  pet.felicidad=Math.min(100,(pet.felicidad||0)+15);
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+felicidadGain);
   pet.xp=(pet.xp||0)+xpGain;
   pet.ultima_energia_ts=Date.now(); /* Reset energy regen timer */
   /* Track plays for stats but no daily limit */

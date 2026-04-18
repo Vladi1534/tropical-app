@@ -896,7 +896,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:25%;top:42%;width:45px;height:45px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.toy-ball{position:absolute;left:25%;top:42%;width:45px;height:45px;z-index:5;cursor:grab;-webkit-tap-highlight-color:transparent;transition:transform .15s;touch-action:none}
 .toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
@@ -1314,6 +1314,12 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devTestSprite('sad')">😢 Sad</button>
   </div>
   
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">🔍 Inspector de sprites</div>
+  <div style="font-size:9px;color:var(--txt3);margin-bottom:6px">Mostrar TODOS los accesorios de TODAS las especies en grilla para detectar sprites rotos:</div>
+  <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="devOpenSpriteInspector()">🔍 Abrir inspector</button>
+  </div>
+  
   <div style="font-size:11px;color:var(--red);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">⚠️ Peligrosos</div>
   <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:10px">
     <button class="bs" onclick="devDeletePet()" style="color:var(--red);border-color:rgba(239,68,68,.3)">🗑️ Eliminar mascota (forzar adopción)</button>
@@ -1324,6 +1330,13 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     Estado actual de la mascota:<br>
     <span id="dev-pet-state" style="font-family:monospace;font-size:10px;color:var(--cyan)">—</span>
   </div>
+</div></div>
+
+<!-- Sprite Inspector modal -->
+<div id="m-sprite-inspector" class="modal"><div class="mbox" style="max-width:380px;max-height:90vh;overflow-y:auto">
+  <div class="mtt">🔍 Sprite Inspector <button class="m-close" onclick="closeM('m-sprite-inspector')">✕</button></div>
+  <div style="font-size:10px;color:var(--txt3);margin-bottom:12px;line-height:1.4">Cada sprite se muestra con su tamaño real + nombre del archivo. Los bordes de colores son solo guía visual del contenedor. Si ves un sprite cortado o vacío, el archivo en Supabase está mal.</div>
+  <div id="sprite-inspector-body"></div>
 </div></div>
 
 <!-- NAV -->
@@ -3635,7 +3648,7 @@ function renderPetCard(){
   h+='<div class="pet-decor snack" id="pet-decor-snack"></div>';
   h+='<div class="pet-bowl" id="pet-bowl-el" onclick="openBowl()" title="Tocar plato"><div class="bowl-sprite" id="bowl-sprite-el"></div></div>';
   h+='<div class="water-bowl" id="water-bowl-el" onclick="openWaterBowl()" title="Tocar agua"><div class="bowl-sprite" id="water-sprite-el"></div></div>';
-  h+='<div class="toy-ball" id="toy-ball-el" onclick="petPlay()" title="Jugar"><div class="bowl-sprite" id="toy-ball-sprite"></div></div>';
+  h+='<div class="toy-ball" id="toy-ball-el" title="Arrastrá para lanzar"><div class="bowl-sprite" id="toy-ball-sprite"></div></div>';
   h+='<div class="pet-walker"><div class="pet-facing" id="pet-facing-el"><div id="pet-sprite-el" class="pet-sprite" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent"></div></div><div class="pet-shadow"></div></div></div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
   h+='<div class="pet-level">Nv.'+lvl+' · '+petGenderName(pet)+' '+(pet.genero==='macho'?'♂':'♀')+' · '+getMoodEmoji(mood)+' '+getMoodText(mood)+'</div></div>';
@@ -3923,6 +3936,221 @@ function updatePetBowl(){
       windowEl.style.backgroundImage='';
     }
   }
+  /* v10.13.7: inicializar drag-and-drop de la pelota cada vez que se
+     re-renderiza el cuarto (renderPetCard destruye el DOM anterior). */
+  if(typeof initBallDrag==='function')initBallDrag();
+}
+
+/* ===== BALL DRAG & DROP (v10.13.7) =====
+   La emisora arrastra la pelota con el dedo/mouse, al soltar la pelota
+   sale disparada con la velocidad y dirección calculadas del movimiento.
+   Al terminar la física vuelve sola a la repisa (via originalStyle en stop()).
+
+   Flujo:
+   1. Touch/mouse down sobre la pelota → guardar posición inicial y timestamp
+   2. Touch/mouse move → actualizar posición de la pelota + guardar últimos 3
+      puntos con timestamp para calcular velocidad al soltar
+   3. Touch/mouse up →
+      - Si casi no se movió (<10px) → tratar como tap (ignorar, nada pasa)
+      - Si se movió lo suficiente → calcular velocidad = delta_px / delta_s
+        clampar a max, validar energía con petPlay, llamar showPlayAnimation
+        pasando la velocidad como params
+*/
+var _ballDragState=null;
+
+function initBallDrag(){
+  var ballEl=document.getElementById('toy-ball-el');
+  if(!ballEl)return;
+  /* Evitar re-bindear si ya tiene listeners (re-renders idempotentes).
+     Usamos un flag en el dataset del elemento. */
+  if(ballEl.dataset.dragBound==='1')return;
+  ballEl.dataset.dragBound='1';
+
+  /* Helper: obtiene coordenadas (x,y) relativas al pet-scene de un evento.
+     Soporta mouse y touch. */
+  function getEventCoords(e){
+    var scene=document.querySelector('.pet-scene');
+    if(!scene)return {x:0,y:0};
+    var rect=scene.getBoundingClientRect();
+    var clientX,clientY;
+    if(e.touches&&e.touches.length>0){
+      clientX=e.touches[0].clientX;
+      clientY=e.touches[0].clientY;
+    }else if(e.changedTouches&&e.changedTouches.length>0){
+      clientX=e.changedTouches[0].clientX;
+      clientY=e.changedTouches[0].clientY;
+    }else{
+      clientX=e.clientX;
+      clientY=e.clientY;
+    }
+    return {x:clientX-rect.left,y:clientY-rect.top};
+  }
+
+  function onStart(e){
+    /* No permitir drag si la mascota está durmiendo o sin energía */
+    var pet=P&&P.mascota;
+    if(!pet)return;
+    if((pet.energia||0)<15){
+      toast('⚡ Sin energía suficiente, déjala descansar');
+      return;
+    }
+    if(getMood(pet)==='sleeping'){
+      toast('💤 Está durmiendo, no la despiertes');
+      return;
+    }
+    /* Si ya hay una animación de pelota corriendo, ignorar */
+    if(_ballPhysics)return;
+
+    e.preventDefault();
+    var coords=getEventCoords(e);
+    var ballRect=ballEl.getBoundingClientRect();
+    var scene=document.querySelector('.pet-scene');
+    var sceneRect=scene.getBoundingClientRect();
+    /* Offset del dedo dentro de la pelota (para que no salte al centro al tocar) */
+    var grabOffsetX=(ballRect.left-sceneRect.left)+(ballRect.width/2)-coords.x;
+    var grabOffsetY=(ballRect.top-sceneRect.top)+(ballRect.height/2)-coords.y;
+
+    _ballDragState={
+      dragging:true,
+      startX:coords.x,
+      startY:coords.y,
+      grabOffsetX:grabOffsetX,
+      grabOffsetY:grabOffsetY,
+      /* Buffer circular de los últimos puntos para calcular velocidad */
+      history:[{x:coords.x,y:coords.y,t:performance.now()}],
+      originalStyle:{
+        left:ballEl.style.left,
+        top:ballEl.style.top,
+        bottom:ballEl.style.bottom,
+        right:ballEl.style.right,
+        transition:ballEl.style.transition
+      }
+    };
+    /* Mientras se arrastra, desactivar transición y usar top/left en px */
+    ballEl.style.transition='none';
+    ballEl.style.bottom='auto';
+    ballEl.style.right='auto';
+    ballEl.style.cursor='grabbing';
+  }
+
+  function onMove(e){
+    if(!_ballDragState||!_ballDragState.dragging)return;
+    e.preventDefault();
+    var coords=getEventCoords(e);
+    /* Aplicar posición con offset de agarre para que el dedo quede donde tocó */
+    var ballSize=45;
+    var scene=document.querySelector('.pet-scene');
+    var sceneRect=scene.getBoundingClientRect();
+    var newCenterX=coords.x+_ballDragState.grabOffsetX;
+    var newCenterY=coords.y+_ballDragState.grabOffsetY;
+    var newLeft=newCenterX-(ballSize/2);
+    var newTop=newCenterY-(ballSize/2);
+    /* Clampar a bounds del cuarto */
+    newLeft=Math.max(0,Math.min(sceneRect.width-ballSize,newLeft));
+    newTop=Math.max(0,Math.min(sceneRect.height-ballSize,newTop));
+    ballEl.style.left=newLeft+'px';
+    ballEl.style.top=newTop+'px';
+    /* Guardar en history (máx 5 puntos) */
+    _ballDragState.history.push({x:coords.x,y:coords.y,t:performance.now()});
+    if(_ballDragState.history.length>5)_ballDragState.history.shift();
+  }
+
+  function onEnd(e){
+    if(!_ballDragState||!_ballDragState.dragging)return;
+    e.preventDefault();
+    _ballDragState.dragging=false;
+    ballEl.style.cursor='';
+    var coords=getEventCoords(e);
+    var hist=_ballDragState.history;
+    var totalDist=Math.sqrt(
+      Math.pow(coords.x-_ballDragState.startX,2)+
+      Math.pow(coords.y-_ballDragState.startY,2)
+    );
+
+    /* Si casi no se movió, restaurar estilo original y no hacer nada */
+    if(totalDist<10){
+      ballEl.style.transition='left .3s ease-out,top .3s ease-out';
+      ballEl.style.left=_ballDragState.originalStyle.left;
+      ballEl.style.top=_ballDragState.originalStyle.top;
+      ballEl.style.bottom=_ballDragState.originalStyle.bottom;
+      ballEl.style.right=_ballDragState.originalStyle.right;
+      setTimeout(function(){
+        ballEl.style.transition=_ballDragState.originalStyle.transition;
+        _ballDragState=null;
+      },350);
+      return;
+    }
+
+    /* Calcular velocidad del último tramo (últimos ~150ms).
+       vx = delta_x / delta_t (px/sec). Multiplicamos por ~3.5 para
+       amplificar: lanzar requiere un gesto rápido, queremos que se sienta
+       bien sin pedir un movimiento enorme. */
+    var now=performance.now();
+    var recentPoint=hist[0];
+    for(var i=0;i<hist.length;i++){
+      if(now-hist[i].t<=200){
+        recentPoint=hist[i];
+        break;
+      }
+    }
+    var dt=(now-recentPoint.t)/1000;
+    if(dt<0.02)dt=0.02; /* evitar división por 0 */
+    var vx=((coords.x-recentPoint.x)/dt)*3.5;
+    var vy=((coords.y-recentPoint.y)/dt)*3.5;
+
+    /* Clampar velocidad máxima para no romper física */
+    var MAX_SPEED=1400;
+    var totalV=Math.sqrt(vx*vx+vy*vy);
+    if(totalV>MAX_SPEED){
+      vx=(vx/totalV)*MAX_SPEED;
+      vy=(vy/totalV)*MAX_SPEED;
+    }
+    /* Si fue demasiado lento (drag pesado), dar velocidad mínima hacia abajo */
+    if(totalV<80){
+      vx=totalV>0?vx:50;
+      vy=150; /* pequeño empujón hacia abajo para que caiga de la repisa */
+    }
+
+    /* Posición actual de la pelota (en px dentro del scene) */
+    var ballRect=ballEl.getBoundingClientRect();
+    var scene=document.querySelector('.pet-scene');
+    var sceneRect=scene.getBoundingClientRect();
+    var currentLeftPx=ballRect.left-sceneRect.left;
+    var currentTopPx=ballRect.top-sceneRect.top;
+
+    /* Restaurar estilo CSS antes de que la física tome control.
+       showPlayAnimation guarda su propio originalStyle leyendo ballEl.style,
+       así que necesitamos restaurar a los valores CSS originales para que
+       al final la pelota vuelva a la repisa. */
+    ballEl.style.left=_ballDragState.originalStyle.left;
+    ballEl.style.top=_ballDragState.originalStyle.top;
+    ballEl.style.bottom=_ballDragState.originalStyle.bottom;
+    ballEl.style.right=_ballDragState.originalStyle.right;
+    ballEl.style.transition=_ballDragState.originalStyle.transition;
+
+    _ballDragState=null;
+
+    /* Ejecutar petPlay (valida energía, cobra stats, muestra toast) */
+    petPlay(vx,vy,currentLeftPx,currentTopPx);
+  }
+
+  /* Bindear todos los eventos — preferir Pointer Events si están disponibles */
+  ballEl.addEventListener('touchstart',onStart,{passive:false});
+  ballEl.addEventListener('touchmove',onMove,{passive:false});
+  ballEl.addEventListener('touchend',onEnd,{passive:false});
+  ballEl.addEventListener('touchcancel',onEnd,{passive:false});
+  ballEl.addEventListener('mousedown',function(e){
+    onStart(e);
+    /* Mouse move/up van al document porque el mouse puede salir de la pelota */
+    var moveHandler=function(ev){onMove(ev)};
+    var upHandler=function(ev){
+      onEnd(ev);
+      document.removeEventListener('mousemove',moveHandler);
+      document.removeEventListener('mouseup',upHandler);
+    };
+    document.addEventListener('mousemove',moveHandler);
+    document.addEventListener('mouseup',upHandler);
+  });
 }
 
 function openBowl(){
@@ -4047,7 +4275,9 @@ function consumeFood(foodId){
 /* Backwards compat: feedPet still callable but routes to consumeFood */
 function feedPet(foodId){consumeFood(foodId)}
 
-function petPlay(){
+function petPlay(dragVx,dragVy,dragX,dragY){
+  /* v10.13.7: acepta velocidad/posición opcionales del drag de la pelota.
+     Si no se pasan, la animación usa random default (retrocompat). */
   var pet=P.mascota;if(!pet)return;
   /* Energy is the only gating factor — no more daily limits */
   if((pet.energia||0)<15){toast('⚡ Sin energía suficiente, déjala descansar (recupera +10/hora)');return}
@@ -4074,9 +4304,10 @@ function petPlay(){
   /* v10.13.2a: la pelota sale disparada con física, la mascota la persigue
      en tiempo real (dentro de showPlayAnimation). NO hacemos petWalkTo a
      un POS_TOY fijo — el chase toma control del walker hasta que la
-     pelota se detiene. */
+     pelota se detiene.
+     v10.13.7: si vino del drag, pasar velocidad/posición. */
   setTimeout(function(){
-    showPlayAnimation();
+    showPlayAnimation(dragVx,dragVy,dragX,dragY);
   },80);
   toast('🎾 ¡'+(pet.nombre)+' va a jugar! +'+xpGain+' XP'+(toy?' con '+toy.name:''));
 }
@@ -4095,7 +4326,10 @@ function petPlay(){
 */
 var _ballPhysics=null;
 
-function showPlayAnimation(){
+function showPlayAnimation(initialVx,initialVy,initialX,initialY){
+  /* v10.13.7: Si se pasan initialVx/Vy, usar esa velocidad (drag-and-drop).
+     Si no, usar velocidad aleatoria default (tap/click simple de compat).
+     initialX/initialY: posición de arranque en px (opcional). */
   var scene=document.querySelector('.pet-scene');
   if(!scene)return;
   var ballEl=document.getElementById('toy-ball-el');
@@ -4113,10 +4347,11 @@ function showPlayAnimation(){
   var sceneH=rect.height;
 
   /* v10.13.6: Posición inicial de la pelota: left:25%, top:42% (sobre la repisa).
-     La pelota cae por gravedad hasta el piso y rebota, la mascota la persigue. */
+     La pelota cae por gravedad hasta el piso y rebota, la mascota la persigue.
+     v10.13.7: si el drag pasó coords/velocidad, usarlas. */
   var ballSize=45;
-  var startX=sceneW*0.25;
-  var startY=sceneH*0.42;
+  var startX=(typeof initialX==='number')?initialX:sceneW*0.25;
+  var startY=(typeof initialY==='number')?initialY:sceneH*0.42;
 
   /* Guardar posición/estilo original para restaurar después */
   var originalStyle={
@@ -4136,13 +4371,19 @@ function showPlayAnimation(){
 
   /* v10.13.6: la pelota arranca en la repisa, así que cae con pequeño
      impulso hacia adelante (no hacia arriba como antes).
-     Ángulo 0-60° = adelante-abajo, velocidad chica (~200-400 px/sec)
-     porque la gravedad va a hacer el trabajo pesado. */
-  var angleDeg=Math.random()*60; /* 0-60° = hacia abajo-adelante */
-  var speed=200+Math.random()*200; /* 200-400 px/sec */
-  var angle=angleDeg*Math.PI/180;
-  var vx=Math.cos(angle)*speed;
-  var vy=Math.sin(angle)*speed;
+     v10.13.7: si se pasó initialVx/Vy (drag), usar esa velocidad.
+     Si no (fallback tap/click), random hacia adelante-abajo. */
+  var vx,vy;
+  if(typeof initialVx==='number'&&typeof initialVy==='number'){
+    vx=initialVx;
+    vy=initialVy;
+  }else{
+    var angleDeg=Math.random()*60; /* 0-60° = hacia abajo-adelante */
+    var speed=200+Math.random()*200; /* 200-400 px/sec */
+    var angle=angleDeg*Math.PI/180;
+    vx=Math.cos(angle)*speed;
+    vy=Math.sin(angle)*speed;
+  }
 
   /* Physics constants */
   var GRAVITY=1400;     /* px/sec² */
@@ -4625,6 +4866,38 @@ function devDeletePet(){
   closeM('m-dev-panel');
   renderPetCard();
   toast('🛠️ Mascota eliminada');
+}
+
+/* v10.13.7: Sprite Inspector — muestra todos los accesorios de todas las
+   especies en una grilla para detectar sprites cortados o rotos. */
+function devOpenSpriteInspector(){
+  closeM('m-dev-panel');
+  var body=document.getElementById('sprite-inspector-body');
+  if(!body)return;
+  var h='';
+  var species=['gato','perro','conejo','pajaro'];
+  var slots=['bed','food_full','water_full','toy_ball','decor1','decor2'];
+  var slotNames={bed:'Cama',food_full:'Plato comida',water_full:'Plato agua',toy_ball:'Pelota/juguete',decor1:'Decor 1',decor2:'Decor 2'};
+  var speciesEmoji={gato:'🐱',perro:'🐶',conejo:'🐰',pajaro:'🐦'};
+  for(var s=0;s<species.length;s++){
+    var sp=species[s];
+    h+='<div style="margin-bottom:16px;border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:10px;background:rgba(168,85,247,.04)">';
+    h+='<div style="font-family:Fredoka,sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">'+speciesEmoji[sp]+' '+sp.toUpperCase()+'</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    for(var i=0;i<slots.length;i++){
+      var slot=slots[i];
+      var url=getAccessoryUrl(sp,slot);
+      var fileName=url.split('/').pop().split('?')[0];
+      h+='<div style="background:rgba(0,0,0,.3);border:1px dashed rgba(168,85,247,.3);border-radius:6px;padding:6px;text-align:center">';
+      h+='<div style="font-size:9px;color:var(--txt3);margin-bottom:4px">'+slotNames[slot]+'</div>';
+      h+='<div style="width:64px;height:64px;margin:0 auto;background-image:url(\''+url+'\');background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;background-color:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)"></div>';
+      h+='<div style="font-size:8px;color:var(--txt2);margin-top:4px;word-break:break-all">'+fileName+'</div>';
+      h+='</div>';
+    }
+    h+='</div></div>';
+  }
+  body.innerHTML=h;
+  openM('m-sprite-inspector');
 }
 
 /* ===== SHOP ===== */

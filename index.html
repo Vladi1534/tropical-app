@@ -2911,7 +2911,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='1';
+var SPRITE_VERSION='2'; /* v10.13.8: bump para invalidar cache tras re-upload de sprites del conejo */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -2956,9 +2956,9 @@ var PET_ACCESSORIES={
   conejo:{
     bed:      {url:'bunnies/accessories/bed.png'},
     food_full:{url:'bunnies/accessories/food_bowl.png'},
-    food_empty:{url:'bunnies/accessories/food_bowl.png'},
+    food_empty:{url:'bunnies/accessories/food_bowl_empty.png'},
     water_full:{url:'bunnies/accessories/water_bowl.png'},
-    water_empty:{url:'bunnies/accessories/water_bowl.png'},
+    water_empty:{url:'bunnies/accessories/water_bowl_empty.png'},
     toy_ball: {url:'bunnies/accessories/ball.png'},
     decor1:   {url:'bunnies/accessories/carrot.png'},
     decor2:   {url:'items/flower.png'}

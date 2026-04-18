@@ -896,7 +896,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:47%;bottom:3%;width:45px;height:45px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.toy-ball{position:absolute;left:25%;top:42%;width:45px;height:45px;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
@@ -905,14 +905,18 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
 .pet-decor.bed{left:3%;bottom:5%;width:115px;height:56px}
-.pet-decor.house{right:14%;bottom:5%;width:108px;height:108px;display:none;z-index:0}
+.pet-decor.house{right:14%;bottom:10%;width:108px;height:108px;display:none;z-index:0}
 .pet-decor.house.active{display:block}
 .pet-decor.brush{left:34%;bottom:7%;width:24px;height:24px}
 .pet-decor.flower{left:41%;bottom:7%;width:20px;height:20px}
 .pet-decor.snack{display:none}
 /* v10.13.3d: ventana en la pared — sin gravedad, vive en la pared alta */
-.pet-wall-window{position:absolute;left:50%;top:12%;transform:translateX(-50%);width:90px;height:102px;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));z-index:1;pointer-events:none;display:none}
+.pet-wall-window{position:absolute;left:50%;top:10%;transform:translateX(-50%);width:120px;height:135px;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));z-index:1;pointer-events:none;display:none}
 .pet-wall-window.active{display:block}
+/* v10.13.6: repisa de madera en la pared para poner la pelota */
+.pet-wall-shelf{position:absolute;left:18%;top:45%;width:22%;height:8px;z-index:1;pointer-events:none;background:linear-gradient(180deg,#a87040 0%,#8b5a2b 40%,#6b3f1f 100%);border-top:2px solid #c68851;border-bottom:2px solid #4a2a12;box-shadow:0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,220,160,.3);border-radius:1px}
+.pet-wall-shelf::before{content:'';position:absolute;left:4%;bottom:-6px;width:3px;height:6px;background:#4a2a12;border-radius:0 0 1px 1px}
+.pet-wall-shelf::after{content:'';position:absolute;right:4%;bottom:-6px;width:3px;height:6px;background:#4a2a12;border-radius:0 0 1px 1px}
 .pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left;display:inline-block;text-align:center}
 .pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
 .pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
@@ -3623,6 +3627,7 @@ function renderPetCard(){
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'<div class="pet-time-overlay" id="pet-time-overlay"></div></div>';
   h+='<div class="pet-time-badge" id="pet-time-badge"></div>';
   h+='<div class="pet-wall-window" id="pet-wall-window"></div>';
+  h+='<div class="pet-wall-shelf" id="pet-wall-shelf"></div>';
   h+='<div class="pet-decor house" id="pet-decor-house"></div>';
   h+='<div class="pet-decor bed" id="pet-decor-bed"></div>';
   h+='<div class="pet-decor brush" id="pet-decor-brush"></div>';
@@ -4107,10 +4112,11 @@ function showPlayAnimation(){
   var sceneW=rect.width;
   var sceneH=rect.height;
 
-  /* Posición inicial de la pelota: left:62%, bottom:7% (CSS default) */
+  /* v10.13.6: Posición inicial de la pelota: left:25%, top:42% (sobre la repisa).
+     La pelota cae por gravedad hasta el piso y rebota, la mascota la persigue. */
   var ballSize=45;
-  var startX=sceneW*0.47;
-  var startY=sceneH-ballSize-sceneH*0.03;
+  var startX=sceneW*0.25;
+  var startY=sceneH*0.42;
 
   /* Guardar posición/estilo original para restaurar después */
   var originalStyle={
@@ -4128,11 +4134,12 @@ function showPlayAnimation(){
   ballEl.style.bottom='auto';
   ballEl.style.right='auto';
 
-  /* Velocidad inicial aleatoria en CUALQUIER dirección hacia arriba.
-     Rango 180°-360° = hemisferio superior del círculo (arriba y a los lados).
-     Evitamos 0-180° (hacia abajo) porque la pelota ya está en el piso. */
-  var angleDeg=180+Math.random()*180; /* 180-360° = arco completo hacia arriba */
-  var speed=550+Math.random()*250; /* 550-800 px/sec, más potente */
+  /* v10.13.6: la pelota arranca en la repisa, así que cae con pequeño
+     impulso hacia adelante (no hacia arriba como antes).
+     Ángulo 0-60° = adelante-abajo, velocidad chica (~200-400 px/sec)
+     porque la gravedad va a hacer el trabajo pesado. */
+  var angleDeg=Math.random()*60; /* 0-60° = hacia abajo-adelante */
+  var speed=200+Math.random()*200; /* 200-400 px/sec */
   var angle=angleDeg*Math.PI/180;
   var vx=Math.cos(angle)*speed;
   var vy=Math.sin(angle)*speed;
@@ -4379,7 +4386,7 @@ function showTapHeart(e,emoji){showTapParticle(e,emoji||'💕','#ec4899')}
    debe estar más a la derecha para que el sprite no salga del cuarto.
    18% deja el sprite cubriendo cama (4-22%) sin salir por la izquierda. */
 var POS_BED=16;    /* bed at left:3% + width 115px → centro ~16% */
-var POS_TOY=53;    /* toy ball at left:47% + width 45px */
+var POS_TOY=30;    /* toy ball sobre repisa en left:25% (solo referencia, chase toma control) */
 var POS_FOOD=67;   /* food bowl at right:28% + width 38px = centro ~67% */
 var POS_WATER=79;  /* water bowl at right:16% + width 38px = centro ~79% */
 /* Walker remembers its position across re-renders since renderPetCard rewrites the DOM */

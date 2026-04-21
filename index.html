@@ -2798,6 +2798,7 @@ var SPRITE_ANIMS={
   cats:{
     classical:{
       frameW:32,frameH:32,
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:10,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:4,fps:3,loop:true},
       sleepy:{file:'sleepy.png',frames:8,fps:5,loop:true},
@@ -2808,6 +2809,7 @@ var SPRITE_ANIMS={
     },
     retro:{
       frameW:64,frameH:64,
+      defaultFacing:'right',
       /* Derived from Cats/RetroCats/Sprites — 64x64, 20 animations with real walk cycle */
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:4,fps:3,loop:true},
@@ -2825,6 +2827,7 @@ var SPRITE_ANIMS={
   dogs:{
     golden:{
       frameW:64,frameH:64,
+      defaultFacing:'left',
       idle:{file:'idle.png',frames:10,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
@@ -2839,6 +2842,7 @@ var SPRITE_ANIMS={
          (perro negro/oscuro, homenaje a Vlaky ID 5088635103). Frame counts
          verificados contra el pack original. */
       frameW:64,frameH:64,
+      defaultFacing:'left',
       idle:{file:'idle.png',frames:7,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:3,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:7,fps:5,loop:true},
@@ -2852,6 +2856,7 @@ var SPRITE_ANIMS={
   bunnies:{
     grey:{
       frameW:32,frameH:32,
+      defaultFacing:'left',
       idle:{file:'idle.png',frames:12,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
@@ -2865,6 +2870,7 @@ var SPRITE_ANIMS={
   birds:{
     green:{
       frameW:16,frameH:16,
+      defaultFacing:'left',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -2876,6 +2882,7 @@ var SPRITE_ANIMS={
     },
     blue:{
       frameW:16,frameH:16,
+      defaultFacing:'left',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -2887,6 +2894,7 @@ var SPRITE_ANIMS={
     },
     yellow:{
       frameW:16,frameH:16,
+      defaultFacing:'left',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -2898,6 +2906,7 @@ var SPRITE_ANIMS={
     },
     parrot:{
       frameW:16,frameH:16,
+      defaultFacing:'left',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -4636,10 +4645,22 @@ var _lastWalkerFace='right'; /* 'left' or 'right' */
 var _walkPaused=false;
 
 function setPetFacing(direction){
-  /* direction: 'left' or 'right' */
+  /* direction: 'left' o 'right' — la dirección HACIA donde se MUEVE la mascota.
+     v10.13.9: respeta defaultFacing (dirección natural del sprite de cada
+     variante). El gato retro nace mirando a la derecha, pero perro/conejo/
+     pájaro nacen mirando a la izquierda. Para que "mire hacia donde camina",
+     hay que flipear solo cuando la dirección pedida difiere del default. */
   _lastWalkerFace=direction;
   var f=document.getElementById('pet-facing-el');
-  if(f)f.classList.toggle('face-left',direction==='left');
+  if(!f)return;
+  /* Averiguar dirección natural del sprite actual */
+  var defaultFacing='right'; /* fallback seguro */
+  if(_currentPetController&&_currentPetController.config&&_currentPetController.config.defaultFacing){
+    defaultFacing=_currentPetController.config.defaultFacing;
+  }
+  /* Flipear solo cuando la dirección de movimiento ≠ dirección natural */
+  var shouldFlip=(direction!==defaultFacing);
+  f.classList.toggle('face-left',shouldFlip);
 }
 
 function petWalkTo(targetPct,callback){

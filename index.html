@@ -1322,9 +1322,12 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   
   <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">🔄 Test facing (v10.13.10 debug)</div>
   <div style="font-size:9px;color:var(--txt3);margin-bottom:6px">Fuerza dirección para ver si flipea. Si no reacciona → el fix no está cargado.</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
     <button class="bs" onclick="setPetFacing('left');toast('setPetFacing(left) ejecutado')">⬅️ Face LEFT</button>
     <button class="bs" onclick="setPetFacing('right');toast('setPetFacing(right) ejecutado')">➡️ Face RIGHT</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:10px">
+    <button class="bs" onclick="toggleDebugOverlay()">🔍 Toggle debug overlay (verde/version badge)</button>
   </div>
   
   <div style="font-size:11px;color:var(--red);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">⚠️ Peligrosos</div>
@@ -2834,7 +2837,7 @@ var SPRITE_ANIMS={
   dogs:{
     golden:{
       frameW:64,frameH:64,
-      defaultFacing:'left',
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:10,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
@@ -2849,7 +2852,7 @@ var SPRITE_ANIMS={
          (perro negro/oscuro, homenaje a Vlaky ID 5088635103). Frame counts
          verificados contra el pack original. */
       frameW:64,frameH:64,
-      defaultFacing:'left',
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:7,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:3,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:7,fps:5,loop:true},
@@ -2863,7 +2866,7 @@ var SPRITE_ANIMS={
   bunnies:{
     grey:{
       frameW:32,frameH:32,
-      defaultFacing:'left',
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:12,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
@@ -2877,7 +2880,7 @@ var SPRITE_ANIMS={
   birds:{
     green:{
       frameW:16,frameH:16,
-      defaultFacing:'left',
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -2889,7 +2892,7 @@ var SPRITE_ANIMS={
     },
     blue:{
       frameW:16,frameH:16,
-      defaultFacing:'left',
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -2901,7 +2904,7 @@ var SPRITE_ANIMS={
     },
     yellow:{
       frameW:16,frameH:16,
-      defaultFacing:'left',
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -2913,7 +2916,7 @@ var SPRITE_ANIMS={
     },
     parrot:{
       frameW:16,frameH:16,
-      defaultFacing:'left',
+      defaultFacing:'right',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
@@ -3666,10 +3669,10 @@ function renderPetCard(){
   h+='<div class="water-bowl" id="water-bowl-el" onclick="openWaterBowl()" title="Tocar agua"><div class="bowl-sprite" id="water-sprite-el"></div></div>';
   h+='<div class="toy-ball" id="toy-ball-el" title="Arrastrá para lanzar"><div class="bowl-sprite" id="toy-ball-sprite"></div></div>';
   h+='<div class="pet-walker"><div class="pet-facing" id="pet-facing-el"><div id="pet-sprite-el" class="pet-sprite" onclick="petTap(event)" style="cursor:pointer;-webkit-tap-highlight-color:transparent"></div></div><div class="pet-shadow"></div></div>';
-  /* v10.13.10: debug panel en dev mode — muestra la lógica de facing en tiempo real */
-  if(devModeActive()){
+  /* v10.13.12: debug panel solo si dev mode + toggle activado */
+  if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.11</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.12</div>';
   }
   h+='</div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
@@ -4837,6 +4840,20 @@ function devModeActive(){
 }
 function devEnable(){try{window.localStorage&&window.localStorage.setItem('tropical-dev','1')}catch(e){}toast('🛠️ Dev mode activado')}
 function devDisable(){try{window.localStorage&&window.localStorage.removeItem('tropical-dev')}catch(e){}closeM('m-dev-panel');renderPetCard();toast('🚪 Dev mode desactivado')}
+/* v10.13.12: toggle para debug overlay (solo aparece cuando el dev quiere verlo) */
+function isDebugOverlayEnabled(){
+  try{return window.localStorage&&window.localStorage.getItem('tropical-debug-overlay')==='1'}catch(e){return false}
+}
+function toggleDebugOverlay(){
+  var now=isDebugOverlayEnabled();
+  try{
+    if(now)window.localStorage.removeItem('tropical-debug-overlay');
+    else window.localStorage.setItem('tropical-debug-overlay','1');
+  }catch(e){}
+  closeM('m-dev-panel');
+  renderPetCard(); /* re-render para mostrar/ocultar overlay */
+  toast(now?'🔍 Debug overlay OFF':'🔍 Debug overlay ON');
+}
 function devCheckURL(){
   try{
     var p=new URLSearchParams(window.location.search);

@@ -2417,6 +2417,45 @@ function hasWaterInInventory(pet){
   return false;
 }
 
+/* v10.13.14: la mascota elige qué comer/beber del inventario.
+   Prefiere premium-plus > premium > standard > basic. Si en un mismo
+   tier hay varias opciones, elige al azar entre las que tengan stock. */
+var TIER_PRIORITY={'premium-plus':4,'premium':3,'standard':2,'basic':1};
+
+function pickBestFoodFromInventory(pet){
+  if(!pet||!pet.inventario_comida)return null;
+  var foods=getPetFood(pet.tipo||'gato');
+  var candidates=[];
+  var bestTier=0;
+  for(var i=0;i<foods.length;i++){
+    var f=foods[i];
+    var owned=pet.inventario_comida[f.id]||0;
+    if(owned<=0)continue;
+    var tp=TIER_PRIORITY[f.tier]||0;
+    if(tp>bestTier){bestTier=tp;candidates=[f]}
+    else if(tp===bestTier)candidates.push(f);
+  }
+  if(candidates.length===0)return null;
+  /* Random entre los del tier más alto */
+  return candidates[Math.floor(Math.random()*candidates.length)];
+}
+
+function pickBestWaterFromInventory(pet){
+  if(!pet||!pet.inventario_agua)return null;
+  var candidates=[];
+  var bestTier=0;
+  for(var i=0;i<PET_WATER_ITEMS.length;i++){
+    var w=PET_WATER_ITEMS[i];
+    var owned=pet.inventario_agua[w.id]||0;
+    if(owned<=0)continue;
+    var tp=TIER_PRIORITY[w.tier]||0;
+    if(tp>bestTier){bestTier=tp;candidates=[w]}
+    else if(tp===bestTier)candidates.push(w);
+  }
+  if(candidates.length===0)return null;
+  return candidates[Math.floor(Math.random()*candidates.length)];
+}
+
 /* v10.13.13: ITEMS DE AGUA — 3 tamaños con distinto +sed.
    Todos iguales para todas las especies (el agua es agua). */
 var PET_WATER_ITEMS=[
@@ -3705,7 +3744,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.13</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.14</div>';
   }
   h+='</div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
@@ -4231,9 +4270,9 @@ function initBallDrag(){
 
 function openBowl(){
   var pet=P&&P.mascota;if(!pet)return;
-  /* If bowl already has food, gentle reminder */
-  if(pet.bowl_filled_at){toast('🍽️ El plato ya tiene comida');return}
-  /* If sleeping, don't disturb */
+  /* v10.13.14: tocar el plato abre menú para comprar/ver comida del inventario.
+     La mascota come sola cuando tiene hambre <30%, elige la mejor del inventario.
+     El menú ahora es INFORMATIVO: muestra qué hay y permite comprar más directo. */
   if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
   openM('m-pet-feed');
   renderFeedMenu();
@@ -4241,11 +4280,8 @@ function openBowl(){
 
 function openWaterBowl(){
   var pet=P&&P.mascota;if(!pet)return;
-  /* If sleeping, don't disturb */
+  /* v10.13.14: mismo que openBowl pero para agua */
   if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
-  /* v10.13.13: si no tiene sed, no abrir menú */
-  if((pet.sed||0)>=95){toast('💧 No tiene sed ahora');return}
-  /* Abrir menú de agua (similar al feed menu) */
   openM('m-pet-drink');
   renderDrinkMenu();
 }
@@ -4268,10 +4304,15 @@ function consumeWater(waterId){
   checkPetLevelUp(pet);savePet();
   closeM('m-pet-drink');
   updatePetStatsInline();
-  /* Walk to water bowl, then play drinking animation (uses eating sprite) */
+  /* v10.13.14: walk to water, drinking anim + partículas siempre (mix opción 3) */
   setTimeout(function(){
     petWalkTo(POS_WATER,function(){
-      petSpritePlayOnce('eating');
+      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
+        petSpritePlayOnce('eating');
+      }
+      if(typeof showEatDrinkParticles==='function'){
+        showEatDrinkParticles('💧','#22d3ee');
+      }
     });
   },100);
   /* Flag de "tomando" se limpia tras ~3s para que el plato pueda
@@ -4368,24 +4409,28 @@ function consumeFood(foodId){
   pet.energia=Math.min(100,(pet.energia||0)+(food.energy||0));
   pet.xp=(pet.xp||0)+food.xp;
   pet.ultima_comida=new Date().toISOString().slice(0,10);
-  /* Fill the bowl visually */
   pet.bowl_filled_at=Date.now();
   pet.bowl_food=foodId;
   checkPetLevelUp(pet);savePet();
   closeM('m-pet-feed');
   updatePetStatsInline();
-  /* Walk to food bowl, then play eating animation.
-     NOTE: The ToffeeCraft eating sprite has a bowl drawn INSIDE the animation
-     frames, so we hide the scene bowl during eating to avoid the "double bowl"
-     visual bug. The scene bowl is restored once eating finishes. */
+  /* v10.13.14: walk to bowl, eating anim.
+     Gato: oculta el bowl (su sprite tiene uno propio dibujado).
+     Resto: mantiene bowl visible + partículas flotantes con emoji de la comida. */
+  var isCat=(pet.tipo==='gato');
   setTimeout(function(){
     petWalkTo(POS_FOOD,function(){
       var bowlEl=document.getElementById('pet-bowl-el');
-      if(bowlEl)bowlEl.classList.add('hide-for-eating');
-      petSpritePlayOnce('eating');
+      if(isCat&&bowlEl)bowlEl.classList.add('hide-for-eating');
+      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
+        petSpritePlayOnce('eating');
+      }
+      if(!isCat&&typeof showEatDrinkParticles==='function'){
+        showEatDrinkParticles(food.icon,'#fbbf24');
+      }
     });
   },100);
-  /* Empty the bowl after eating animation completes (~3s after walk) */
+  /* Restaurar estado tras animación */
   setTimeout(function(){
     if(P&&P.mascota){
       P.mascota.bowl_filled_at=null;
@@ -4951,6 +4996,10 @@ function startPetWander(){
   if(_petTimeInterval)clearInterval(_petTimeInterval);
   _petTimeInterval=setInterval(updateTimeOverlay,60000);
 }
+/* v10.13.14: flags del comportamiento autónomo para evitar loops */
+var _petLastAutoAction=0;
+var _petFrustratedUntil=0; /* timestamp: si dio vueltas y no hay comida, no lo repite enseguida */
+
 function petWander(){
   if(_walkPaused)return; /* don't interrupt action walks */
   var w=document.querySelector('.pet-walker');
@@ -4962,22 +5011,35 @@ function petWander(){
   if(!pet)return;
   var mood=getMood(pet);
   if(mood==='sleeping'){
-    /* v10.13.2c: si se durmió lejos de la cama (p.ej. tras quedar sin
-       energía en medio del cuarto), caminar a la cama. Si ya está cerca
-       de la cama, quedarse quieta. */
+    /* v10.13.2c: si se durmió lejos de la cama, caminar a la cama */
     if(typeof POS_BED==='number'&&Math.abs(_lastWalkerLeft-POS_BED)>3){
       petWalkTo(POS_BED);
     }
     return;
   }
-  /* Free zone: 35% to 58% — between left decorations (5-30%) and right items (62-93%) */
+  /* v10.13.14: comportamiento autónomo — revisar necesidades antes del wander
+     normal. Cooldown de 30s entre auto-acciones para que no spammee. */
+  var now=Date.now();
+  if(now-_petLastAutoAction>30000&&now>_petFrustratedUntil){
+    /* Prioridad: sed < hambre < juguete (ya existe) */
+    var sed=pet.sed||100;
+    var hambre=pet.hambre||100;
+    if(sed<30){
+      _petLastAutoAction=now;
+      petAutoDrink();
+      return;
+    }
+    if(hambre<30){
+      _petLastAutoAction=now;
+      petAutoEat();
+      return;
+    }
+  }
+  /* Wander normal */
   var newLeft=35+Math.random()*23;
-  /* Set facing direction based on movement */
   var direction=newLeft<_lastWalkerLeft?'left':'right';
   setPetFacing(direction);
-  /* Add walking bounce for the duration of the slow wander (4.5s) */
   w.classList.add('walking');
-  /* v10.9: walk animation for dogs/bunnies */
   var hasW=_currentPetController&&_currentPetController.config&&_currentPetController.config.walk;
   if(hasW&&_currentPetController)_currentPetController.setState('walk');
   w.style.left=newLeft+'%';
@@ -4985,10 +5047,132 @@ function petWander(){
   setTimeout(function(){
     var wEnd=document.querySelector('.pet-walker');
     if(wEnd)wEnd.classList.remove('walking');
-    /* v10.12-fase1c: tras pasear, refleja mood actual (no idle forzado).
-       Si está triste vuelve a sad, si está hambrienta vuelve a sleepy. */
     if(hasW&&_currentPetController)applyPetMoodState();
   },4600);
+}
+
+/* v10.13.14: la mascota va sola al plato de comida.
+   - Si hay comida en inventario: elige la mejor (prefiere premium),
+     camina al plato, reproduce animación eating, aplica stats.
+   - Si NO hay comida: camina al plato, pone cara triste, muestra
+     particulas "🍽️?" flotantes, se queda un rato, luego se aleja.
+     Entra en "frustrated" por 60s para no repetir la escena. */
+function petAutoEat(){
+  var pet=P&&P.mascota;if(!pet)return;
+  var bestFood=pickBestFoodFromInventory(pet);
+  var walker=document.querySelector('.pet-walker');
+  if(!walker)return;
+  _walkPaused=true;
+  walker.classList.add('walking','fast');
+  var hasW=_currentPetController&&_currentPetController.config&&_currentPetController.config.walk;
+  if(hasW&&_currentPetController)_currentPetController.setState('walk');
+  petWalkTo(POS_FOOD,function(){
+    walker.classList.remove('walking','fast');
+    if(bestFood){
+      /* Hay comida: comer */
+      pet.inventario_comida[bestFood.id]=(pet.inventario_comida[bestFood.id]||0)-1;
+      pet.hambre=Math.min(100,(pet.hambre||0)+bestFood.hunger);
+      pet.felicidad=Math.min(100,(pet.felicidad||0)+bestFood.happy);
+      pet.energia=Math.min(100,(pet.energia||0)+(bestFood.energy||0));
+      pet.xp=(pet.xp||0)+bestFood.xp;
+      pet.ultima_comida=new Date().toISOString().slice(0,10);
+      checkPetLevelUp(pet);
+      savePet();updatePetStatsInline();
+      /* Animación eating */
+      var isCat=(pet.tipo==='gato');
+      var bowlEl=document.getElementById('pet-bowl-el');
+      if(isCat&&bowlEl)bowlEl.classList.add('hide-for-eating'); /* cat sprite tiene bowl propio */
+      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
+        petSpritePlayOnce('eating');
+      }
+      /* Partículas para no-gato (opción 3 mix) */
+      if(!isCat)showEatDrinkParticles(bestFood.icon,'#fbbf24');
+      setTimeout(function(){
+        if(bowlEl)bowlEl.classList.remove('hide-for-eating');
+        updatePetBowl();
+        _walkPaused=false;
+        applyPetMoodState();
+      },3500);
+      toast(bestFood.icon+' '+(pet.nombre||'Tu mascota')+' comió '+bestFood.name+' · +'+bestFood.xp+' XP');
+    }else{
+      /* Sin comida: cara triste + partículas de "quiero comer" */
+      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.sad){
+        petSpritePlayOnce('sad');
+      }
+      showEatDrinkParticles('🍽️','#ef4444');
+      showEatDrinkParticles('❓','#ef4444');
+      _petFrustratedUntil=Date.now()+60000; /* 60s sin repetir */
+      setTimeout(function(){
+        _walkPaused=false;
+        applyPetMoodState();
+      },2500);
+      toast('😟 '+(pet.nombre||'Tu mascota')+' quiere comer pero no hay comida');
+    }
+  });
+}
+
+function petAutoDrink(){
+  var pet=P&&P.mascota;if(!pet)return;
+  var bestWater=pickBestWaterFromInventory(pet);
+  var walker=document.querySelector('.pet-walker');
+  if(!walker)return;
+  _walkPaused=true;
+  walker.classList.add('walking','fast');
+  var hasW=_currentPetController&&_currentPetController.config&&_currentPetController.config.walk;
+  if(hasW&&_currentPetController)_currentPetController.setState('walk');
+  petWalkTo(POS_WATER,function(){
+    walker.classList.remove('walking','fast');
+    if(bestWater){
+      pet.inventario_agua[bestWater.id]=(pet.inventario_agua[bestWater.id]||0)-1;
+      pet.sed=Math.min(100,(pet.sed||0)+bestWater.sed);
+      pet.felicidad=Math.min(100,(pet.felicidad||0)+bestWater.happy);
+      pet.xp=(pet.xp||0)+bestWater.xp;
+      pet.water_last_refill=Date.now();
+      checkPetLevelUp(pet);
+      savePet();updatePetStatsInline();
+      /* Animación: eating sprite como stand-in para beber */
+      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
+        petSpritePlayOnce('eating');
+      }
+      /* Partículas azules siempre (mix: incluso para gato) */
+      showEatDrinkParticles('💧','#22d3ee');
+      setTimeout(function(){
+        updatePetBowl();
+        _walkPaused=false;
+        applyPetMoodState();
+      },3500);
+      toast(bestWater.icon+' '+(pet.nombre||'Tu mascota')+' bebió '+bestWater.name+' · +'+bestWater.xp+' XP');
+    }else{
+      /* Sin agua */
+      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.sad){
+        petSpritePlayOnce('sad');
+      }
+      showEatDrinkParticles('💧','#ef4444');
+      showEatDrinkParticles('❓','#ef4444');
+      _petFrustratedUntil=Date.now()+60000;
+      setTimeout(function(){
+        _walkPaused=false;
+        applyPetMoodState();
+      },2500);
+      toast('😟 '+(pet.nombre||'Tu mascota')+' tiene sed pero no hay agua');
+    }
+  });
+}
+
+/* v10.13.14: partículas flotantes sobre la mascota (eating/drinking/need) */
+function showEatDrinkParticles(emoji,color){
+  var scene=document.querySelector('.pet-scene');
+  var walker=document.querySelector('.pet-walker');
+  if(!scene||!walker)return;
+  var sceneRect=scene.getBoundingClientRect();
+  var walkerRect=walker.getBoundingClientRect();
+  var xRel=walkerRect.left-sceneRect.left+walkerRect.width/2;
+  var yRel=walkerRect.top-sceneRect.top-8;
+  var el=document.createElement('div');
+  el.textContent=emoji;
+  el.style.cssText='position:absolute;left:'+xRel+'px;top:'+yRel+'px;font-size:18px;pointer-events:none;z-index:25;animation:heartPop 1.8s ease-out forwards;text-shadow:0 2px 4px rgba(0,0,0,.5);color:'+(color||'#fff');
+  scene.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el)},1900);
 }
 
 /* ===== DEV MODE — para probar mecánicas sin esperar ===== */

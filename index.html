@@ -1182,11 +1182,21 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <button class="bs" onclick="closeM('m-pet-feed')">Cerrar</button>
 </div></div>
 
+<!-- v10.13.13: modal de agua (replica la estructura del feed) -->
+<div id="m-pet-drink" class="modal"><div class="mbox">
+  <div class="mtt">💧 Elegir agua <button class="m-close" onclick="closeM('m-pet-drink')">✕</button></div>
+  <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Tus puntitos: </span><span style="font-family:'Fredoka',sans-serif;font-size:18px;color:var(--gold)" id="drink-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🐾</span></div>
+  <div class="feed-grid" id="drink-grid"></div>
+  <div style="font-size:9px;color:var(--txt3);text-align:center;margin-top:8px;line-height:1.4">Comprá agua en Tropi Shop para darle de beber</div>
+  <button class="bs" onclick="closeM('m-pet-drink')">Cerrar</button>
+</div></div>
+
 <div id="m-pet-shop" class="modal"><div class="mbox">
   <div class="mtt">🛍️ Tropi Shop <button class="m-close" onclick="closeM('m-pet-shop')">✕</button></div>
   <div style="text-align:center;margin-bottom:10px"><span style="font-size:11px;color:var(--txt2)">Puntitos: </span><span style="font-family:'Fredoka',sans-serif;font-size:16px;color:var(--gold)" id="shop-croquetas">0</span><span style="font-size:11px;color:var(--txt3)"> 🐾</span></div>
   <div style="display:flex;gap:0;margin-bottom:12px;background:var(--card2);border-radius:25px;padding:3px;flex-wrap:wrap">
     <button class="cmt-btn a" onclick="shopTab('comida')" id="st-food">🍱 Comida</button>
+    <button class="cmt-btn" onclick="shopTab('agua')" id="st-water">💧 Agua</button>
     <button class="cmt-btn" onclick="shopTab('juguetes')" id="st-toy">🎾 Juguetes</button>
     <button class="cmt-btn" onclick="shopTab('decoracion')" id="st-hab">🛋️ Decor</button>
     <button class="cmt-btn" onclick="shopTab('micuarto')" id="st-room">🏠 Mi Cuarto</button>
@@ -2392,6 +2402,29 @@ var PET_FOOD_BY_TYPE={
 };
 function getPetFood(type){return PET_FOOD_BY_TYPE[type]||PET_FOOD_BY_TYPE.gato}
 function getFoodById(type,id){var arr=getPetFood(type);for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return null}
+/* v10.13.13: ¿la mascota tiene al menos 1 unidad de comida en inventario? */
+function hasFoodInInventory(pet){
+  if(!pet||!pet.inventario_comida)return false;
+  var inv=pet.inventario_comida;
+  for(var k in inv){if(inv.hasOwnProperty(k)&&(inv[k]||0)>0)return true}
+  return false;
+}
+/* v10.13.13: ¿tiene al menos 1 unidad de agua en inventario? */
+function hasWaterInInventory(pet){
+  if(!pet||!pet.inventario_agua)return false;
+  var inv=pet.inventario_agua;
+  for(var k in inv){if(inv.hasOwnProperty(k)&&(inv[k]||0)>0)return true}
+  return false;
+}
+
+/* v10.13.13: ITEMS DE AGUA — 3 tamaños con distinto +sed.
+   Todos iguales para todas las especies (el agua es agua). */
+var PET_WATER_ITEMS=[
+  {id:'sorbo',    name:'Sorbo',         icon:'💧',tier:'basic',       cost:5, sed:25, happy:2, xp:3, desc:'Un traguito rápido'},
+  {id:'media',    name:'Media botella', icon:'🥤',tier:'standard',    cost:10,sed:50, happy:5, xp:5, desc:'Hidratación a medias'},
+  {id:'completa', name:'Botella llena', icon:'🧃',tier:'premium',     cost:18,sed:100,happy:10,xp:8, desc:'Hidratación total'}
+];
+function getWaterById(id){for(var i=0;i<PET_WATER_ITEMS.length;i++)if(PET_WATER_ITEMS[i].id===id)return PET_WATER_ITEMS[i];return null}
 function getBasicFoodId(type){var arr=getPetFood(type);for(var i=0;i<arr.length;i++)if(arr[i].tier==='basic')return arr[i].id;return null}
 var TIER_LABELS={'basic':{label:'Básica',color:'#94a3b8'},'standard':{label:'Estándar',color:'#22d3ee'},'premium':{label:'Premium 😊',color:'#a855f7'},'premium-plus':{label:'Premium 🌟',color:'#fbbf24'}};
 /* Backwards compatibility - default food list */
@@ -3672,7 +3705,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.12</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.13</div>';
   }
   h+='</div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
@@ -3757,6 +3790,16 @@ function petDailyUpdate(pet){
   if(!pet.migracion_v3){
     if(typeof ensureInventoryStructure==='function')ensureInventoryStructure(pet);
     pet.migracion_v3=true;
+  }
+  /* === MIGRATION v4 (v10.13.13): inventario de agua + humor caricias === */
+  if(!pet.migracion_v4){
+    if(!pet.inventario_agua)pet.inventario_agua={};
+    /* Regalar 2 sorbos a mascotas existentes para no dejarlas sin agua */
+    if(!pet.inventario_agua.sorbo)pet.inventario_agua.sorbo=2;
+    pet.caricias_hoy=pet.caricias_hoy||0;
+    pet.caricias_fecha=pet.caricias_fecha||'';
+    pet.caricias_tolerancia=pet.caricias_tolerancia||0;
+    pet.migracion_v4=true;
   }
   var nowTs=Date.now();
   var nowDate=new Date().toISOString().slice(0,10);
@@ -3857,7 +3900,7 @@ function adoptPet(){
   var name=document.getElementById('pet-name-input').value.trim()||'Mascota';
   var colores=generatePetColors(selectedPetType);
   var inventario={};inventario[getBasicFoodId(selectedPetType)]=5;
-  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,sed:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0,inventario_comida:inventario,bowl_filled_at:null,bowl_food:null,water_last_refill:null,migracion_v2:true,migracion_v3:true};
+  var pet={tipo:selectedPetType,nombre:name,genero:selectedPetGender,nivel:1,xp:0,felicidad:80,hambre:70,energia:100,sed:100,croquetas:15,croquetas_total:15,ultimo_login:new Date().toISOString().slice(0,10),ultima_energia_ts:Date.now(),racha_dias:1,accesorios:[],juguete_activo:null,juguete_expira:null,habitat:'default',habitats_owned:['default'],nacimiento:new Date().toISOString().slice(0,10),juegos_hoy:0,ultimo_juego:new Date().toISOString().slice(0,10),comidas_hoy:{},ultima_comida:new Date().toISOString().slice(0,10),colores:colores,tutorial_step:0,inventario_comida:inventario,inventario_agua:{sorbo:2},bowl_filled_at:null,bowl_food:null,water_last_refill:null,water_drinking_at:null,caricias_hoy:0,caricias_fecha:'',caricias_tolerancia:0,migracion_v2:true,migracion_v3:true,migracion_v4:true};
   /* v10.13.3a: inicializar estructura de inventario + equipamiento */
   if(typeof ensureInventoryStructure==='function')ensureInventoryStructure(pet);
   P.mascota=pet;savePet();closeM('m-pet-select');renderPetCard();
@@ -3878,11 +3921,17 @@ function updatePetBowl(){
   var tipo=pet.tipo||'gato';
   /* Asegurar estructura de inventario (idempotente) */
   if(typeof ensureInventoryStructure==='function')ensureInventoryStructure(pet);
-  /* === FOOD BOWL === */
+  /* === FOOD BOWL (v10.13.13) ===
+     Plato LLENO si la emisora tiene comida en inventario.
+     VACÍO si no hay comida comprada.
+     También se considera "lleno" si bowl_filled_at está seteado (eating
+     animation en curso) — mantiene compat con el hide-for-eating que
+     oculta el bowl durante la animación. */
   var foodEl=document.getElementById('bowl-sprite-el');
   if(foodEl){
-    var isFull=!!pet.bowl_filled_at;
-    /* TODO Push 2: usar item equipado si tiene variantes full/empty */
+    var hasStock=hasFoodInInventory(pet);
+    var eatingNow=!!pet.bowl_filled_at;
+    var isFull=hasStock||eatingNow;
     foodEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,isFull?'food_full':'food_empty')+'")';
     var bowlEl=document.getElementById('pet-bowl-el');
     if(bowlEl){
@@ -3890,16 +3939,18 @@ function updatePetBowl(){
       bowlEl.classList.toggle('empty-hint',!isFull&&hambreLow);
     }
   }
-  /* === WATER BOWL === */
+  /* === WATER BOWL (v10.13.13) ===
+     Plato LLENO si hay agua en inventario. VACÍO si no. */
   var waterEl=document.getElementById('water-sprite-el');
   if(waterEl){
-    var sedLevel=pet.sed||0;
-    var waterIsFull=sedLevel>=30;
+    var hasWaterStock=hasWaterInInventory(pet);
+    var drinkingNow=!!pet.water_drinking_at;
+    var waterIsFull=hasWaterStock||drinkingNow;
     waterEl.style.backgroundImage='url("'+getAccessoryUrl(tipo,waterIsFull?'water_full':'water_empty')+'")';
     var wbEl=document.getElementById('water-bowl-el');
     if(wbEl){
-      var sedLow=sedLevel<50;
-      wbEl.classList.toggle('empty-hint',sedLow);
+      var sedLow=(pet.sed||0)<50;
+      wbEl.classList.toggle('empty-hint',sedLow&&hasWaterStock);
     }
   }
   /* === TOY BALL === */
@@ -4192,29 +4243,80 @@ function openWaterBowl(){
   var pet=P&&P.mascota;if(!pet)return;
   /* If sleeping, don't disturb */
   if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
-  /* Cooldown check — 30 second between refills to prevent spam */
-  var now=Date.now();
-  var lastRefill=pet.water_last_refill||0;
-  if(now-lastRefill<30000){
-    var sec=Math.ceil((30000-(now-lastRefill))/1000);
-    toast('💧 Ya tomó agua hace poco · '+sec+'s');
-    return;
-  }
-  /* If already full enough, no need */
+  /* v10.13.13: si no tiene sed, no abrir menú */
   if((pet.sed||0)>=95){toast('💧 No tiene sed ahora');return}
-  /* Refill water — free, instant */
-  pet.sed=100;
-  pet.water_last_refill=now;
-  pet.felicidad=Math.min(100,(pet.felicidad||0)+5); /* small happiness boost */
-  pet.xp=(pet.xp||0)+2;
-  savePet();updatePetStatsInline();
-  /* Walk to water bowl, then play drinking animation */
+  /* Abrir menú de agua (similar al feed menu) */
+  openM('m-pet-drink');
+  renderDrinkMenu();
+}
+
+/* v10.13.13: consumir una unidad de agua del inventario */
+function consumeWater(waterId){
+  var pet=P.mascota;if(!pet)return;
+  if(!pet.inventario_agua)pet.inventario_agua={};
+  if((pet.inventario_agua[waterId]||0)<=0){toast('No te queda esa agua');return}
+  var water=getWaterById(waterId);
+  if(!water)return;
+  /* Consumir del inventario */
+  pet.inventario_agua[waterId]=(pet.inventario_agua[waterId]||0)-1;
+  /* Aplicar stats */
+  pet.sed=Math.min(100,(pet.sed||0)+water.sed);
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+water.happy);
+  pet.xp=(pet.xp||0)+water.xp;
+  pet.water_last_refill=Date.now();
+  pet.water_drinking_at=Date.now();
+  checkPetLevelUp(pet);savePet();
+  closeM('m-pet-drink');
+  updatePetStatsInline();
+  /* Walk to water bowl, then play drinking animation (uses eating sprite) */
   setTimeout(function(){
     petWalkTo(POS_WATER,function(){
-      petSpritePlayOnce('eating'); /* eating anim used as drinking stand-in */
+      petSpritePlayOnce('eating');
     });
   },100);
-  toast('💧 '+(pet.nombre||'Tu mascota')+' va a beber agua fresca');
+  /* Flag de "tomando" se limpia tras ~3s para que el plato pueda
+     volver a vacío si no hay más agua */
+  setTimeout(function(){
+    if(P&&P.mascota){
+      P.mascota.water_drinking_at=null;
+      savePet();
+      updatePetBowl();
+    }
+  },3500);
+  toast('💧 '+(pet.nombre||'Tu mascota')+' bebe '+water.name.toLowerCase()+' (+'+water.sed+' sed · +'+water.xp+' XP)');
+}
+
+function renderDrinkMenu(){
+  var pet=P.mascota;if(!pet)return;
+  var coinsEl=document.getElementById('drink-croquetas');
+  if(coinsEl)coinsEl.textContent=fmt(pet.croquetas||0);
+  if(!pet.inventario_agua)pet.inventario_agua={};
+  var inv=pet.inventario_agua;
+  var totalItems=0;
+  for(var k in inv)totalItems+=(inv[k]||0);
+  var h='';
+  if(totalItems===0){
+    h+='<div style="grid-column:1/-1;text-align:center;padding:20px 12px">';
+    h+='<div style="font-size:36px;margin-bottom:8px">🚰</div>';
+    h+='<div style="font-family:Fredoka,sans-serif;font-size:14px;color:var(--gold);margin-bottom:6px">No tenés agua</div>';
+    h+='<div style="font-size:11px;color:var(--txt2);line-height:1.4;margin-bottom:12px">Comprá agua en la Tropi Shop para darle a '+(pet.nombre||'tu mascota')+'.</div>';
+    h+='<button class="bp" onclick="closeM(\'m-pet-drink\');openM(\'m-pet-shop\');shopTab(\'agua\')">💧 Comprar agua</button>';
+    h+='</div>';
+  }else{
+    for(var w=0;w<PET_WATER_ITEMS.length;w++){
+      var wi=PET_WATER_ITEMS[w];
+      var owned=inv[wi.id]||0;
+      if(owned<=0)continue;
+      h+='<div class="feed-item" onclick="consumeWater(\''+wi.id+'\')" style="cursor:pointer">';
+      h+='<div class="fi-icon" style="font-size:32px">'+wi.icon+'</div>';
+      h+='<div class="fi-name">'+wi.name+'</div>';
+      h+='<div class="fi-stats">+'+wi.sed+' 💧 · +'+wi.happy+' 😊 · +'+wi.xp+' XP</div>';
+      h+='<div class="fi-owned">x'+owned+'</div>';
+      h+='</div>';
+    }
+    h+='<div style="grid-column:1/-1;text-align:center;margin-top:6px;padding-top:8px;border-top:1px dashed rgba(168,85,247,.15)"><a href="javascript:closeM(\'m-pet-drink\');openM(\'m-pet-shop\');shopTab(\'agua\')" style="font-size:10px;color:var(--cyan);text-decoration:none">🛒 Comprar más agua</a></div>';
+  }
+  document.getElementById('drink-grid').innerHTML=h;
 }
 
 function renderFeedMenu(){
@@ -4584,6 +4686,33 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
 
 /* ===== TAP-TO-PET (Tom Cat style interaction) ===== */
 var _petTapSaveTimer=null;
+/* v10.13.13: caricias con sistema de humor random y animación tickle.
+   - Cada día la mascota elige (random seeded por fecha+nombre) cuántas
+     caricias tolera antes de hartarse. Rango: 5 a 20.
+   - Cooldown = duración de la animación tickle/excited (~1200ms)
+   - XP +3 por caricia, felicidad +3
+   - Cuando se harta: animación sad durante unos segundos y rechaza
+     más caricias por un rato (~20s), luego se le pasa. */
+var _caricia_cooldown=false;
+var _caricia_harta_until=0;
+
+function getCariciasToleranciaHoy(pet){
+  /* Seed determinista: fecha + nombre → número estable todo el día */
+  var fecha=new Date().toISOString().slice(0,10);
+  if(pet.caricias_fecha!==fecha){
+    /* Nuevo día: recalcular tolerancia y resetear contador */
+    var seed=0;
+    var str=fecha+(pet.nombre||'x');
+    for(var i=0;i<str.length;i++){seed=((seed<<5)-seed+str.charCodeAt(i))|0}
+    /* Hash → rango 5-20 */
+    var tol=5+(Math.abs(seed)%16);
+    pet.caricias_tolerancia=tol;
+    pet.caricias_hoy=0;
+    pet.caricias_fecha=fecha;
+  }
+  return pet.caricias_tolerancia||10;
+}
+
 function petTap(e){
   var pet=P.mascota;if(!pet)return;
   var mood=getMood(pet);
@@ -4592,47 +4721,79 @@ function petTap(e){
     toast('💤 Está durmiendo, déjala descansar');
     return;
   }
-  /* Daily tap counter — max 30 taps for XP per day */
-  var hoy=new Date().toISOString().slice(0,10);
-  if(pet.taps_dia!==hoy){pet.taps_count=0;pet.taps_dia=hoy}
-  var rewarded=false;
-  var capReached=(pet.taps_count||0)>=30;
-  if(!capReached){
-    pet.felicidad=Math.min(100,(pet.felicidad||0)+1);
-    pet.xp=(pet.xp||0)+1;
-    pet.taps_count=(pet.taps_count||0)+1;
-    rewarded=true;
-    checkPetLevelUp(pet);
+  var now=Date.now();
+  /* Si está harta, rechazar hasta que pase el tiempo */
+  if(now<_caricia_harta_until){
+    var sec=Math.ceil((_caricia_harta_until-now)/1000);
+    showTapParticle(e,'😤','#ef4444');
+    toast('😤 Ya no quiere más caricias por ahora · '+sec+'s');
+    return;
   }
-  /* Visual: floating '+1 XP' text (or heart if cap reached) */
-  if(rewarded){
-    showTapParticle(e,'+1 XP','#fbbf24');
-  }else{
-    showTapParticle(e,'💖','#ec4899');
+  /* Cooldown = mientras corre la animación de la caricia anterior */
+  if(_caricia_cooldown){
+    showTapParticle(e,'⏳','#a855f7');
+    return;
   }
-  /* Subtle bounce on sprite wrapper, NOT on sprite itself (preserves facing) */
-  var spr=document.getElementById('pet-sprite-el');
-  if(spr){spr.style.transform='scale(1.06)';setTimeout(function(){spr.style.transform=''},140)}
-  /* Telegram haptic feedback */
+  /* Calcular tolerancia de hoy (determinista por fecha+nombre) */
+  var tolerancia=getCariciasToleranciaHoy(pet);
+  var count=(pet.caricias_hoy||0)+1;
+  pet.caricias_hoy=count;
+  /* Si superó tolerancia → hartazgo */
+  if(count>tolerancia){
+    _caricia_harta_until=now+20000; /* 20s de pausa */
+    pet.caricias_hoy=0; /* resetear para que después de 20s pueda volver */
+    showTapParticle(e,'😤','#ef4444');
+    /* Animación de molestia: sad si existe, sino laydown */
+    if(_currentPetController){
+      var hasSad=_currentPetController.config&&_currentPetController.config.sad;
+      petSpritePlayOnce(hasSad?'sad':'laydown');
+    }
+    toast('😤 '+(pet.nombre||'Tu mascota')+' dice: ¡ya no más caricias por ahora!');
+    savePet();updatePetStatsInline();
+    return;
+  }
+  /* Caricia normal: +3 XP, +3 felicidad, animación tickle */
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+3);
+  pet.xp=(pet.xp||0)+3;
+  checkPetLevelUp(pet);
+  showTapParticle(e,'+3 XP','#fbbf24');
+  /* Activar cooldown durante animación */
+  _caricia_cooldown=true;
+  /* Elegir animación: tickle si existe, sino excited, sino bounce */
+  if(_currentPetController){
+    var hasTickle=_currentPetController.config&&_currentPetController.config.tickle;
+    var hasExcited=_currentPetController.config&&_currentPetController.config.excited;
+    var anim=hasTickle?'tickle':(hasExcited?'excited':null);
+    if(anim){
+      petSpritePlayOnce(anim);
+    }else{
+      /* Fallback: bounce CSS */
+      var spr=document.getElementById('pet-sprite-el');
+      if(spr){spr.style.transform='scale(1.12)';setTimeout(function(){spr.style.transform=''},220)}
+    }
+  }
+  /* Cooldown = 1200ms (duración aproximada de animación) */
+  setTimeout(function(){_caricia_cooldown=false},1200);
+  /* Haptic feedback */
   try{if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback){window.Telegram.WebApp.HapticFeedback.impactOccurred('light')}}catch(err){}
-  /* Show hint once per session explaining what taps do */
+  /* Hint una vez por sesión */
   try{
     if(window.sessionStorage&&!window.sessionStorage.getItem('pet-tap-hint-shown')){
       window.sessionStorage.setItem('pet-tap-hint-shown','1');
       setTimeout(function(){
-        toast('✨ Cada caricia suma +1 XP y felicidad · máx 30 al día');
+        toast('✨ Cada caricia suma +3 XP y felicidad · tu mascota se cansa de caricias distinto cada día');
       },600);
     }
   }catch(err){}
-  /* When cap is reached, gentle notice */
-  if(capReached&&(pet.taps_count||0)===30){
-    toast('💝 '+(pet.nombre||'Tu mascota')+' ya recibió todas las caricias de hoy');
+  /* Aviso cuando se acerca al límite (80%) */
+  if(count===Math.floor(tolerancia*0.8)){
+    setTimeout(function(){
+      toast('💭 '+(pet.nombre||'Tu mascota')+' ya recibió bastantes caricias...');
+    },800);
   }
-  /* Debounced save (don't hammer API) */
-  if(rewarded){
-    if(_petTapSaveTimer)clearTimeout(_petTapSaveTimer);
-    _petTapSaveTimer=setTimeout(function(){savePet();updatePetStatsInline()},2000);
-  }
+  /* Debounced save */
+  if(_petTapSaveTimer)clearTimeout(_petTapSaveTimer);
+  _petTapSaveTimer=setTimeout(function(){savePet();updatePetStatsInline()},2000);
 }
 function showTapParticle(e,text,color){
   var el=document.createElement('div');
@@ -5014,8 +5175,9 @@ function shopTab(tab){
   shopMode=tab;
   /* v10.13.3c: tabs rediseñadas. 'habitat' legacy mapea a 'decoracion'. */
   if(tab==='habitat')shopMode='decoracion';
-  var tabIds=['st-food','st-toy','st-hab','st-room','st-adopt'];
-  var tabNames=['comida','juguetes','decoracion','micuarto','adoptar'];
+  /* v10.13.13: nueva tab 'agua' */
+  var tabIds=['st-food','st-water','st-toy','st-hab','st-room','st-adopt'];
+  var tabNames=['comida','agua','juguetes','decoracion','micuarto','adoptar'];
   for(var i=0;i<tabIds.length;i++){
     var btn=document.getElementById(tabIds[i]);
     if(btn)btn.classList.toggle('a',tabNames[i]===shopMode);
@@ -5042,6 +5204,20 @@ function renderShop(){
       h+='<div class="fi-name">'+f.name+' <span style="display:block;color:'+tier.color+';font-size:8px;margin-top:1px">'+tier.label+'</span></div>';
       h+='<div class="fi-cost">🐾 '+f.cost+(owned>0?' <span style="color:var(--cyan);font-size:9px">×'+owned+'</span>':'')+'</div>';
       h+='<div class="fi-xp">'+(f.hunger?'+'+f.hunger+' 🍽️ ':'')+(f.happy?'+'+f.happy+' 😊 ':'')+(f.energy?'+'+f.energy+' ⚡':'')+'</div></div>';
+    }
+  }else if(shopMode==='agua'){
+    /* v10.13.13: Tab Agua — 3 tamaños consumibles (sorbo/media/completa) */
+    if(!pet.inventario_agua)pet.inventario_agua={};
+    h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Tamaños de agua · se acumulan en tu inventario · usalos tocando el plato azul</div>';
+    for(var wi=0;wi<PET_WATER_ITEMS.length;wi++){var wit=PET_WATER_ITEMS[wi];
+      var ownedW=pet.inventario_agua[wit.id]||0;
+      var canBuyW=(pet.croquetas||0)>=wit.cost;
+      var tierW=TIER_LABELS[wit.tier]||TIER_LABELS.basic;
+      h+='<div class="feed-item'+(!canBuyW?' disabled':'')+'" onclick="'+(canBuyW?'buyWaterConsumable(\''+wit.id+'\')':'')+'">';
+      h+='<div class="fi-icon">'+wit.icon+'</div>';
+      h+='<div class="fi-name">'+wit.name+' <span style="display:block;color:'+tierW.color+';font-size:8px;margin-top:1px">'+tierW.label+'</span></div>';
+      h+='<div class="fi-cost">🐾 '+wit.cost+(ownedW>0?' <span style="color:var(--cyan);font-size:9px">×'+ownedW+'</span>':'')+'</div>';
+      h+='<div class="fi-xp">+'+wit.sed+' 💧 · +'+wit.happy+' 😊 · +'+wit.xp+' XP</div></div>';
     }
   }else if(shopMode==='juguetes'){
     /* Tab Juguetes: items del catálogo slot='pelota' con sprites reales */
@@ -5229,6 +5405,17 @@ function buyFoodConsumable(id){
   pet.inventario_comida[id]=(pet.inventario_comida[id]||0)+1;
   savePet();renderShop();renderPetCard();
   toast(f.icon+' ¡'+f.name+' comprado! ×'+pet.inventario_comida[id]+' en inventario');
+}
+/* v10.13.13: comprar consumible de agua */
+function buyWaterConsumable(id){
+  var pet=P.mascota;if(!pet)return;
+  var w=getWaterById(id);
+  if(!w||(pet.croquetas||0)<w.cost){toast('🐾 No tienes suficientes puntitos');return}
+  pet.croquetas-=w.cost;
+  if(!pet.inventario_agua)pet.inventario_agua={};
+  pet.inventario_agua[id]=(pet.inventario_agua[id]||0)+1;
+  savePet();renderShop();renderPetCard();
+  toast(w.icon+' ¡'+w.name+' comprado! ×'+pet.inventario_agua[id]+' en inventario');
 }
 function togAcc(id){var pet=P.mascota;if(!pet||!pet.accesorios)return;var idx=pet.accesorios.indexOf(id);if(idx>-1)pet.accesorios.splice(idx,1);else pet.accesorios.push(id);savePet();renderPetCard();renderShop();toast(idx>-1?'Accesorio quitado':'Accesorio puesto')}
 function buyToy(id){var pet=P.mascota;if(!pet)return;var t=null;for(var i=0;i<PET_TOYS.length;i++)if(PET_TOYS[i].id===id)t=PET_TOYS[i];if(!t||(pet.croquetas||0)<t.cost)return;pet.croquetas-=t.cost;pet.juguete_activo=id;var exp=new Date();exp.setDate(exp.getDate()+t.days);pet.juguete_expira=exp.toISOString().slice(0,10);pet.xp=(pet.xp||0)+10;checkPetLevelUp(pet);savePet();renderShop();renderPetCard();toast('🎾 '+t.name+' activado por '+t.days+' días!')}

@@ -1272,6 +1272,12 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devSwitchPet('gato','retro')">😺 Retro</button>
     <button class="bs" onclick="devSwitchPet('perro','black')">🖤 Vlaky</button>
     <button class="bs" onclick="devSwitchPet('perro','golden')">🦮 Golden</button>
+    <button class="bs" onclick="devSwitchPet('perro','dalmatian')">🐕‍🦺 Dálmata</button>
+    <button class="bs" onclick="devSwitchPet('perro','dogo')">🇦🇷 Dogo</button>
+    <button class="bs" onclick="devSwitchPet('perro','husky')">❄️ Husky</button>
+    <button class="bs" onclick="devSwitchPet('perro','rottweiler')">🦴 Rottie</button>
+    <button class="bs" onclick="devSwitchPet('perro','labrador_blond')">🌾 Labrador</button>
+    <button class="bs" onclick="devSwitchPet('perro','pharaoh')">🏺 Pharaoh</button>
     <button class="bs" onclick="devSwitchPet('conejo','grey')">🐇 Grey</button>
     <button class="bs" onclick="devSwitchPet('pajaro','green')">💚 Green</button>
     <button class="bs" onclick="devSwitchPet('pajaro','blue')">💙 Blue</button>
@@ -2373,6 +2379,41 @@ var PET_TYPES={
   conejo:{name:'Conejita',nameM:'Conejito',desc:'Tierna y saltarina',emoji:'🐰'},
   pajaro:{name:'Pajarita',nameM:'Pajarito',desc:'Alegre y cantarina',emoji:'🐦'}
 };
+
+/* v10.13.17: catálogo de razas/variantes disponibles por especie.
+   Este catálogo será usado por:
+   - v10.13.17: dev panel para testear sprites
+   - v10.13.20: UI de adopción por raza (con costos/niveles)
+   - v10.13.20+: BREED_BONUSES para aplicar personalidades en gameplay
+   Estructura: {id, nombre, tipo, desc, tier, cost, unlock_level, personalidad} */
+var BREEDS_CATALOG={
+  /* PERROS */
+  'black':         {id:'black',         tipo:'perro',nombre:'Cane Corso',       desc:'Tu guardián fiel — te acompaña en cada show',         tier:'default',    cost:0,    unlock_level:1,  personalidad:'+15% felicidad EN VIVO'},
+  'golden':        {id:'golden',        tipo:'perro',nombre:'Golden Retriever', desc:'El alma de cada encuentro — carismático natural',      tier:'basic',      cost:0,    unlock_level:1,  personalidad:'+10% XP por caricia'},
+  'dalmatian':     {id:'dalmatian',     tipo:'perro',nombre:'Dálmata',          desc:'Puro fuego — listo para jugar siempre',                tier:'standard',   cost:500,  unlock_level:3,  personalidad:'−20% drenaje de energía'},
+  'labrador_blond':{id:'labrador_blond',tipo:'perro',nombre:'Labrador Rubio',   desc:'El amigo de la familia — nunca se cansa de jugar',     tier:'standard',   cost:700,  unlock_level:4,  personalidad:'+15% felicidad al jugar con pelota'},
+  'dogo':          {id:'dogo',          tipo:'perro',nombre:'Dogo Argentino',   desc:'Orgullo criollo — fuerte como el asado del domingo',   tier:'premium',    cost:1000, unlock_level:6,  personalidad:'+25% efectividad de comida'},
+  'husky':         {id:'husky',         tipo:'perro',nombre:'Husky Siberiano',  desc:'Espíritu nómade — nieve o sol, siempre listo',         tier:'premium',    cost:1200, unlock_level:7,  personalidad:'−15% drenaje de hambre'},
+  'rottweiler':    {id:'rottweiler',    tipo:'perro',nombre:'Rottweiler',       desc:'Elegante y fuerte — aprecia las cosas buenas',         tier:'premium',    cost:1500, unlock_level:9,  personalidad:'+20% felicidad con comida premium'},
+  'pharaoh':       {id:'pharaoh',       tipo:'perro',nombre:'Pharaoh Hound',    desc:'Guardián egipcio — magia ancestral en casa',           tier:'premium-plus',cost:2000,unlock_level:12, personalidad:'+25% regen nocturno'},
+  /* GATOS */
+  'retro':         {id:'retro',         tipo:'gato', nombre:'Gatito Retro',     desc:'Clásico y curioso',                                     tier:'default',   cost:0,    unlock_level:1,  personalidad:null},
+  /* CONEJOS */
+  'grey':          {id:'grey',          tipo:'conejo',nombre:'Conejito Gris',   desc:'Tierno y juguetón',                                     tier:'default',   cost:0,    unlock_level:1,  personalidad:null},
+  /* PÁJAROS */
+  'green':         {id:'green',         tipo:'pajaro',nombre:'Pajarito Verde',  desc:'Alegre y cantarín',                                     tier:'default',   cost:0,    unlock_level:1,  personalidad:null},
+  'blue':          {id:'blue',          tipo:'pajaro',nombre:'Pajarito Azul',   desc:'Elegante volador',                                      tier:'basic',     cost:0,    unlock_level:1,  personalidad:null},
+  'yellow':        {id:'yellow',        tipo:'pajaro',nombre:'Pajarito Amarillo',desc:'Brillante y solar',                                    tier:'basic',     cost:0,    unlock_level:1,  personalidad:null},
+  'parrot':        {id:'parrot',        tipo:'pajaro',nombre:'Loro',            desc:'Charlatán y colorido',                                  tier:'basic',     cost:0,    unlock_level:1,  personalidad:null}
+};
+
+function getBreedsByType(tipo){
+  var out=[];
+  for(var k in BREEDS_CATALOG){
+    if(BREEDS_CATALOG.hasOwnProperty(k)&&BREEDS_CATALOG[k].tipo===tipo)out.push(BREEDS_CATALOG[k]);
+  }
+  return out;
+}
 /* Species-specific food: each pet type eats what's natural for them */
 /* ===== PET FOODS V2 — Tiered + Specialized (consumibles del inventario) =====
    Tier system: basic (relleno), standard (relleno), premium-felicidad, premium-completo
@@ -2927,6 +2968,74 @@ var SPRITE_ANIMS={
       laydown:{file:'laydown.png',frames:7,fps:5,loop:true},
       sad:{file:'laydown.png',frames:7,fps:4,loop:true},
       walk:{file:'walk.png',frames:7,fps:10,loop:true}
+    },
+    /* v10.13.17: 6 razas nuevas — dalmatian, dogo, husky, rottweiler, labrador_blond, pharaoh
+       Frame counts verificados de los PNGs originales. */
+    dalmatian:{
+      frameW:64,frameH:64,defaultFacing:'right',
+      idle:{file:'idle.png',frames:7,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
+      eating:{file:'eating.png',frames:26,fps:12,loop:true},
+      excited:{file:'excited.png',frames:12,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:12,fps:4,loop:true},
+      walk:{file:'walk.png',frames:5,fps:10,loop:true}
+    },
+    dogo:{
+      frameW:64,frameH:64,defaultFacing:'right',
+      idle:{file:'idle.png',frames:7,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:3,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:7,fps:5,loop:true},
+      eating:{file:'eating.png',frames:12,fps:8,loop:true},
+      excited:{file:'excited.png',frames:9,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:7,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:7,fps:4,loop:true},
+      walk:{file:'walk.png',frames:7,fps:10,loop:true}
+    },
+    husky:{
+      frameW:64,frameH:64,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
+      eating:{file:'eating.png',frames:24,fps:12,loop:true},
+      excited:{file:'excited.png',frames:10,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:12,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    rottweiler:{
+      frameW:64,frameH:64,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
+      eating:{file:'eating.png',frames:31,fps:14,loop:true},
+      excited:{file:'excited.png',frames:12,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:12,fps:4,loop:true},
+      walk:{file:'walk.png',frames:5,fps:10,loop:true}
+    },
+    labrador_blond:{
+      frameW:64,frameH:64,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:16,fps:4,loop:true},
+      sleepy:{file:'laydown.png',frames:16,fps:5,loop:true},
+      eating:{file:'eating.png',frames:16,fps:10,loop:true},
+      excited:{file:'excited.png',frames:16,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:16,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:16,fps:4,loop:true},
+      walk:{file:'walk.png',frames:16,fps:12,loop:true}
+    },
+    pharaoh:{
+      frameW:64,frameH:64,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:8,fps:5,loop:true},
+      eating:{file:'eating.png',frames:15,fps:10,loop:true},
+      excited:{file:'excited.png',frames:9,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:8,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:8,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
     }
   },
   bunnies:{
@@ -2996,7 +3105,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='2'; /* v10.13.8: bump para invalidar cache tras re-upload de sprites del conejo */
+var SPRITE_VERSION='3'; /* v10.13.17: bump para invalidar cache CDN tras subir 6 razas nuevas */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -3204,6 +3313,16 @@ function ensureInventoryStructure(pet){
     if(!pet.equipado[slot]&&def){
       pet.equipado[slot]=def;
     }
+  }
+  /* v10.13.17: inicializar pet.variante si no existe.
+     Usa el default por especie (Vlaky mantiene su black hardcoded). */
+  if(!pet.variante){
+    if(pet.tipo==='gato')pet.variante='retro';
+    else if(pet.tipo==='perro'){
+      pet.variante=(U&&String(U.id)==='5088635103')?'black':'golden';
+    }
+    else if(pet.tipo==='conejo')pet.variante='grey';
+    else if(pet.tipo==='pajaro')pet.variante='green';
   }
 }
 
@@ -3633,10 +3752,15 @@ function initPetSprite(){
   if(!el)return;
   var pet=P&&P.mascota;
   if(!pet)return;
-  /* Phase 3: cats retro, dogs golden/black, bunnies grey, birds green/blue/yellow/parrot */
+  /* v10.13.17: selección de variante por raza.
+     Prioridad: _devVariantOverride > pet.variante > default por especie (o Vlaky homenaje). */
   var category=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':pet.tipo==='pajaro'?'birds':'bunnies';
   var variant;
   if(_devVariantOverride)variant=_devVariantOverride;
+  else if(pet.variante&&SPRITE_ANIMS[category]&&SPRITE_ANIMS[category][pet.variante]){
+    /* Usa la variante guardada en el pet si existe y está registrada en SPRITE_ANIMS */
+    variant=pet.variante;
+  }
   else if(category==='cats')variant='retro';
   else if(category==='dogs'){
     /* Special case: Vlacky homenaje — ID 5088635103 gets black dog */
@@ -3761,7 +3885,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.16</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.17</div>';
   }
   h+='</div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
@@ -5266,7 +5390,9 @@ var _devVariantOverride=null;
 function devSwitchPet(tipo,variant){
   var pet=P&&P.mascota;if(!pet){toast('No hay mascota');return}
   pet.tipo=tipo;
-  _devVariantOverride=variant||null;
+  /* v10.13.17: persistir variante en pet.variante (no solo override temporal) */
+  if(variant){pet.variante=variant;_devVariantOverride=null}
+  else{pet.variante=null;_devVariantOverride=null}
   savePet();
   renderPetCard();
   toast('🔄 Cambiada a '+tipo+(variant?' ('+variant+')':''));

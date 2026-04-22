@@ -3016,15 +3016,17 @@ var SPRITE_ANIMS={
       walk:{file:'walk.png',frames:5,fps:10,loop:true}
     },
     labrador_blond:{
+      /* v10.13.17b: frame counts corregidos. Los PNG son 1024px de ancho
+         pero con padding transparente — los frames reales son menos. */
       frameW:64,frameH:64,defaultFacing:'right',
       idle:{file:'idle.png',frames:6,fps:6,loop:true},
-      sleep:{file:'sleep.png',frames:16,fps:4,loop:true},
-      sleepy:{file:'laydown.png',frames:16,fps:5,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
       eating:{file:'eating.png',frames:16,fps:10,loop:true},
-      excited:{file:'excited.png',frames:16,fps:10,loop:true},
-      laydown:{file:'laydown.png',frames:16,fps:5,loop:true},
-      sad:{file:'laydown.png',frames:16,fps:4,loop:true},
-      walk:{file:'walk.png',frames:16,fps:12,loop:true}
+      excited:{file:'excited.png',frames:9,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:12,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
     },
     pharaoh:{
       frameW:64,frameH:64,defaultFacing:'right',
@@ -3105,7 +3107,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='3'; /* v10.13.17: bump para invalidar cache CDN tras subir 6 razas nuevas */
+var SPRITE_VERSION='4'; /* v10.13.17b: bump para invalidar cache del Labrador (sprites recortados) */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;

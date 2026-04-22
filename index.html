@@ -917,6 +917,10 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-wall-shelf{position:absolute;left:18%;top:51%;width:22%;height:8px;z-index:1;pointer-events:none;background:linear-gradient(180deg,#a87040 0%,#8b5a2b 40%,#6b3f1f 100%);border-top:2px solid #c68851;border-bottom:2px solid #4a2a12;box-shadow:0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,220,160,.3);border-radius:1px}
 .pet-wall-shelf::before{content:'';position:absolute;left:4%;bottom:-6px;width:3px;height:6px;background:#4a2a12;border-radius:0 0 1px 1px}
 .pet-wall-shelf::after{content:'';position:absolute;right:4%;bottom:-6px;width:3px;height:6px;background:#4a2a12;border-radius:0 0 1px 1px}
+/* v10.13.16: lámpara de techo colgante */
+.pet-wall-lamp{position:absolute;top:2%;left:50%;transform:translateX(-50%);width:48px;height:58px;background-repeat:no-repeat;background-size:contain;background-position:top center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));z-index:1;pointer-events:none}
+/* v10.13.16: planta en el piso — izquierda del cuarto */
+.pet-floor-plant{position:absolute;left:3%;bottom:4%;width:52px;height:74px;background-repeat:no-repeat;background-size:contain;background-position:bottom center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));z-index:1;pointer-events:none}
 .pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left;display:inline-block;text-align:center}
 .pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
 .pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
@@ -1198,6 +1202,8 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="cmt-btn a" onclick="shopTab('comida')" id="st-food">🍱 Comida</button>
     <button class="cmt-btn" onclick="shopTab('agua')" id="st-water">💧 Agua</button>
     <button class="cmt-btn" onclick="shopTab('juguetes')" id="st-toy">🎾 Juguetes</button>
+    <button class="cmt-btn" onclick="shopTab('lampara')" id="st-lamp">💡 Lámparas</button>
+    <button class="cmt-btn" onclick="shopTab('planta')" id="st-plant">🪴 Plantas</button>
     <button class="cmt-btn" onclick="shopTab('decoracion')" id="st-hab">🛋️ Decor</button>
     <button class="cmt-btn" onclick="shopTab('micuarto')" id="st-room">🏠 Mi Cuarto</button>
     <button class="cmt-btn" onclick="shopTab('adoptar')" id="st-adopt">🐣 Adoptar</button>
@@ -3147,16 +3153,35 @@ var TROPISHOP_CATALOG={
   'ventana_5':{id:'ventana_5',slot:'ventana',nombre:'Ventana Jardín',desc:'Cortinas verdes',url:'items/v11/window_5.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:500,unlock_level:7,bonus:null},
   'ventana_6':{id:'ventana_6',slot:'ventana',nombre:'Ventana Dorada',desc:'Lujo y brillo',url:'items/v11/window_6.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:1200,unlock_level:12,bonus:{tipo:'felicidad_regen',value:0.10}},
   'ventana_7':{id:'ventana_7',slot:'ventana',nombre:'Ventana Tropical',desc:'Vista paradisíaca',url:'items/v11/window_7.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:1500,unlock_level:15,bonus:{tipo:'felicidad_regen',value:0.15}},
-  'ventana_8':{id:'ventana_8',slot:'ventana',nombre:'Ventana Nocturna',desc:'Estrellas visibles',url:'items/v11/window_8.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:2000,unlock_level:20,bonus:{tipo:'felicidad_regen',value:0.20}}
+  'ventana_8':{id:'ventana_8',slot:'ventana',nombre:'Ventana Nocturna',desc:'Estrellas visibles',url:'items/v11/window_8.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:2000,unlock_level:20,bonus:{tipo:'felicidad_regen',value:0.20}},
+  /* v10.13.16: lámparas de techo */
+  'lampara_blue':{id:'lampara_blue',slot:'lampara',nombre:'Lámpara Azul',desc:'Luz cálida clásica',url:'decor/v1/lamp_blue.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:0,unlock_level:1,bonus:null},
+  'lampara_pink':{id:'lampara_pink',slot:'lampara',nombre:'Lámpara Rosa',desc:'Tono suave rosado',url:'decor/v1/lamp_pink.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:50,unlock_level:1,bonus:null},
+  'lampara_gold':{id:'lampara_gold',slot:'lampara',nombre:'Lámpara Dorada',desc:'Brillo elegante',url:'decor/v1/lamp_gold.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
+  'lampara_gray':{id:'lampara_gray',slot:'lampara',nombre:'Lámpara Gris',desc:'Estilo industrial',url:'decor/v1/lamp_gray.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:50,unlock_level:1,bonus:null},
+  'lampara_navy':{id:'lampara_navy',slot:'lampara',nombre:'Lámpara Azul Marino',desc:'Tono profundo',url:'decor/v1/lamp_navy.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
+  'lampara_purple':{id:'lampara_purple',slot:'lampara',nombre:'Lámpara Violeta',desc:'Luz mística',url:'decor/v1/lamp_purple.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:120,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.05}},
+  'lampara_green':{id:'lampara_green',slot:'lampara',nombre:'Lámpara Verde',desc:'Tono natural',url:'decor/v1/lamp_green.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
+  'lampara_lightblue':{id:'lampara_lightblue',slot:'lampara',nombre:'Lámpara Celeste',desc:'Frescura marina',url:'decor/v1/lamp_lightblue.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:200,unlock_level:7,bonus:{tipo:'felicidad_regen',value:0.08}},
+  /* v10.13.16: plantas de piso */
+  'planta_big_green':{id:'planta_big_green',slot:'planta',nombre:'Planta Grande Verde',desc:'Frondosa y tropical',url:'decor/v1/plant_big_green.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:0,unlock_level:1,bonus:null},
+  'planta_big_pink':{id:'planta_big_pink',slot:'planta',nombre:'Planta Grande Rosa',desc:'Flores exóticas',url:'decor/v1/plant_big_pink.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:80,unlock_level:3,bonus:null},
+  'planta_big_orange':{id:'planta_big_orange',slot:'planta',nombre:'Planta Grande Naranja',desc:'Hojas otoñales',url:'decor/v1/plant_big_orange.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:80,unlock_level:3,bonus:null},
+  'planta_med_fern':{id:'planta_med_fern',slot:'planta',nombre:'Helecho Mediano',desc:'Clásico y verde',url:'decor/v1/plant_med_fern.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:30,unlock_level:1,bonus:null},
+  'planta_med_leaves':{id:'planta_med_leaves',slot:'planta',nombre:'Hojas Medianas',desc:'Follaje decorativo',url:'decor/v1/plant_med_leaves.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:30,unlock_level:1,bonus:null},
+  'planta_med_vine':{id:'planta_med_vine',slot:'planta',nombre:'Enredadera Mediana',desc:'Colgante natural',url:'decor/v1/plant_med_vine.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:60,unlock_level:3,bonus:null},
+  'planta_small_red':{id:'planta_small_red',slot:'planta',nombre:'Planta Chica Roja',desc:'Maceta compacta',url:'decor/v1/plant_small_red.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:40,unlock_level:1,bonus:null},
+  'planta_small_orange':{id:'planta_small_orange',slot:'planta',nombre:'Planta Chica Naranja',desc:'Toque cítrico',url:'decor/v1/plant_small_orange.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:40,unlock_level:1,bonus:null},
+  'planta_small_blue':{id:'planta_small_blue',slot:'planta',nombre:'Planta Chica Azul',desc:'Flor exótica azul',url:'decor/v1/plant_small_blue.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:150,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.05}}
 };
 
 /* Default items que TODAS las mascotas tienen sin comprar nada.
    Representan los sprites actuales de PET_ACCESSORIES. */
 var DEFAULT_EQUIPPED={
-  gato:    {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null},
-  perro:   {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null},
-  conejo:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null},
-  pajaro:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null}
+  gato:    {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null,lampara:'lampara_blue',planta:'planta_big_green'},
+  perro:   {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null,lampara:'lampara_blue',planta:'planta_big_green'},
+  conejo:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null,lampara:'lampara_blue',planta:'planta_big_green'},
+  pajaro:  {cama:'cama_default',pelota:'pelota_default',comedero:'comedero_default',bebedero:'bebedero_default',ventana:'ventana_1',caseta:null,lampara:'lampara_blue',planta:'planta_big_green'}
 };
 
 /* Migración: asegura que toda pet tenga inventario_items y equipado.
@@ -3166,7 +3191,7 @@ function ensureInventoryStructure(pet){
   if(!pet.inventario_items)pet.inventario_items={};
   if(!pet.equipado)pet.equipado={};
   var defaults=DEFAULT_EQUIPPED[pet.tipo]||DEFAULT_EQUIPPED.gato;
-  var slots=['cama','pelota','comedero','bebedero','ventana','caseta'];
+  var slots=['cama','pelota','comedero','bebedero','ventana','caseta','lampara','planta'];
   for(var i=0;i<slots.length;i++){
     var slot=slots[i];
     if(!pet.inventario_items[slot])pet.inventario_items[slot]=[];
@@ -3722,6 +3747,8 @@ function renderPetCard(){
   h+='<div class="pet-time-badge" id="pet-time-badge"></div>';
   h+='<div class="pet-wall-window" id="pet-wall-window"></div>';
   h+='<div class="pet-wall-shelf" id="pet-wall-shelf"></div>';
+  h+='<div class="pet-wall-lamp" id="pet-wall-lamp"></div>';
+  h+='<div class="pet-floor-plant" id="pet-floor-plant"></div>';
   h+='<div class="pet-decor house" id="pet-decor-house"></div>';
   h+='<div class="pet-decor bed" id="pet-decor-bed"></div>';
   h+='<div class="pet-decor brush" id="pet-decor-brush"></div>';
@@ -3734,7 +3761,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.15</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.16</div>';
   }
   h+='</div>';
   h+='<div class="pet-info"><div class="pet-name-area"><div class="pet-pname">'+(pet.nombre||'Mascota')+' <span style="font-size:10px;color:var(--txt3)">'+getPetStageName(stage)+'</span></div>';
@@ -4039,6 +4066,28 @@ function updatePetBowl(){
     }else{
       windowEl.classList.remove('active');
       windowEl.style.backgroundImage='';
+    }
+  }
+  /* v10.13.16: lámpara de techo */
+  var lampEl=document.getElementById('pet-wall-lamp');
+  if(lampEl){
+    var lampId=pet.equipado&&pet.equipado.lampara;
+    var lampItem=lampId&&TROPISHOP_CATALOG[lampId];
+    if(lampItem&&lampItem.url){
+      lampEl.style.backgroundImage='url("'+SPRITE_BUCKET_URL+lampItem.url+'?v='+SPRITE_VERSION+'")';
+    }else{
+      lampEl.style.backgroundImage='';
+    }
+  }
+  /* v10.13.16: planta en el piso */
+  var plantEl=document.getElementById('pet-floor-plant');
+  if(plantEl){
+    var plantId=pet.equipado&&pet.equipado.planta;
+    var plantItem=plantId&&TROPISHOP_CATALOG[plantId];
+    if(plantItem&&plantItem.url){
+      plantEl.style.backgroundImage='url("'+SPRITE_BUCKET_URL+plantItem.url+'?v='+SPRITE_VERSION+'")';
+    }else{
+      plantEl.style.backgroundImage='';
     }
   }
   /* v10.13.7: inicializar drag-and-drop de la pelota cada vez que se
@@ -5350,8 +5399,8 @@ function shopTab(tab){
   /* v10.13.3c: tabs rediseñadas. 'habitat' legacy mapea a 'decoracion'. */
   if(tab==='habitat')shopMode='decoracion';
   /* v10.13.13: nueva tab 'agua' */
-  var tabIds=['st-food','st-water','st-toy','st-hab','st-room','st-adopt'];
-  var tabNames=['comida','agua','juguetes','decoracion','micuarto','adoptar'];
+  var tabIds=['st-food','st-water','st-toy','st-lamp','st-plant','st-hab','st-room','st-adopt'];
+  var tabNames=['comida','agua','juguetes','lampara','planta','decoracion','micuarto','adoptar'];
   for(var i=0;i<tabIds.length;i++){
     var btn=document.getElementById(tabIds[i]);
     if(btn)btn.classList.toggle('a',tabNames[i]===shopMode);
@@ -5402,6 +5451,26 @@ function renderShop(){
     }
     for(var ji=0;ji<items.length;ji++){
       h+=renderShopItemCard(items[ji],pet);
+    }
+  }else if(shopMode==='lampara'){
+    /* v10.13.16: Tab Lámparas */
+    var lamps=typeof getShopItemsByCategory==='function'?getShopItemsByCategory(pet,'lampara'):[];
+    h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Lámparas de techo · iluminan el cuarto · algunas dan bonus de felicidad</div>';
+    if(lamps.length===0){
+      h+='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--txt3);font-size:10px">No hay lámparas disponibles</div>';
+    }
+    for(var li=0;li<lamps.length;li++){
+      h+=renderShopItemCard(lamps[li],pet);
+    }
+  }else if(shopMode==='planta'){
+    /* v10.13.16: Tab Plantas */
+    var plants=typeof getShopItemsByCategory==='function'?getShopItemsByCategory(pet,'planta'):[];
+    h+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt2);text-align:center;margin:0 0 8px;line-height:1.4">Plantas decorativas · dan vida al cuarto · algunas dan bonus de felicidad</div>';
+    if(plants.length===0){
+      h+='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--txt3);font-size:10px">No hay plantas disponibles</div>';
+    }
+    for(var pli=0;pli<plants.length;pli++){
+      h+=renderShopItemCard(plants[pli],pet);
     }
   }else if(shopMode==='decoracion'){
     /* Tab Decoración: camas, casetas, ventanas */

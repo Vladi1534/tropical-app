@@ -903,9 +903,14 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .toy-ball.ready::after{opacity:1;animation:bowlPulse 2.4s ease-in-out infinite}
 @keyframes bowlPulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .bowl-sprite{width:100%;height:100%;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-.pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:1;pointer-events:none}
-.pet-decor.bed{left:3%;bottom:5%;width:115px;height:56px}
-.pet-decor.house{right:14%;bottom:10%;width:108px;height:108px;display:none;z-index:0}
+/* v10.13.19: Y-sorting manual por defecto.
+   Los muebles ocupan z-index en un rango 5-15 según su posición vertical
+   (más al frente = más alto). La mascota (walker) usa z-index dinámico
+   calculado en JS según su bottom%. Esto permite pasar correctamente
+   por delante o por detrás de los muebles según su posición en el cuarto. */
+.pet-decor{position:absolute;background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));z-index:8;pointer-events:none}
+.pet-decor.bed{left:3%;bottom:5%;width:115px;height:56px;z-index:9}
+.pet-decor.house{right:14%;bottom:10%;width:108px;height:108px;display:none;z-index:7}
 .pet-decor.house.active{display:block}
 .pet-decor.brush{left:34%;bottom:7%;width:24px;height:24px}
 .pet-decor.flower{left:41%;bottom:7%;width:20px;height:20px}
@@ -919,9 +924,16 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-wall-shelf::after{content:'';position:absolute;right:4%;bottom:-6px;width:3px;height:6px;background:#4a2a12;border-radius:0 0 1px 1px}
 /* v10.13.16: lámpara de techo colgante */
 .pet-wall-lamp{position:absolute;top:2%;left:50%;transform:translateX(-50%);width:48px;height:58px;background-repeat:no-repeat;background-size:contain;background-position:top center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));z-index:1;pointer-events:none}
-/* v10.13.16: planta en el piso — izquierda del cuarto */
-.pet-floor-plant{position:absolute;left:3%;bottom:4%;width:52px;height:74px;background-repeat:no-repeat;background-size:contain;background-position:bottom center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));z-index:1;pointer-events:none}
-.pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left;display:inline-block;text-align:center}
+/* v10.13.16 + v10.13.19: planta en el piso — izquierda del cuarto.
+   z-index 2 para que quede DELANTE de la cama (que está en left:3% bottom:5% z:1).
+   left:0% pegada a la pared, more-left que la cama para no superponerse. */
+.pet-floor-plant{position:absolute;left:0%;bottom:2%;width:44px;height:66px;background-repeat:no-repeat;background-size:contain;background-position:bottom center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));z-index:2;pointer-events:none}
+/* v10.13.19: walker con z-index base 10.
+   Y-sorting dinámico se aplica vía JS: se ajusta al moverse el walker
+   según su posición vertical (más abajo = más al frente = z mayor).
+   Esto hace que si la mascota camina hacia la cama (que ocupa el
+   frente del cuarto), pase CORRECTAMENTE por delante de ella. */
+.pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left,z-index;display:inline-block;text-align:center}
 .pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
 .pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
 .pet-walker.fast{transition:left 1.5s cubic-bezier(.4,0,.6,1)}
@@ -3243,7 +3255,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='5'; /* v10.13.18: bump para invalidar cache tras sistema de escalas biológicas */
+var SPRITE_VERSION='6'; /* v10.13.19: bump tras Y-sorting y fixes de profundidad */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -3919,6 +3931,9 @@ function initPetSprite(){
     void w.offsetHeight; /* force reflow */
     w.style.transition='';
   }
+  /* v10.13.19: aplicar Y-sort al walker principal (para arrancar correctamente
+     cuando el pet está en zona de cama, no queda por encima) */
+  if(w&&typeof applyWalkerZSort==='function')applyWalkerZSort(w);
   /* Restore facing direction */
   setPetFacing(_lastWalkerFace);
   /* If sleeping and not already at bed, walk to bed */
@@ -4020,7 +4035,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.18</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.19</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -4895,8 +4910,11 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
     walker.classList.add('fast');
     walker.style.transition='left .15s linear'; /* actualización rápida */
   }
-  /* Forzar animación walk en la mascota durante el chase */
+  /* Forzar animación walk en la mascota durante el chase.
+     v10.13.19: resetear currentState para FORZAR reaplicación aunque
+     ya estuviera 'walk' (evita que se quede sin animar por race conditions). */
   if(_currentPetController&&_currentPetController.config&&_currentPetController.config.walk){
+    if(_currentPetController.currentState==='walk')_currentPetController.currentState='';
     _currentPetController.setState('walk');
   }
 
@@ -4919,6 +4937,9 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
     /* Mover walker */
     walker.style.left=ballPct+'%';
     _lastWalkerLeft=ballPct;
+    /* v10.13.19: Y-sort mientras persigue para que pase correctamente
+       por delante/detrás de los muebles según posición. */
+    if(typeof applyWalkerZSort==='function')applyWalkerZSort(walker);
     /* v10.13.2b: drenar energía mientras persigue (~2 por segundo).
        dt es el tiempo del frame en segundos. */
     var pet=P&&P.mascota;
@@ -5250,6 +5271,27 @@ if(typeof window!=='undefined'){
   setTimeout(function(){if(typeof startPetDebugOverlay==='function')startPetDebugOverlay()},1500);
 }
 
+/* v10.13.19: Y-sorting dinámico.
+   Calcula un z-index para el walker según su left% actual.
+   Si está en zona de cama (0-22%) → z=8 (detrás de cama que es z=9)
+   Si está centrado (22-60%) → z=12 (por encima de todo)
+   Si está en zona de platos/caseta (60-100%) → z=8-10 según específico */
+function computeWalkerZ(leftPct){
+  /* Zona izquierda (cama): si está sobre la cama, queda detrás */
+  if(leftPct<22)return 8;  /* detrás de la cama (z=9) */
+  /* Zona centro (libre): queda encima de todo */
+  if(leftPct<60)return 12;
+  /* Zona derecha (caseta + platos): queda entre ellos */
+  return 10;
+}
+
+function applyWalkerZSort(walker){
+  if(!walker)return;
+  var leftPctStr=walker.style.left||'50%';
+  var leftPct=parseFloat(leftPctStr)||50;
+  walker.style.zIndex=computeWalkerZ(leftPct);
+}
+
 function petWalkTo(targetPct,callback){
   /* Animates walker to target % then runs callback. Faster than wander (1.5s). */
   var w=document.querySelector('.pet-walker');
@@ -5264,19 +5306,25 @@ function petWalkTo(targetPct,callback){
   w.classList.add('walking');
   /* v10.9: trigger real walk animation for dogs/bunnies that have walk cycle */
   var pet=P&&P.mascota;
-  /* v10.11: walk cycle if the active sprite controller has a 'walk' animation defined */
+  /* v10.11: walk cycle if the active sprite controller has a 'walk' animation defined
+     v10.13.19: forzar cambio de estado aunque ya esté 'walk' para que reinicie el sprite
+     (fixea el bug de "corre sin animación por unos segundos") */
   var hasWalkCycle=_currentPetController&&_currentPetController.config&&_currentPetController.config.walk;
   if(hasWalkCycle&&_currentPetController){
+    /* Resetear currentState para forzar re-aplicación de la animación walk */
+    if(_currentPetController.currentState==='walk')_currentPetController.currentState='';
     _currentPetController.setState('walk');
   }
   /* Force reflow then set position */
   void w.offsetHeight;
   w.style.left=targetPct+'%';
   _lastWalkerLeft=targetPct;
+  /* v10.13.19: Y-sort ya mismo y también al finalizar transición */
+  applyWalkerZSort(w);
   /* After walk completes (1.5s), stop bouncing and run callback */
   setTimeout(function(){
     var wMid=document.querySelector('.pet-walker');
-    if(wMid)wMid.classList.remove('walking');
+    if(wMid){wMid.classList.remove('walking');applyWalkerZSort(wMid)}
     /* v10.12-fase1c: respetar mood al llegar (NO forzar idle).
        Si la mascota fue a la cama y mood='sleeping', se acuesta a dormir.
        Si va a comer y mood='hungry', queda comiendo. El callback puede
@@ -5349,12 +5397,18 @@ function petWander(){
   setPetFacing(direction);
   w.classList.add('walking');
   var hasW=_currentPetController&&_currentPetController.config&&_currentPetController.config.walk;
-  if(hasW&&_currentPetController)_currentPetController.setState('walk');
+  if(hasW&&_currentPetController){
+    /* v10.13.19: forzar reinicio de walk anim aunque ya estuviera walk */
+    if(_currentPetController.currentState==='walk')_currentPetController.currentState='';
+    _currentPetController.setState('walk');
+  }
   w.style.left=newLeft+'%';
   _lastWalkerLeft=newLeft;
+  /* v10.13.19: Y-sort inmediato al cambiar de posición */
+  applyWalkerZSort(w);
   setTimeout(function(){
     var wEnd=document.querySelector('.pet-walker');
-    if(wEnd)wEnd.classList.remove('walking');
+    if(wEnd){wEnd.classList.remove('walking');applyWalkerZSort(wEnd)}
     if(hasW&&_currentPetController)applyPetMoodState();
   },4600);
 }
@@ -5596,7 +5650,9 @@ function renderCompareRoster(){
     walker.className='pet-walker compare-walker';
     walker.style.left=positions[j]+'%';
     walker.style.transition='none';
-    walker.style.zIndex='9';
+    /* v10.13.19: Y-sort aplicado para que las comparativas también respeten
+       la profundidad del cuarto (detrás de cama si están en zona izquierda). */
+    walker.style.zIndex=computeWalkerZ(positions[j]);
     walker.style.opacity='0.85';
     walker.innerHTML='<div class="pet-facing"><div class="pet-sprite compare-sprite"></div></div>'+
       '<div class="pet-shadow"></div>'+

@@ -1309,7 +1309,16 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devSwitchPet('pajaro','green')">💚 Green</button>
     <button class="bs" onclick="devSwitchPet('pajaro','blue')">💙 Blue</button>
     <button class="bs" onclick="devSwitchPet('pajaro','yellow')">💛 Yellow</button>
-    <button class="bs" onclick="devSwitchPet('pajaro','parrot')">🦜 Loro</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','black')">🖤 Black</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','orange')">🧡 Orange</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','white')">🤍 White</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','pink')">💗 Pink</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','purple')">💜 Purple</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','parrot')">🦜 Loro1</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','parrot2')">🦜 Loro2</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','parrot3')">🦜 Loro3</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','parrot4')">🦜 Loro4</button>
+    <button class="bs" onclick="devSwitchPet('pajaro','parrot5')">🦜 Loro5</button>
     <button class="bs" onclick="devTestSprite('dance')" title="Solo funciona en RetroCats">💃 Dance</button>
   </div>
   
@@ -1330,6 +1339,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="compareAdd('conejo','fantasy_bunny',25)">✨ Fantasy</button>
     <button class="bs" onclick="compareAdd('pajaro','green',25)">🐦 Pájaro</button>
     <button class="bs" onclick="compareAdd('pajaro','parrot',25)">🦜 Loro</button>
+    <button class="bs" onclick="compareAdd('pajaro','parrot5',25)">🦜 Loro Anc.</button>
   </div>
   <div style="font-size:9px;color:var(--txt3);margin-bottom:6px">Edades para probar tamaños:</div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px">
@@ -2470,7 +2480,17 @@ var BREEDS_CATALOG={
   'green':         {id:'green',         tipo:'pajaro',nombre:'Pajarito Verde',  desc:'Alegre y cantarín',                                     tier:'default',   cost:0,    unlock_level:1,  personalidad:null},
   'blue':          {id:'blue',          tipo:'pajaro',nombre:'Pajarito Azul',   desc:'Elegante volador',                                      tier:'basic',     cost:0,    unlock_level:1,  personalidad:null},
   'yellow':        {id:'yellow',        tipo:'pajaro',nombre:'Pajarito Amarillo',desc:'Brillante y solar',                                    tier:'basic',     cost:0,    unlock_level:1,  personalidad:null},
-  'parrot':        {id:'parrot',        tipo:'pajaro',nombre:'Loro',            desc:'Charlatán y colorido',                                  tier:'basic',     cost:0,    unlock_level:1,  personalidad:null}
+  'parrot':        {id:'parrot',        tipo:'pajaro',nombre:'Loro',            desc:'Charlatán y colorido',                                  tier:'basic',     cost:0,    unlock_level:1,  personalidad:null},
+  /* v10.13.22: 5 colores nuevos de pájaro chico + 4 loros nuevos */
+  'black':         {id:'black',         tipo:'pajaro',nombre:'Pajarito Negro',  desc:'Misterioso nocturno',                                   tier:'basic',     cost:100,  unlock_level:1,  personalidad:null},
+  'orange':        {id:'orange',        tipo:'pajaro',nombre:'Pajarito Naranja',desc:'Vivaz como el sol',                                     tier:'basic',     cost:100,  unlock_level:1,  personalidad:null},
+  'white':         {id:'white',         tipo:'pajaro',nombre:'Pajarito Blanco', desc:'Puro y sereno',                                         tier:'standard',  cost:200,  unlock_level:2,  personalidad:null},
+  'pink':          {id:'pink',          tipo:'pajaro',nombre:'Pajarito Rosa',   desc:'Tierno cantor',                                         tier:'standard',  cost:300,  unlock_level:3,  personalidad:'+5% felicidad al cantar'},
+  'purple':        {id:'purple',        tipo:'pajaro',nombre:'Pajarito Violeta',desc:'Mágico crepúsculo',                                     tier:'premium',   cost:500,  unlock_level:5,  personalidad:'+10% regen de felicidad'},
+  'parrot2':       {id:'parrot2',       tipo:'pajaro',nombre:'Loro Tropical',   desc:'Selva caribeña',                                        tier:'premium',   cost:800,  unlock_level:7,  personalidad:'+10% XP general'},
+  'parrot3':       {id:'parrot3',       tipo:'pajaro',nombre:'Loro Colorido',   desc:'Arcoíris en plumas',                                    tier:'premium',   cost:800,  unlock_level:7,  personalidad:'+10% XP general'},
+  'parrot4':       {id:'parrot4',       tipo:'pajaro',nombre:'Loro Real',       desc:'Sabio observador',                                      tier:'premium',   cost:1000, unlock_level:10, personalidad:'+15% XP general'},
+  'parrot5':       {id:'parrot5',       tipo:'pajaro',nombre:'Loro Ancestral',  desc:'El más sabio de todos',                                 tier:'premium-plus',cost:1500,unlock_level:12, personalidad:'+20% XP general'}
 };
 
 function getBreedsByType(tipo){
@@ -2678,7 +2698,17 @@ var BREED_BASE_HEIGHT={
   'green':          28,
   'blue':           28,
   'yellow':         28,
-  'parrot':         34   /* Loros más grandes que pájaros chicos */
+  'parrot':         34   /* Loros más grandes que pájaros chicos */,
+  /* v10.13.22: 5 pájaros chicos nuevos (mismo tamaño) + 4 loros nuevos */
+  'black':          28,
+  'orange':         28,
+  'pink':           28,
+  'purple':         28,
+  'white':          28,
+  'parrot2':        34,
+  'parrot3':        34,
+  'parrot4':        36,  /* Loro Real, un toque más grande */
+  'parrot5':        38   /* Loro Ancestral, el más grande de todos */
 };
 
 /* Default por categoría si no hay variante registrada */
@@ -3383,12 +3413,115 @@ var SPRITE_ANIMS={
       laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
       sad:{file:'laydown.png',frames:6,fps:4,loop:true},
       walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    /* v10.13.22: 5 colores nuevos de pájaro chico + 4 loros nuevos.
+       Todos comparten el layout verificado: idle=6, sleep=8, laydown=6,
+       eating=6, excited=8, walk=6. Frames reales coinciden con el esperado
+       (detectado por pixels no-transparentes, cero padding raro). */
+    black:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    orange:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    pink:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    purple:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    white:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    parrot2:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    parrot3:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    parrot4:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
+    },
+    parrot5:{
+      frameW:16,frameH:16,defaultFacing:'right',
+      idle:{file:'idle.png',frames:6,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:4,loop:true},
+      eating:{file:'eating.png',frames:6,fps:7,loop:true},
+      excited:{file:'excited.png',frames:8,fps:10,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:6,fps:10,loop:true}
     }
   }
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='7'; /* v10.13.21: bump para invalidar cache tras subir 9 conejos nuevos */
+var SPRITE_VERSION='8'; /* v10.13.22: bump tras 9 pájaros nuevos */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -4168,7 +4301,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.21</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.22</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */

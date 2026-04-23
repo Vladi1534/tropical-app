@@ -1297,6 +1297,15 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="devSwitchPet('perro','labrador_blond')">🌾 Labrador</button>
     <button class="bs" onclick="devSwitchPet('perro','pharaoh')">🏺 Pharaoh</button>
     <button class="bs" onclick="devSwitchPet('conejo','grey')">🐇 Grey</button>
+    <button class="bs" onclick="devSwitchPet('conejo','bunny_black')">⚫ B.Negro</button>
+    <button class="bs" onclick="devSwitchPet('conejo','bunny_brown')">🟤 B.Marrón</button>
+    <button class="bs" onclick="devSwitchPet('conejo','light_brown')">🟫 Claro</button>
+    <button class="bs" onclick="devSwitchPet('conejo','white_bunny')">⚪ Blanco</button>
+    <button class="bs" onclick="devSwitchPet('conejo','black_white')">🔳 B/N</button>
+    <button class="bs" onclick="devSwitchPet('conejo','brown_white')">🏳 M/B</button>
+    <button class="bs" onclick="devSwitchPet('conejo','brown_2color')">🎨 Tri</button>
+    <button class="bs" onclick="devSwitchPet('conejo','demonic_bunny')">😈 Demon</button>
+    <button class="bs" onclick="devSwitchPet('conejo','fantasy_bunny')">✨ Fantasy</button>
     <button class="bs" onclick="devSwitchPet('pajaro','green')">💚 Green</button>
     <button class="bs" onclick="devSwitchPet('pajaro','blue')">💙 Blue</button>
     <button class="bs" onclick="devSwitchPet('pajaro','yellow')">💛 Yellow</button>
@@ -1317,6 +1326,8 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
     <button class="bs" onclick="compareAdd('perro','pharaoh',25)">🏺 Pharaoh</button>
     <button class="bs" onclick="compareAdd('gato','retro',25)">🐱 Gato</button>
     <button class="bs" onclick="compareAdd('conejo','grey',25)">🐰 Conejo</button>
+    <button class="bs" onclick="compareAdd('conejo','demonic_bunny',25)">😈 Demon</button>
+    <button class="bs" onclick="compareAdd('conejo','fantasy_bunny',25)">✨ Fantasy</button>
     <button class="bs" onclick="compareAdd('pajaro','green',25)">🐦 Pájaro</button>
     <button class="bs" onclick="compareAdd('pajaro','parrot',25)">🦜 Loro</button>
   </div>
@@ -2445,6 +2456,16 @@ var BREEDS_CATALOG={
   'retro':         {id:'retro',         tipo:'gato', nombre:'Gatito Retro',     desc:'Clásico y curioso',                                     tier:'default',   cost:0,    unlock_level:1,  personalidad:null},
   /* CONEJOS */
   'grey':          {id:'grey',          tipo:'conejo',nombre:'Conejito Gris',   desc:'Tierno y juguetón',                                     tier:'default',   cost:0,    unlock_level:1,  personalidad:null},
+  /* v10.13.21: 9 variantes nuevas de conejo */
+  'bunny_brown':   {id:'bunny_brown',   tipo:'conejo',nombre:'Conejito Marrón', desc:'Campestre y cariñoso',                                  tier:'basic',     cost:100,  unlock_level:1,  personalidad:null},
+  'bunny_black':   {id:'bunny_black',   tipo:'conejo',nombre:'Conejito Negro',  desc:'Misterioso y elegante',                                 tier:'basic',     cost:100,  unlock_level:1,  personalidad:null},
+  'light_brown':   {id:'light_brown',   tipo:'conejo',nombre:'Conejo Claro',    desc:'Suave como tostada',                                    tier:'basic',     cost:200,  unlock_level:2,  personalidad:null},
+  'white_bunny':   {id:'white_bunny',   tipo:'conejo',nombre:'Conejo Blanco',   desc:'Pureza en patitas',                                     tier:'standard',  cost:300,  unlock_level:3,  personalidad:'+5% velocidad al saltar'},
+  'black_white':   {id:'black_white',   tipo:'conejo',nombre:'Conejo Bicolor B/N',desc:'Smoking natural',                                     tier:'standard',  cost:400,  unlock_level:4,  personalidad:null},
+  'brown_white':   {id:'brown_white',   tipo:'conejo',nombre:'Conejo Bicolor M/B',desc:'Manchas de caramelo',                                 tier:'standard',  cost:400,  unlock_level:4,  personalidad:null},
+  'brown_2color':  {id:'brown_2color',  tipo:'conejo',nombre:'Conejo Tricolor', desc:'Combinación única',                                     tier:'premium',   cost:600,  unlock_level:6,  personalidad:'+10% XP de comidas'},
+  'demonic_bunny': {id:'demonic_bunny', tipo:'conejo',nombre:'Conejo Demoníaco',desc:'Noctámbulo con cuernitos 😈',                           tier:'premium-plus',cost:2000,unlock_level:12, personalidad:'+20% felicidad entre 0-6 AM'},
+  'fantasy_bunny': {id:'fantasy_bunny', tipo:'conejo',nombre:'Conejo Fantasía', desc:'Magia ancestral ✨',                                    tier:'premium-plus',cost:2500,unlock_level:15, personalidad:'+10% regen de TODAS las stats'},
   /* PÁJAROS */
   'green':         {id:'green',         tipo:'pajaro',nombre:'Pajarito Verde',  desc:'Alegre y cantarín',                                     tier:'default',   cost:0,    unlock_level:1,  personalidad:null},
   'blue':          {id:'blue',          tipo:'pajaro',nombre:'Pajarito Azul',   desc:'Elegante volador',                                      tier:'basic',     cost:0,    unlock_level:1,  personalidad:null},
@@ -2643,6 +2664,16 @@ var BREED_BASE_HEIGHT={
   'retro':          50,  /* Gato adulto */
   /* === CONEJOS === */
   'grey':           42,
+  /* v10.13.21: todos los conejos usan la misma altura base (biológicamente similares) */
+  'bunny_black':    42,
+  'bunny_brown':    42,
+  'light_brown':    42,
+  'white_bunny':    42,
+  'black_white':    42,
+  'brown_white':    42,
+  'brown_2color':   42,
+  'demonic_bunny':  44,  /* Un poquito más grande, tiene cuernitos */
+  'fantasy_bunny':  44,  /* Un poquito más grande, tiene aura mágica */
   /* === PÁJAROS === */
   'green':          28,
   'blue':           28,
@@ -3200,6 +3231,108 @@ var SPRITE_ANIMS={
       laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
       sad:{file:'laydown.png',frames:6,fps:4,loop:true},
       walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    /* v10.13.21: 9 variantes nuevas de conejo — todas con el mismo layout
+       que grey (verificado con detección de pixels no-transparentes).
+       Frame counts: idle=12, sleep=6, laydown=6, eating=5, excited=11, walk=8 */
+    bunny_black:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    bunny_brown:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    light_brown:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    white_bunny:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    black_white:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    brown_white:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    brown_2color:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    demonic_bunny:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
+    },
+    fantasy_bunny:{
+      frameW:32,frameH:32,defaultFacing:'right',
+      idle:{file:'idle.png',frames:12,fps:6,loop:true},
+      sleep:{file:'sleep.png',frames:6,fps:3,loop:true},
+      sleepy:{file:'laydown.png',frames:6,fps:5,loop:true},
+      eating:{file:'eating.png',frames:5,fps:7,loop:true},
+      excited:{file:'excited.png',frames:11,fps:12,loop:true},
+      laydown:{file:'laydown.png',frames:6,fps:5,loop:true},
+      sad:{file:'laydown.png',frames:6,fps:4,loop:true},
+      walk:{file:'walk.png',frames:8,fps:12,loop:true}
     }
   },
   birds:{
@@ -3255,7 +3388,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='6'; /* v10.13.19: bump tras Y-sorting y fixes de profundidad */
+var SPRITE_VERSION='7'; /* v10.13.21: bump para invalidar cache tras subir 9 conejos nuevos */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -4035,7 +4168,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.20</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.21</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */

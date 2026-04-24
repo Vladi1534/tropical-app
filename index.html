@@ -928,14 +928,96 @@ body.theme-light #tropical-bg g path{opacity:.35}
    z-index 2 para que quede DELANTE de la cama (que está en left:3% bottom:5% z:1).
    left:0% pegada a la pared, more-left que la cama para no superponerse. */
 .pet-floor-plant{position:absolute;left:0%;bottom:2%;width:44px;height:66px;background-repeat:no-repeat;background-size:contain;background-position:bottom center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));z-index:2;pointer-events:none}
-/* v10.13.27: feedback visual de muebles draggables.
-   En reposo no se ve nada distinto. Cuando el usuario hace long-press y
-   entra modo drag, .dragging agrega un outline dorado pulsante. */
-.draggable-furniture{cursor:grab;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.draggable-furniture.dragging{cursor:grabbing;outline:2px dashed var(--gold);outline-offset:3px;filter:drop-shadow(0 0 8px rgba(250,204,21,.6));z-index:25!important;opacity:.92}
+/* v10.13.27 + v10.13.28: feedback visual de muebles draggables.
+   - En reposo: sin cambios
+   - Durante long-press (500ms): pulso suave de "despertar"
+   - En modo drag: glow violeta + float animation + halo circular en el piso
+     para indicar la zona donde se va a soltar */
+.draggable-furniture{cursor:grab;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:filter .3s,transform .3s}
+/* v10.13.28: durante los 500ms del long press, el mueble late suave */
+.draggable-furniture.press-charging{animation:furnitureCharging .5s ease-out 1;filter:brightness(1.15)}
+@keyframes furnitureCharging{
+  0%{transform:scale(1)}
+  60%{transform:scale(1.04)}
+  100%{transform:scale(1.06)}
+}
+/* v10.13.28: mueble en modo drag activo — se eleva visualmente */
+.draggable-furniture.dragging{
+  cursor:grabbing;
+  z-index:25!important;
+  animation:furnitureFloating 1.6s ease-in-out infinite;
+  filter:drop-shadow(0 6px 12px rgba(168,85,247,.55)) brightness(1.12);
+  transition:none;
+}
+@keyframes furnitureFloating{
+  0%,100%{transform:translateY(0) scale(1.06)}
+  50%{transform:translateY(-3px) scale(1.06)}
+}
+/* v10.13.28: halo brillante alrededor del mueble que está siendo movido */
+.draggable-furniture.dragging::before{
+  content:'';
+  position:absolute;
+  inset:-8px;
+  border-radius:12px;
+  background:radial-gradient(ellipse at center,rgba(168,85,247,.25) 0%,rgba(168,85,247,0) 70%);
+  pointer-events:none;
+  z-index:-1;
+  animation:furnitureHalo 1.2s ease-in-out infinite;
+}
+@keyframes furnitureHalo{
+  0%,100%{opacity:.5;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.08)}
+}
+/* v10.13.28: todos los OTROS muebles se opacan cuando hay uno en drag
+   — dirige la atención al mueble activo. Aplicado vía clase en .pet-bg */
+.pet-bg.edit-mode .draggable-furniture:not(.dragging){
+  opacity:.45;
+  filter:saturate(.6);
+  transition:opacity .3s,filter .3s;
+}
 /* La planta y lamp tienen pointer-events:none por default — hay que reactivarlo
    cuando se les agrega la clase draggable-furniture */
 .pet-floor-plant.draggable-furniture{pointer-events:auto}
+
+/* v10.13.28: banner flotante "Modo edición" arriba del cuarto */
+.edit-mode-banner{
+  position:absolute;
+  top:8px;
+  left:50%;
+  transform:translateX(-50%) translateY(-60px);
+  z-index:100;
+  background:linear-gradient(135deg,rgba(168,85,247,.95),rgba(236,72,153,.92));
+  color:#fff;
+  font-family:'Fredoka',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  padding:6px 14px;
+  border-radius:20px;
+  box-shadow:0 4px 14px rgba(168,85,247,.5);
+  letter-spacing:.3px;
+  white-space:nowrap;
+  pointer-events:none;
+  opacity:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.edit-mode-banner.visible{
+  transform:translateX(-50%) translateY(0);
+  opacity:1;
+}
+.edit-mode-banner .eb-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#fff;
+  animation:ebPulse 1s ease-in-out infinite;
+}
+@keyframes ebPulse{
+  0%,100%{opacity:.4;transform:scale(.8)}
+  50%{opacity:1;transform:scale(1.2)}
+}
 /* v10.13.19: walker con z-index base 10.
    Y-sorting dinámico se aplica vía JS: se ajusta al moverse el walker
    según su posición vertical (más abajo = más al frente = z mayor).
@@ -4355,6 +4437,8 @@ function renderPetCard(){
   /* Dev button (only in dev mode) */
   if(devModeActive())h+='<button onclick="devOpen()" style="position:absolute;top:10px;right:42px;z-index:5;background:rgba(168,85,247,.6);border:1px solid rgba(168,85,247,.4);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;color:#fff" title="Dev panel">🛠️</button>';
   h+='<div class="pet-scene"><div class="pet-bg">'+petBgSVG(pet.habitat||'default')+'<div class="pet-time-overlay" id="pet-time-overlay"></div></div>';
+  /* v10.13.28: banner flotante que aparece al entrar en modo edición (drag&drop) */
+  h+='<div class="edit-mode-banner" id="edit-mode-banner"><span class="eb-dot"></span>Modo edición · arrastrá y soltá</div>';
   h+='<div class="pet-time-badge" id="pet-time-badge"></div>';
   h+='<div class="pet-wall-window" id="pet-wall-window"></div>';
   h+='<div class="pet-wall-shelf" id="pet-wall-shelf"></div>';
@@ -4372,7 +4456,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.27</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.28</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -4869,6 +4953,8 @@ function startFurnitureLongPress(el,clientX,clientY){
   _dragState.startPointerX=clientX;
   _dragState.startPointerY=clientY;
   _dragState.pressStartTime=Date.now();
+  /* v10.13.28: feedback visual inmediato — el mueble "carga" durante los 500ms */
+  el.classList.add('press-charging');
   /* Long press timer: 500ms sin soltar ni mover mucho → activar drag */
   _dragState.longPressTimer=setTimeout(function(){
     activateDragMode();
@@ -4895,12 +4981,20 @@ function onFurniturePreMove(e){
 function activateDragMode(){
   if(!_dragState.element||!_dragState.config)return;
   _dragState.active=true;
+  /* v10.13.28: sacar press-charging y poner dragging (son mutuamente excluyentes) */
+  _dragState.element.classList.remove('press-charging');
   _dragState.element.classList.add('dragging');
+  /* v10.13.28: activar modo edición global — atenúa los otros muebles */
+  var bg=document.querySelector('.pet-bg');
+  if(bg)bg.classList.add('edit-mode');
+  /* v10.13.28: mostrar banner flotante */
+  var banner=document.getElementById('edit-mode-banner');
+  if(banner)banner.classList.add('visible');
   /* Feedback háptico en mobile */
   if(navigator.vibrate)navigator.vibrate(25);
   /* Capturar el rect del contenedor para conversiones px → % */
-  var bg=document.querySelector('.pet-bg');
-  _dragState.containerRect=bg?bg.getBoundingClientRect():null;
+  var bgRect=document.querySelector('.pet-bg');
+  _dragState.containerRect=bgRect?bgRect.getBoundingClientRect():null;
   /* Leer posición actual del elemento en % */
   var cfg=_dragState.config;
   var pet=P&&P.mascota;
@@ -4912,7 +5006,6 @@ function activateDragMode(){
   document.removeEventListener('mousemove',onFurniturePreMove);
   document.addEventListener('touchmove',onFurnitureDragMove,{passive:false});
   document.addEventListener('mousemove',onFurnitureDragMove);
-  toast('✋ Arrastrá para mover · soltá para fijar');
 }
 
 function onFurnitureDragMove(e){
@@ -4992,10 +5085,15 @@ function onFurnitureRelease(){
     if(typeof savePet==='function')savePet();
     /* Recalcular constantes de física (POS_BED, POS_FOOD, etc) */
     recalculatePhysicsPositions(pet);
-    toast('✅ Mueble guardado en nueva posición');
+    toast('✨ ¡Mueble en su nuevo lugar!');
   }
   /* Limpiar estado */
   if(_dragState.element)_dragState.element.classList.remove('dragging');
+  /* v10.13.28: quitar edit-mode global y ocultar banner */
+  var bg=document.querySelector('.pet-bg');
+  if(bg)bg.classList.remove('edit-mode');
+  var banner=document.getElementById('edit-mode-banner');
+  if(banner)banner.classList.remove('visible');
   cancelLongPress();
   /* Re-aplicar Y-sort al walker por si cambió una zona (ej: cama movida) */
   var walker=document.querySelector('.pet-walker');
@@ -5006,6 +5104,11 @@ function cancelLongPress(){
   if(_dragState.longPressTimer){
     clearTimeout(_dragState.longPressTimer);
     _dragState.longPressTimer=null;
+  }
+  /* v10.13.28: si el long press se canceló antes de activar drag,
+     quitar la clase press-charging (el usuario soltó o movió antes). */
+  if(_dragState.element){
+    _dragState.element.classList.remove('press-charging');
   }
   _dragState.active=false;
   _dragState.element=null;

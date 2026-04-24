@@ -2670,50 +2670,52 @@ function getPetStageName(s){return['','Bebé','Joven','Adulta','Viejita'][s]}
 */
 
 /* Altura base biológica por variante (pixels, a escala adulto 1.0) */
+/* v10.13.23: claves ahora son "tipo:variante" para evitar que 'black'
+   del pájaro pise 'black' del perro (Cane Corso). Alturas subidas
+   de 28-80px al rango 38-115px para que los pets se vean grandes
+   en el cuarto (antes se veían como miniaturas). */
 var BREED_BASE_HEIGHT={
-  /* === PERROS === */
-  'black':          80,  /* Cane Corso — grande */
-  'dogo':           80,  /* Dogo Argentino — grande */
-  'husky':          78,  /* Husky — grande pero un toque más chico */
-  'rottweiler':     80,  /* Rottweiler — grande */
-  'golden':         72,  /* Golden — mediano */
-  'dalmatian':      70,  /* Dálmata — mediano */
-  'labrador_blond': 72,  /* Labrador — mediano */
-  'pharaoh':        68,  /* Pharaoh Hound — mediano/flaco */
+  /* === PERROS (grandes 115, medianos 100, Pharaoh flaco 95) === */
+  'perro:black':          115,  /* Cane Corso — grande */
+  'perro:dogo':           115,  /* Dogo Argentino — grande */
+  'perro:husky':          110,  /* Husky — grande pero un toque más chico */
+  'perro:rottweiler':     115,  /* Rottweiler — grande */
+  'perro:golden':         100,  /* Golden — mediano */
+  'perro:dalmatian':      100,  /* Dálmata — mediano */
+  'perro:labrador_blond': 100,  /* Labrador — mediano */
+  'perro:pharaoh':         95,  /* Pharaoh Hound — mediano/flaco */
   /* === GATOS === */
-  'retro':          50,  /* Gato adulto */
+  'gato:retro':            70,  /* Gato adulto */
   /* === CONEJOS === */
-  'grey':           42,
-  /* v10.13.21: todos los conejos usan la misma altura base (biológicamente similares) */
-  'bunny_black':    42,
-  'bunny_brown':    42,
-  'light_brown':    42,
-  'white_bunny':    42,
-  'black_white':    42,
-  'brown_white':    42,
-  'brown_2color':   42,
-  'demonic_bunny':  44,  /* Un poquito más grande, tiene cuernitos */
-  'fantasy_bunny':  44,  /* Un poquito más grande, tiene aura mágica */
-  /* === PÁJAROS === */
-  'green':          28,
-  'blue':           28,
-  'yellow':         28,
-  'parrot':         34   /* Loros más grandes que pájaros chicos */,
-  /* v10.13.22: 5 pájaros chicos nuevos (mismo tamaño) + 4 loros nuevos */
-  'black':          28,
-  'orange':         28,
-  'pink':           28,
-  'purple':         28,
-  'white':          28,
-  'parrot2':        34,
-  'parrot3':        34,
-  'parrot4':        36,  /* Loro Real, un toque más grande */
-  'parrot5':        38   /* Loro Ancestral, el más grande de todos */
+  'conejo:grey':           58,
+  'conejo:bunny_black':    58,
+  'conejo:bunny_brown':    58,
+  'conejo:light_brown':    58,
+  'conejo:white_bunny':    58,
+  'conejo:black_white':    58,
+  'conejo:brown_white':    58,
+  'conejo:brown_2color':   58,
+  'conejo:demonic_bunny':  61,  /* Un poquito más grande, tiene cuernitos */
+  'conejo:fantasy_bunny':  61,  /* Un poquito más grande, tiene aura mágica */
+  /* === PÁJAROS (chicos 38, loros 46-55 según rareza) === */
+  'pajaro:green':          38,
+  'pajaro:blue':           38,
+  'pajaro:yellow':         38,
+  'pajaro:black':          38,
+  'pajaro:orange':         38,
+  'pajaro:pink':           38,
+  'pajaro:purple':         38,
+  'pajaro:white':          38,
+  'pajaro:parrot':         46,
+  'pajaro:parrot2':        46,
+  'pajaro:parrot3':        46,
+  'pajaro:parrot4':        50,  /* Loro Real, un toque más grande */
+  'pajaro:parrot5':        55   /* Loro Ancestral, el más grande de todos */
 };
 
 /* Default por categoría si no hay variante registrada */
 var CATEGORY_DEFAULT_HEIGHT={
-  cats:50, dogs:72, bunnies:42, birds:28
+  cats:70, dogs:100, bunnies:58, birds:38
 };
 
 /* v10.13.18: etapas de vida con factores gradualese.
@@ -2741,13 +2743,16 @@ function getLifeStageDetail(lvl){
 
 /* Devuelve la altura objetivo en pixels para un pet dado (raza + edad). */
 function getPetTargetHeight(pet){
-  if(!pet)return 72;
+  if(!pet)return 100;
   var variant=pet.variante;
-  var base=BREED_BASE_HEIGHT[variant];
+  var tipo=pet.tipo||'perro';
+  /* v10.13.23: lookup por tipo:variante para evitar colisión entre
+     'black' del perro (Cane Corso) y 'black' del pájaro. */
+  var base=BREED_BASE_HEIGHT[tipo+':'+variant];
   if(!base){
     /* Fallback por categoría */
-    var cat=pet.tipo==='gato'?'cats':pet.tipo==='perro'?'dogs':pet.tipo==='pajaro'?'birds':'bunnies';
-    base=CATEGORY_DEFAULT_HEIGHT[cat]||72;
+    var cat=tipo==='gato'?'cats':tipo==='perro'?'dogs':tipo==='pajaro'?'birds':'bunnies';
+    base=CATEGORY_DEFAULT_HEIGHT[cat]||100;
   }
   var life=getLifeStageDetail(pet.nivel||1);
   return Math.round(base*life.factor);
@@ -3521,7 +3526,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='8'; /* v10.13.22: bump tras 9 pájaros nuevos */
+var SPRITE_VERSION='9'; /* v10.13.23: bump tras rescalado biológico + fix colisión muebles */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -3680,24 +3685,24 @@ var TROPISHOP_CATALOG={
   'ventana_7':{id:'ventana_7',slot:'ventana',nombre:'Ventana Tropical',desc:'Vista paradisíaca',url:'items/v11/window_7.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:1500,unlock_level:15,bonus:{tipo:'felicidad_regen',value:0.15}},
   'ventana_8':{id:'ventana_8',slot:'ventana',nombre:'Ventana Nocturna',desc:'Estrellas visibles',url:'items/v11/window_8.png',especies:['gato','perro','conejo','pajaro'],tier:'premium-plus',cost:2000,unlock_level:20,bonus:{tipo:'felicidad_regen',value:0.20}},
   /* v10.13.16: lámparas de techo */
-  'lampara_blue':{id:'lampara_blue',slot:'lampara',nombre:'Lámpara Azul',desc:'Luz cálida clásica',url:'decor/v1/lamp_blue.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:0,unlock_level:1,bonus:null},
-  'lampara_pink':{id:'lampara_pink',slot:'lampara',nombre:'Lámpara Rosa',desc:'Tono suave rosado',url:'decor/v1/lamp_pink.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:50,unlock_level:1,bonus:null},
-  'lampara_gold':{id:'lampara_gold',slot:'lampara',nombre:'Lámpara Dorada',desc:'Brillo elegante',url:'decor/v1/lamp_gold.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
-  'lampara_gray':{id:'lampara_gray',slot:'lampara',nombre:'Lámpara Gris',desc:'Estilo industrial',url:'decor/v1/lamp_gray.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:50,unlock_level:1,bonus:null},
-  'lampara_navy':{id:'lampara_navy',slot:'lampara',nombre:'Lámpara Azul Marino',desc:'Tono profundo',url:'decor/v1/lamp_navy.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
-  'lampara_purple':{id:'lampara_purple',slot:'lampara',nombre:'Lámpara Violeta',desc:'Luz mística',url:'decor/v1/lamp_purple.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:120,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.05}},
-  'lampara_green':{id:'lampara_green',slot:'lampara',nombre:'Lámpara Verde',desc:'Tono natural',url:'decor/v1/lamp_green.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
-  'lampara_lightblue':{id:'lampara_lightblue',slot:'lampara',nombre:'Lámpara Celeste',desc:'Frescura marina',url:'decor/v1/lamp_lightblue.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:200,unlock_level:7,bonus:{tipo:'felicidad_regen',value:0.08}},
+  'lampara_blue':{id:'lampara_blue',slot:'lampara',nombre:'Lámpara Azul',desc:'Luz cálida clásica',url:'decor/v2/lamp_blue.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:0,unlock_level:1,bonus:null},
+  'lampara_pink':{id:'lampara_pink',slot:'lampara',nombre:'Lámpara Rosa',desc:'Tono suave rosado',url:'decor/v2/lamp_pink.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:50,unlock_level:1,bonus:null},
+  'lampara_gold':{id:'lampara_gold',slot:'lampara',nombre:'Lámpara Dorada',desc:'Brillo elegante',url:'decor/v2/lamp_gold.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
+  'lampara_gray':{id:'lampara_gray',slot:'lampara',nombre:'Lámpara Gris',desc:'Estilo industrial',url:'decor/v2/lamp_gray.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:50,unlock_level:1,bonus:null},
+  'lampara_navy':{id:'lampara_navy',slot:'lampara',nombre:'Lámpara Azul Marino',desc:'Tono profundo',url:'decor/v2/lamp_navy.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
+  'lampara_purple':{id:'lampara_purple',slot:'lampara',nombre:'Lámpara Violeta',desc:'Luz mística',url:'decor/v2/lamp_purple.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:120,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.05}},
+  'lampara_green':{id:'lampara_green',slot:'lampara',nombre:'Lámpara Verde',desc:'Tono natural',url:'decor/v2/lamp_green.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:100,unlock_level:3,bonus:null},
+  'lampara_lightblue':{id:'lampara_lightblue',slot:'lampara',nombre:'Lámpara Celeste',desc:'Frescura marina',url:'decor/v2/lamp_lightblue.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:200,unlock_level:7,bonus:{tipo:'felicidad_regen',value:0.08}},
   /* v10.13.16: plantas de piso */
-  'planta_big_green':{id:'planta_big_green',slot:'planta',nombre:'Planta Grande Verde',desc:'Frondosa y tropical',url:'decor/v1/plant_big_green.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:0,unlock_level:1,bonus:null},
-  'planta_big_pink':{id:'planta_big_pink',slot:'planta',nombre:'Planta Grande Rosa',desc:'Flores exóticas',url:'decor/v1/plant_big_pink.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:80,unlock_level:3,bonus:null},
-  'planta_big_orange':{id:'planta_big_orange',slot:'planta',nombre:'Planta Grande Naranja',desc:'Hojas otoñales',url:'decor/v1/plant_big_orange.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:80,unlock_level:3,bonus:null},
-  'planta_med_fern':{id:'planta_med_fern',slot:'planta',nombre:'Helecho Mediano',desc:'Clásico y verde',url:'decor/v1/plant_med_fern.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:30,unlock_level:1,bonus:null},
-  'planta_med_leaves':{id:'planta_med_leaves',slot:'planta',nombre:'Hojas Medianas',desc:'Follaje decorativo',url:'decor/v1/plant_med_leaves.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:30,unlock_level:1,bonus:null},
-  'planta_med_vine':{id:'planta_med_vine',slot:'planta',nombre:'Enredadera Mediana',desc:'Colgante natural',url:'decor/v1/plant_med_vine.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:60,unlock_level:3,bonus:null},
-  'planta_small_red':{id:'planta_small_red',slot:'planta',nombre:'Planta Chica Roja',desc:'Maceta compacta',url:'decor/v1/plant_small_red.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:40,unlock_level:1,bonus:null},
-  'planta_small_orange':{id:'planta_small_orange',slot:'planta',nombre:'Planta Chica Naranja',desc:'Toque cítrico',url:'decor/v1/plant_small_orange.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:40,unlock_level:1,bonus:null},
-  'planta_small_blue':{id:'planta_small_blue',slot:'planta',nombre:'Planta Chica Azul',desc:'Flor exótica azul',url:'decor/v1/plant_small_blue.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:150,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.05}}
+  'planta_big_green':{id:'planta_big_green',slot:'planta',nombre:'Planta Grande Verde',desc:'Frondosa y tropical',url:'decor/v2/plant_big_green.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:0,unlock_level:1,bonus:null},
+  'planta_big_pink':{id:'planta_big_pink',slot:'planta',nombre:'Planta Grande Rosa',desc:'Flores exóticas',url:'decor/v2/plant_big_pink.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:80,unlock_level:3,bonus:null},
+  'planta_big_orange':{id:'planta_big_orange',slot:'planta',nombre:'Planta Grande Naranja',desc:'Hojas otoñales',url:'decor/v2/plant_big_orange.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:80,unlock_level:3,bonus:null},
+  'planta_med_fern':{id:'planta_med_fern',slot:'planta',nombre:'Helecho Mediano',desc:'Clásico y verde',url:'decor/v2/plant_med_fern.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:30,unlock_level:1,bonus:null},
+  'planta_med_leaves':{id:'planta_med_leaves',slot:'planta',nombre:'Hojas Medianas',desc:'Follaje decorativo',url:'decor/v2/plant_med_leaves.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:30,unlock_level:1,bonus:null},
+  'planta_med_vine':{id:'planta_med_vine',slot:'planta',nombre:'Enredadera Mediana',desc:'Colgante natural',url:'decor/v2/plant_med_vine.png',especies:['gato','perro','conejo','pajaro'],tier:'standard',cost:60,unlock_level:3,bonus:null},
+  'planta_small_red':{id:'planta_small_red',slot:'planta',nombre:'Planta Chica Roja',desc:'Maceta compacta',url:'decor/v2/plant_small_red.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:40,unlock_level:1,bonus:null},
+  'planta_small_orange':{id:'planta_small_orange',slot:'planta',nombre:'Planta Chica Naranja',desc:'Toque cítrico',url:'decor/v2/plant_small_orange.png',especies:['gato','perro','conejo','pajaro'],tier:'basic',cost:40,unlock_level:1,bonus:null},
+  'planta_small_blue':{id:'planta_small_blue',slot:'planta',nombre:'Planta Chica Azul',desc:'Flor exótica azul',url:'decor/v2/plant_small_blue.png',especies:['gato','perro','conejo','pajaro'],tier:'premium',cost:150,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.05}}
 };
 
 /* Default items que TODAS las mascotas tienen sin comprar nada.
@@ -4012,8 +4017,11 @@ function PetController(el,category,variant,pet){
   if(this.pet){
     targetHeight=getPetTargetHeight(this.pet);
   }else{
-    /* Preview sin pet: usar BREED_BASE_HEIGHT o category default */
-    targetHeight=BREED_BASE_HEIGHT[variant]||CATEGORY_DEFAULT_HEIGHT[category]||72;
+    /* Preview sin pet: mapear category → tipo y usar la clave combinada.
+       v10.13.23: evita colisión 'black' perro vs 'black' pájaro. */
+    var catToTipo={cats:'gato',dogs:'perro',bunnies:'conejo',birds:'pajaro'};
+    var tipo=catToTipo[category]||'perro';
+    targetHeight=BREED_BASE_HEIGHT[tipo+':'+variant]||CATEGORY_DEFAULT_HEIGHT[category]||100;
   }
   var scale=targetHeight/this.config.frameH;
   this.sprite=new PetSprite({
@@ -4100,6 +4108,10 @@ function applyPetMoodState(){
   var mood=getMood(P.mascota);
   var state=moodToState(mood);
   _currentPetController.setState(state);
+  /* v10.13.23: re-aplicar Y-sort/física al cambiar mood para que si
+     pasó a sleeping estando sobre la cama, suba a z=15 (delante de cama). */
+  var walker=document.querySelector('.pet-walker');
+  if(walker)applyWalkerZSort(walker);
   /* v10.13.2b: si la mascota se durmió lejos de la cama, caminar hasta
      ahí. No hacer esto si ya está caminando (_walkPaused=true indica
      acción en curso — dejar que esa acción termine antes). */
@@ -4301,7 +4313,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.22</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.23</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -5542,20 +5554,58 @@ if(typeof window!=='undefined'){
    Si está en zona de cama (0-22%) → z=8 (detrás de cama que es z=9)
    Si está centrado (22-60%) → z=12 (por encima de todo)
    Si está en zona de platos/caseta (60-100%) → z=8-10 según específico */
+/* v10.13.19: Y-sorting dinámico + v10.13.23: colisión con muebles.
+   Los muebles del cuarto ocupan zonas específicas — la mascota debe
+   treparse encima de ellos cuando camina sobre uno, no atravesarlo.
+
+   ZONAS DEL CUARTO (left%):
+     0-4%    → pared izquierda (planta, intocable)
+     4-22%   → cama (sube ~18px cuando está arriba)
+     22-60%  → piso libre
+     60-74%  → plato de comida (sube ~8px, es bajito)
+     74-85%  → plato de agua (sube ~8px)
+     71-97%  → caseta (ocupa bottom:10%, la mascota entra adentro)
+*/
+
+/* Devuelve {bottom, z, onFurniture, furnitureType} para una posición left%.
+   Si el pet está sobre cama/plato, ajusta el bottom% y el z-index. */
+function getPetPhysicsAt(leftPct,mood){
+  var base={bottom:6,z:10,onFurniture:null};
+  /* Zona cama (5-22%): mascota se trepa encima */
+  if(leftPct>=4&&leftPct<22){
+    if(mood==='sleeping'){
+      /* Durmiendo encima de la cama — VISIBLE DELANTE de ella (z mayor).
+         Bottom sube a ~11% (alto de la cama) para que no se hunda. */
+      return {bottom:10,z:15,onFurniture:'bed'};
+    }
+    /* Caminando sobre la cama — sube pero queda DETRÁS de ella para
+       dar efecto de "estar dentro/sobre ella" (ilusión de profundidad). */
+    return {bottom:8,z:8,onFurniture:'bed'};
+  }
+  /* Zona central (22-60%): piso libre, queda delante de todo */
+  if(leftPct<60){return {bottom:6,z:12,onFurniture:null}}
+  /* Zona platos (60-85%): salta sobre ellos */
+  if(leftPct<85){
+    return {bottom:8,z:11,onFurniture:'bowl'};
+  }
+  /* Zona caseta (85%+): queda adentro, detrás del techo de la caseta */
+  return {bottom:6,z:7,onFurniture:'house'};
+}
+
 function computeWalkerZ(leftPct){
-  /* Zona izquierda (cama): si está sobre la cama, queda detrás */
-  if(leftPct<22)return 8;  /* detrás de la cama (z=9) */
-  /* Zona centro (libre): queda encima de todo */
-  if(leftPct<60)return 12;
-  /* Zona derecha (caseta + platos): queda entre ellos */
-  return 10;
+  return getPetPhysicsAt(leftPct,null).z;
 }
 
 function applyWalkerZSort(walker){
   if(!walker)return;
   var leftPctStr=walker.style.left||'50%';
   var leftPct=parseFloat(leftPctStr)||50;
-  walker.style.zIndex=computeWalkerZ(leftPct);
+  /* v10.13.23: pasar mood para que al dormir en la cama el z sea correcto */
+  var mood=null;
+  if(P&&P.mascota)mood=getMood(P.mascota);
+  var phys=getPetPhysicsAt(leftPct,mood);
+  walker.style.zIndex=phys.z;
+  walker.style.bottom=phys.bottom+'%';
 }
 
 function petWalkTo(targetPct,callback){
@@ -5916,9 +5966,11 @@ function renderCompareRoster(){
     walker.className='pet-walker compare-walker';
     walker.style.left=positions[j]+'%';
     walker.style.transition='none';
-    /* v10.13.19: Y-sort aplicado para que las comparativas también respeten
-       la profundidad del cuarto (detrás de cama si están en zona izquierda). */
-    walker.style.zIndex=computeWalkerZ(positions[j]);
+    /* v10.13.19+23: física completa aplicada a comparativas — respetan
+       profundidad (z-index) Y altura (bottom%) según zona del cuarto. */
+    var phys=getPetPhysicsAt(positions[j],null);
+    walker.style.zIndex=phys.z;
+    walker.style.bottom=phys.bottom+'%';
     walker.style.opacity='0.85';
     walker.innerHTML='<div class="pet-facing"><div class="pet-sprite compare-sprite"></div></div>'+
       '<div class="pet-shadow"></div>'+

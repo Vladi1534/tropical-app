@@ -928,6 +928,14 @@ body.theme-light #tropical-bg g path{opacity:.35}
    z-index 2 para que quede DELANTE de la cama (que está en left:3% bottom:5% z:1).
    left:0% pegada a la pared, more-left que la cama para no superponerse. */
 .pet-floor-plant{position:absolute;left:0%;bottom:2%;width:44px;height:66px;background-repeat:no-repeat;background-size:contain;background-position:bottom center;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));z-index:2;pointer-events:none}
+/* v10.13.27: feedback visual de muebles draggables.
+   En reposo no se ve nada distinto. Cuando el usuario hace long-press y
+   entra modo drag, .dragging agrega un outline dorado pulsante. */
+.draggable-furniture{cursor:grab;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.draggable-furniture.dragging{cursor:grabbing;outline:2px dashed var(--gold);outline-offset:3px;filter:drop-shadow(0 0 8px rgba(250,204,21,.6));z-index:25!important;opacity:.92}
+/* La planta y lamp tienen pointer-events:none por default — hay que reactivarlo
+   cuando se les agrega la clase draggable-furniture */
+.pet-floor-plant.draggable-furniture{pointer-events:auto}
 /* v10.13.19: walker con z-index base 10.
    Y-sorting dinámico se aplica vía JS: se ajusta al moverse el walker
    según su posición vertical (más abajo = más al frente = z mayor).
@@ -1356,6 +1364,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   </div>
   <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:10px">
     <button class="bs" onclick="compareClear()" style="background:rgba(239,68,68,.15)">🧹 Limpiar compare</button>
+    <button class="bs" onclick="resetFurniturePositions()" style="background:rgba(250,204,21,.15);color:var(--gold)">🔄 Reset muebles</button>
   </div>
 
   <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">😊 Mood test</div>
@@ -3765,6 +3774,19 @@ function ensureInventoryStructure(pet){
     else if(pet.tipo==='conejo')pet.variante='grey';
     else if(pet.tipo==='pajaro')pet.variante='green';
   }
+  /* v10.13.27: posiciones personalizadas de muebles de piso.
+     Estructura: pet.decoracion_custom = {
+       bed: {left: 3, bottom: 5},       // % default del CSS
+       house: {right: 14, bottom: 10},
+       food: {right: 28, bottom: 2},
+       water: {right: 16, bottom: 2},
+       plant: {left: 0, bottom: 2}
+     }
+     Si no existe, se usa la posición default del CSS.
+     Los valores están en % del contenedor del cuarto. */
+  if(!pet.decoracion_custom){
+    pet.decoracion_custom={};
+  }
 }
 
 /* Dado un pet y un slot, devuelve la URL del sprite equipado.
@@ -4350,7 +4372,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.26</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.27</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -4694,6 +4716,10 @@ function updatePetBowl(){
   /* v10.13.7: inicializar drag-and-drop de la pelota cada vez que se
      re-renderiza el cuarto (renderPetCard destruye el DOM anterior). */
   if(typeof initBallDrag==='function')initBallDrag();
+  /* v10.13.27: aplicar posiciones personalizadas de muebles (drag&drop del usuario)
+     e inicializar el long-press para activar modo edición. */
+  if(typeof applyCustomPositions==='function')applyCustomPositions(pet);
+  if(typeof initFurnitureDrag==='function')initFurnitureDrag();
 }
 
 /* ===== BALL DRAG & DROP (v10.13.7) =====
@@ -4712,6 +4738,307 @@ function updatePetBowl(){
         pasando la velocidad como params
 */
 var _ballDragState=null;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v10.13.27: DRAG & DROP DE MUEBLES DE PISO
+   ═══════════════════════════════════════════════════════════════════════
+   Permite al usuario reorganizar los muebles de piso del cuarto:
+   - Cama (pet-decor-bed)
+   - Caseta (pet-decor-house) — solo visible si el perro la tiene equipada
+   - Planta (pet-floor-plant)
+   - Plato comida (pet-bowl)
+   - Plato agua (water-bowl)
+
+   UX: long-press 500ms sobre un mueble lo pone en "modo edit" (outline
+   dorado + cursor grab). Un segundo touchmove/mousemove lo arrastra.
+   Al soltar, se guarda la nueva posición en pet.decoracion_custom y
+   se recalculan las zonas de física (POS_BED, POS_FOOD, etc).
+
+   Los muebles de pared (ventana, repisa, lámpara, reloj, cuadros) NO son
+   draggables por decisión de diseño (confirmado por Vladi). */
+
+/* Metadata de muebles draggables: { id, anchor, defaults, physicsKey }
+   anchor: 'left' o 'right' — el lado desde el que se posiciona.
+   defaults: valores del CSS original.
+   physicsKey: cuál constante POS_* actualizar (si aplica). */
+var DRAGGABLE_FURNITURE=[
+  {id:'pet-decor-bed',     key:'bed',   anchor:'left',  defaultX:3,  defaultY:5,  physicsKey:'POS_BED',   widthPct:30},
+  {id:'pet-decor-house',   key:'house', anchor:'right', defaultX:14, defaultY:10, physicsKey:'POS_HOUSE', widthPct:28},
+  {id:'pet-floor-plant',   key:'plant', anchor:'left',  defaultX:0,  defaultY:2,  physicsKey:null,        widthPct:12},
+  {id:'pet-bowl-el',   key:'food',  anchor:'right', defaultX:28, defaultY:2,  physicsKey:'POS_FOOD',  widthPct:10},
+  {id:'water-bowl-el', key:'water', anchor:'right', defaultX:16, defaultY:2,  physicsKey:'POS_WATER', widthPct:10}
+];
+
+/* Aplica las posiciones custom guardadas en pet.decoracion_custom al DOM.
+   Si un mueble no tiene entrada custom, usa los defaults del CSS (no-op). */
+function applyCustomPositions(pet){
+  if(!pet||!pet.decoracion_custom)return;
+  for(var i=0;i<DRAGGABLE_FURNITURE.length;i++){
+    var cfg=DRAGGABLE_FURNITURE[i];
+    var el=document.getElementById(cfg.id);
+    if(!el)continue;
+    var custom=pet.decoracion_custom[cfg.key];
+    if(!custom)continue;
+    /* Aplicar coordenadas (solo x del anchor correspondiente + bottom) */
+    if(cfg.anchor==='left'){
+      el.style.left=custom.x+'%';
+      el.style.right='auto';
+    }else{
+      el.style.right=custom.x+'%';
+      el.style.left='auto';
+    }
+    el.style.bottom=custom.y+'%';
+  }
+  /* Recalcular constantes de física con las nuevas posiciones */
+  recalculatePhysicsPositions(pet);
+}
+
+/* Recalcula POS_BED, POS_HOUSE, POS_FOOD, POS_WATER en base a las
+   posiciones actuales de los muebles (default o custom).
+   Usa leftPct = centro horizontal del mueble. */
+function recalculatePhysicsPositions(pet){
+  if(!pet)return;
+  var custom=pet.decoracion_custom||{};
+  /* bed: anchor left + width ~30% → centro = left + 15 */
+  var bedX=custom.bed?custom.bed.x:3;
+  POS_BED=bedX+15;
+  /* house: anchor right + width ~28% → centro = 100 - right - 14 */
+  var houseX=custom.house?custom.house.x:14;
+  POS_HOUSE=100-houseX-14;
+  /* food: anchor right + width ~10% → centro = 100 - right - 5 */
+  var foodX=custom.food?custom.food.x:28;
+  POS_FOOD=100-foodX-5;
+  /* water: anchor right + width ~10% → centro = 100 - right - 5 */
+  var waterX=custom.water?custom.water.x:16;
+  POS_WATER=100-waterX-5;
+}
+
+/* Estado global del sistema de drag */
+var _dragState={
+  active:false,      /* true cuando hay un mueble siendo arrastrado */
+  element:null,      /* DOM element del mueble */
+  config:null,       /* entry de DRAGGABLE_FURNITURE */
+  longPressTimer:null,
+  pressStartTime:0,
+  startPointerX:0,   /* px del touch/mouse al arrancar */
+  startPointerY:0,
+  startElX:0,        /* % del elemento al arrancar (x según su anchor) */
+  startElY:0,        /* % bottom del elemento */
+  containerRect:null /* bounding rect del .pet-bg para conversiones */
+};
+
+/* Inicializa listeners long-press en cada mueble draggable.
+   Llamado desde updatePetBowl() tras re-renderizar el cuarto. */
+function initFurnitureDrag(){
+  for(var i=0;i<DRAGGABLE_FURNITURE.length;i++){
+    var cfg=DRAGGABLE_FURNITURE[i];
+    var el=document.getElementById(cfg.id);
+    if(!el)continue;
+    /* Marcar draggable para CSS hint */
+    el.classList.add('draggable-furniture');
+    el.style.pointerEvents='auto';
+    /* Limpiar listeners previos clonando el nodo — forma segura de evitar duplicados */
+    /* NOTA: no clonamos porque romperia el sprite del bowl. En su lugar, guardamos
+       el config en el elemento y usamos handlers que chequean data-drag-bound. */
+    if(el.dataset.dragBound==='1')continue;
+    el.dataset.dragBound='1';
+    el._dragCfg=cfg;
+    /* Eventos unificados: touch primero, mouse como fallback */
+    el.addEventListener('touchstart',onFurnitureTouchStart,{passive:false});
+    el.addEventListener('mousedown',onFurnitureMouseDown);
+  }
+}
+
+function onFurnitureTouchStart(e){
+  if(e.touches.length!==1)return;
+  var t=e.touches[0];
+  startFurnitureLongPress(this,t.clientX,t.clientY);
+  /* No preventDefault acá — así el plato sigue siendo clickeable para comer si no es long press */
+}
+
+function onFurnitureMouseDown(e){
+  if(e.button!==0)return;
+  startFurnitureLongPress(this,e.clientX,e.clientY);
+}
+
+function startFurnitureLongPress(el,clientX,clientY){
+  /* Cancelar cualquier long press anterior */
+  cancelLongPress();
+  _dragState.element=el;
+  _dragState.config=el._dragCfg;
+  _dragState.startPointerX=clientX;
+  _dragState.startPointerY=clientY;
+  _dragState.pressStartTime=Date.now();
+  /* Long press timer: 500ms sin soltar ni mover mucho → activar drag */
+  _dragState.longPressTimer=setTimeout(function(){
+    activateDragMode();
+  },500);
+  /* Listeners de seguimiento para cancelar si mueve o suelta antes de los 500ms */
+  document.addEventListener('touchmove',onFurniturePreMove,{passive:false});
+  document.addEventListener('mousemove',onFurniturePreMove);
+  document.addEventListener('touchend',onFurnitureRelease);
+  document.addEventListener('mouseup',onFurnitureRelease);
+}
+
+function onFurniturePreMove(e){
+  /* Antes de los 500ms, si el dedo se mueve más de 8px, cancelar (era un scroll o tap) */
+  if(_dragState.active)return; /* ya activado, pasar a drag real */
+  var cx=e.touches?e.touches[0].clientX:e.clientX;
+  var cy=e.touches?e.touches[0].clientY:e.clientY;
+  var dx=cx-_dragState.startPointerX;
+  var dy=cy-_dragState.startPointerY;
+  if(Math.sqrt(dx*dx+dy*dy)>8){
+    cancelLongPress();
+  }
+}
+
+function activateDragMode(){
+  if(!_dragState.element||!_dragState.config)return;
+  _dragState.active=true;
+  _dragState.element.classList.add('dragging');
+  /* Feedback háptico en mobile */
+  if(navigator.vibrate)navigator.vibrate(25);
+  /* Capturar el rect del contenedor para conversiones px → % */
+  var bg=document.querySelector('.pet-bg');
+  _dragState.containerRect=bg?bg.getBoundingClientRect():null;
+  /* Leer posición actual del elemento en % */
+  var cfg=_dragState.config;
+  var pet=P&&P.mascota;
+  var custom=pet&&pet.decoracion_custom&&pet.decoracion_custom[cfg.key];
+  _dragState.startElX=custom?custom.x:cfg.defaultX;
+  _dragState.startElY=custom?custom.y:cfg.defaultY;
+  /* Switch listeners: ahora son move reales */
+  document.removeEventListener('touchmove',onFurniturePreMove);
+  document.removeEventListener('mousemove',onFurniturePreMove);
+  document.addEventListener('touchmove',onFurnitureDragMove,{passive:false});
+  document.addEventListener('mousemove',onFurnitureDragMove);
+  toast('✋ Arrastrá para mover · soltá para fijar');
+}
+
+function onFurnitureDragMove(e){
+  if(!_dragState.active||!_dragState.element||!_dragState.containerRect)return;
+  if(e.cancelable)e.preventDefault(); /* prevenir scroll durante drag */
+  var cx=e.touches?e.touches[0].clientX:e.clientX;
+  var cy=e.touches?e.touches[0].clientY:e.clientY;
+  var rect=_dragState.containerRect;
+  /* Delta en px desde donde empezó el press */
+  var dxPx=cx-_dragState.startPointerX;
+  var dyPx=cy-_dragState.startPointerY;
+  /* Convertir a % del contenedor */
+  var dxPct=(dxPx/rect.width)*100;
+  var dyPct=(dyPx/rect.height)*100;
+  var cfg=_dragState.config;
+  /* Calcular nueva posición (respetando anchor).
+     Para left: aumentar con dx. Para right: invertir (mueble se mueve a la derecha → right disminuye).
+     Bottom siempre se invierte (bajar cursor = bottom baja). */
+  var newX;
+  if(cfg.anchor==='left'){
+    newX=_dragState.startElX+dxPct;
+  }else{
+    newX=_dragState.startElX-dxPct;
+  }
+  var newY=_dragState.startElY-dyPct;
+  /* Clamp dentro de rangos razonables */
+  newX=Math.max(0,Math.min(100-cfg.widthPct,newX));
+  newY=Math.max(0,Math.min(60,newY)); /* máximo 60% de altura para no ir al techo */
+  /* Aplicar al DOM inmediatamente (feedback visual sin lag) */
+  if(cfg.anchor==='left'){
+    _dragState.element.style.left=newX+'%';
+    _dragState.element.style.right='auto';
+  }else{
+    _dragState.element.style.right=newX+'%';
+    _dragState.element.style.left='auto';
+  }
+  _dragState.element.style.bottom=newY+'%';
+  /* Guardar valor provisorio para aplicarlo al soltar */
+  _dragState._pendingX=newX;
+  _dragState._pendingY=newY;
+}
+
+function onFurnitureRelease(){
+  /* Si aún no se activó drag (release antes de 500ms), cancelar */
+  if(!_dragState.active){
+    cancelLongPress();
+    return;
+  }
+  /* v10.13.27: prevenir el onclick del elemento (openBowl, etc) al soltar
+     después de haber hecho drag. Marcamos flag que se chequea por ~350ms. */
+  if(_dragState.element){
+    _dragState.element._justDragged=true;
+    setTimeout(function(){
+      if(_dragState.element)_dragState.element._justDragged=false;
+    },350);
+    /* También interceptar el siguiente click al capture para cancelarlo */
+    var elCapture=_dragState.element;
+    var blockClick=function(ev){
+      ev.stopPropagation();
+      ev.preventDefault();
+      elCapture.removeEventListener('click',blockClick,true);
+    };
+    elCapture.addEventListener('click',blockClick,true);
+    setTimeout(function(){
+      elCapture.removeEventListener('click',blockClick,true);
+    },400);
+  }
+  /* Drag finalizado — guardar posición */
+  var cfg=_dragState.config;
+  var pet=P&&P.mascota;
+  if(pet&&cfg&&_dragState._pendingX!==undefined){
+    if(!pet.decoracion_custom)pet.decoracion_custom={};
+    pet.decoracion_custom[cfg.key]={
+      x:Math.round(_dragState._pendingX*10)/10, /* 1 decimal */
+      y:Math.round(_dragState._pendingY*10)/10
+    };
+    if(typeof savePet==='function')savePet();
+    /* Recalcular constantes de física (POS_BED, POS_FOOD, etc) */
+    recalculatePhysicsPositions(pet);
+    toast('✅ Mueble guardado en nueva posición');
+  }
+  /* Limpiar estado */
+  if(_dragState.element)_dragState.element.classList.remove('dragging');
+  cancelLongPress();
+  /* Re-aplicar Y-sort al walker por si cambió una zona (ej: cama movida) */
+  var walker=document.querySelector('.pet-walker');
+  if(walker&&typeof applyWalkerZSort==='function')applyWalkerZSort(walker);
+}
+
+function cancelLongPress(){
+  if(_dragState.longPressTimer){
+    clearTimeout(_dragState.longPressTimer);
+    _dragState.longPressTimer=null;
+  }
+  _dragState.active=false;
+  _dragState.element=null;
+  _dragState.config=null;
+  _dragState._pendingX=undefined;
+  _dragState._pendingY=undefined;
+  /* Remover listeners globales */
+  document.removeEventListener('touchmove',onFurniturePreMove);
+  document.removeEventListener('mousemove',onFurniturePreMove);
+  document.removeEventListener('touchmove',onFurnitureDragMove);
+  document.removeEventListener('mousemove',onFurnitureDragMove);
+  document.removeEventListener('touchend',onFurnitureRelease);
+  document.removeEventListener('mouseup',onFurnitureRelease);
+}
+
+/* Resetea todas las posiciones de muebles a los defaults del CSS.
+   Limpia pet.decoracion_custom y re-renderiza. */
+function resetFurniturePositions(){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.decoracion_custom={};
+  if(typeof savePet==='function')savePet();
+  recalculatePhysicsPositions(pet);
+  /* Reset directo de cada elemento al default */
+  for(var i=0;i<DRAGGABLE_FURNITURE.length;i++){
+    var cfg=DRAGGABLE_FURNITURE[i];
+    var el=document.getElementById(cfg.id);
+    if(!el)continue;
+    el.style.left='';
+    el.style.right='';
+    el.style.bottom='';
+  }
+  toast('🔄 Muebles reseteados a posición original');
+}
 
 function initBallDrag(){
   var ballEl=document.getElementById('toy-ball-el');

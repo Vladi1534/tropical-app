@@ -936,9 +936,15 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left,z-index;display:inline-block;text-align:center}
 .pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
 .pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
+/* v10.13.26: salto sobre platos — el walker hace un hop pronunciado
+   al cruzar un plato de comida/agua. Altura del salto ~14px vs 3px del walk. */
+.pet-walker.jumping .pet-facing{animation:petJumpOver .55s ease-out 1}
+.pet-walker.jumping .pet-facing.face-left{animation:petJumpOverLeft .55s ease-out 1}
 .pet-walker.fast{transition:left 1.5s cubic-bezier(.4,0,.6,1)}
 @keyframes petWalkBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes petWalkBounceLeft{0%,100%{transform:scaleX(-1) translateY(0)}50%{transform:scaleX(-1) translateY(-3px)}}
+@keyframes petJumpOver{0%{transform:translateY(0)}40%{transform:translateY(-14px)}70%{transform:translateY(-10px)}100%{transform:translateY(0)}}
+@keyframes petJumpOverLeft{0%{transform:scaleX(-1) translateY(0)}40%{transform:scaleX(-1) translateY(-14px)}70%{transform:scaleX(-1) translateY(-10px)}100%{transform:scaleX(-1) translateY(0)}}
 .pet-time-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;mix-blend-mode:multiply;transition:background-color 2s ease,opacity 2s ease;opacity:0}
 .pet-time-overlay.dusk{background:linear-gradient(to bottom,rgba(255,180,120,.45),rgba(220,140,170,.4));opacity:1}
 .pet-time-overlay.night{background:linear-gradient(to bottom,rgba(80,90,140,.5),rgba(60,70,120,.55));opacity:1}
@@ -4344,7 +4350,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.25</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.26</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -5660,6 +5666,34 @@ function computeWalkerZ(leftPct){
   return getPetPhysicsAt(leftPct,null).z;
 }
 
+/* v10.13.26: detección de cruce de plato para animar salto.
+   Cuando el walker se mueve de un leftPct a otro, si pasa a través de
+   una zona de plato (60-82%), se le aplica la clase .jumping para
+   que haga un hop visual en vez de atravesar el plato como si fuera aire.
+
+   Llamar ANTES de cambiar walker.style.left, con los valores viejo y nuevo.
+   Solo se dispara si el movimiento cruza la zona (no si ya venía adentro). */
+function triggerJumpIfCrossing(walker,fromPct,toPct){
+  if(!walker)return;
+  /* Zona plato = 60 a 82%. Si el camino cruza ese rango, animar salto. */
+  var PLATE_START=60;
+  var PLATE_END=82;
+  var minP=Math.min(fromPct,toPct);
+  var maxP=Math.max(fromPct,toPct);
+  /* Solo si el segmento de movimiento intersecta la zona de plato */
+  var crossesPlate=(maxP>=PLATE_START&&minP<=PLATE_END);
+  /* Y solo si no venía ya adentro de la zona (para no saltar 2 veces) */
+  var wasInside=(fromPct>=PLATE_START&&fromPct<=PLATE_END);
+  if(crossesPlate&&!wasInside){
+    walker.classList.add('jumping');
+    /* Remover la clase después de la animación (.55s) */
+    setTimeout(function(){
+      var w2=document.querySelector('.pet-walker');
+      if(w2)w2.classList.remove('jumping');
+    },600);
+  }
+}
+
 function applyWalkerZSort(walker){
   if(!walker)return;
   var leftPctStr=walker.style.left||'50%';
@@ -5707,6 +5741,8 @@ function petWalkTo(targetPct,callback){
   }
   /* Force reflow then set position */
   void w.offsetHeight;
+  /* v10.13.26: detectar si cruza plato y activar salto */
+  triggerJumpIfCrossing(w,_lastWalkerLeft,targetPct);
   w.style.left=targetPct+'%';
   _lastWalkerLeft=targetPct;
   /* v10.13.19: Y-sort ya mismo y también al finalizar transición */
@@ -5792,6 +5828,8 @@ function petWander(){
     if(_currentPetController.currentState==='walk')_currentPetController.currentState='';
     _currentPetController.setState('walk');
   }
+  /* v10.13.26: detectar si cruza plato y activar salto */
+  triggerJumpIfCrossing(w,_lastWalkerLeft,newLeft);
   w.style.left=newLeft+'%';
   _lastWalkerLeft=newLeft;
   /* v10.13.19: Y-sort inmediato al cambiar de posición */

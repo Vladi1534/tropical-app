@@ -3637,7 +3637,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='9'; /* v10.13.23: bump tras rescalado biológico + fix colisión muebles */
+var SPRITE_VERSION='10'; /* v10.13.29: pelotas reextraídas + 4 juguetes específicos */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -3768,17 +3768,39 @@ var TROPISHOP_CATALOG={
   'cama_conejo_purple':{id:'cama_conejo_purple',slot:'cama',nombre:'Cama Púrpura',desc:'Real conejita',url:'bunnies/beds/bed_purple.png',especies:['conejo'],tier:'premium-plus',cost:900,unlock_level:10,bonus:{tipo:'energia_regen',value:0.10}},
   'cama_conejo_red':{id:'cama_conejo_red',slot:'cama',nombre:'Cama Roja',desc:'Pasión acolchada',url:'bunnies/beds/bed_red.png',especies:['conejo'],tier:'premium-plus',cost:900,unlock_level:10,bonus:{tipo:'energia_regen',value:0.10}},
 
-  /* === PELOTAS DE PERRO (10 variantes) === */
-  'pelota_blue':{id:'pelota_blue',slot:'pelota',nombre:'Pelota Azul',desc:'Clásica y firme',url:'dogs/balls/ball_blue.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
-  'pelota_gold':{id:'pelota_gold',slot:'pelota',nombre:'Pelota Dorada',desc:'Brillante y ligera',url:'dogs/balls/ball_gold.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
-  'pelota_red':{id:'pelota_red',slot:'pelota',nombre:'Pelota Roja',desc:'Clásica',url:'dogs/balls/ball_red.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
-  'pelota_green':{id:'pelota_green',slot:'pelota',nombre:'Pelota Verde',desc:'Tenis style',url:'dogs/balls/ball_green.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
-  'pelota_pink':{id:'pelota_pink',slot:'pelota',nombre:'Pelota Rosa',desc:'Suave al morder',url:'dogs/balls/ball_pink.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:3,bonus:{tipo:'play_energy_cost',value:-0.10}},
-  'pelota_orange':{id:'pelota_orange',slot:'pelota',nombre:'Pelota Naranja',desc:'Visible al anochecer',url:'dogs/balls/ball_orange.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:3,bonus:{tipo:'play_energy_cost',value:-0.10}},
-  'pelota_purple':{id:'pelota_purple',slot:'pelota',nombre:'Pelota Púrpura',desc:'Aerodinámica',url:'dogs/balls/ball_purple.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.10}},
-  'pelota_white':{id:'pelota_white',slot:'pelota',nombre:'Pelota Blanca',desc:'De cuero sintético',url:'dogs/balls/ball_white.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.10}},
-  'pelota_black':{id:'pelota_black',slot:'pelota',nombre:'Pelota Negra',desc:'Misteriosa y veloz',url:'dogs/balls/ball_black.png',especies:['perro','gato','conejo'],tier:'premium-plus',cost:700,unlock_level:10,bonus:{tipo:'play_energy_cost',value:-0.20}},
-  'pelota_brown':{id:'pelota_brown',slot:'pelota',nombre:'Pelota Marrón',desc:'Cuero premium',url:'dogs/balls/ball_brown.png',especies:['perro','gato','conejo'],tier:'premium-plus',cost:700,unlock_level:10,bonus:{tipo:'felicidad_regen',value:0.15}},
+  /* === PELOTAS / JUGUETES (v10.13.29: URLs apuntan a /dogs/balls/v2/
+     con sprites reextraídos del pack ToffeeCraft).
+
+     Pelotas que existen en el sprite original: blue, gold, red, green-light,
+     orange, purple, white, navy, gray, teal, violet.
+     Las que NO existen (pink, black, brown) ahora apuntan a colores
+     reales del sheet — los IDs se mantienen para no romper inventarios
+     de emisoras existentes:
+       'pelota_pink'  → ahora es la teal (verde-mar bonita)
+       'pelota_black' → ahora es la navy (azul muy oscuro, casi negra)
+       'pelota_brown' → ahora es la violet (la más cercana a marrón) */
+  'pelota_blue':{id:'pelota_blue',slot:'pelota',nombre:'Pelota Azul',desc:'Clásica y firme',url:'dogs/balls/v2/ball_blue.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_gold':{id:'pelota_gold',slot:'pelota',nombre:'Pelota Dorada',desc:'Brillante y ligera',url:'dogs/balls/v2/ball_gold.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_red':{id:'pelota_red',slot:'pelota',nombre:'Pelota Roja',desc:'Clásica',url:'dogs/balls/v2/ball_red.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_green':{id:'pelota_green',slot:'pelota',nombre:'Pelota Verde',desc:'Tenis style',url:'dogs/balls/v2/ball_green_light.png',especies:['perro','gato','conejo'],tier:'basic',cost:100,unlock_level:1,bonus:null},
+  'pelota_pink':{id:'pelota_pink',slot:'pelota',nombre:'Pelota Turquesa',desc:'Suave al morder',url:'dogs/balls/v2/ball_teal.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:3,bonus:{tipo:'play_energy_cost',value:-0.10}},
+  'pelota_orange':{id:'pelota_orange',slot:'pelota',nombre:'Pelota Naranja',desc:'Visible al anochecer',url:'dogs/balls/v2/ball_orange.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:3,bonus:{tipo:'play_energy_cost',value:-0.10}},
+  'pelota_purple':{id:'pelota_purple',slot:'pelota',nombre:'Pelota Púrpura',desc:'Aerodinámica',url:'dogs/balls/v2/ball_purple.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.10}},
+  'pelota_white':{id:'pelota_white',slot:'pelota',nombre:'Pelota Blanca',desc:'De cuero sintético',url:'dogs/balls/v2/ball_white.png',especies:['perro','gato','conejo'],tier:'premium',cost:300,unlock_level:5,bonus:{tipo:'felicidad_regen',value:0.10}},
+  'pelota_black':{id:'pelota_black',slot:'pelota',nombre:'Pelota Azul Marino',desc:'Misteriosa y veloz',url:'dogs/balls/v2/ball_navy.png',especies:['perro','gato','conejo'],tier:'premium-plus',cost:700,unlock_level:10,bonus:{tipo:'play_energy_cost',value:-0.20}},
+  'pelota_brown':{id:'pelota_brown',slot:'pelota',nombre:'Pelota Violeta',desc:'Cuero premium',url:'dogs/balls/v2/ball_violet.png',especies:['perro','gato','conejo'],tier:'premium-plus',cost:700,unlock_level:10,bonus:{tipo:'felicidad_regen',value:0.15}},
+  /* v10.13.29: pelotas nuevas que existen en el sheet pero no tenían entry */
+  'pelota_gray':{id:'pelota_gray',slot:'pelota',nombre:'Pelota Gris',desc:'Sólida y discreta',url:'dogs/balls/v2/ball_gray.png',especies:['perro','gato','conejo'],tier:'standard',cost:200,unlock_level:2,bonus:null},
+  'pelota_lightblue':{id:'pelota_lightblue',slot:'pelota',nombre:'Pelota Celeste',desc:'Color verano',url:'dogs/balls/v2/ball_blue_light.png',especies:['perro','gato','conejo'],tier:'standard',cost:200,unlock_level:2,bonus:null},
+
+  /* === JUGUETES ESPECÍFICOS POR ESPECIE (v10.13.29) ===
+     Cada uno usa slot:'pelota' para mantener compat con el sistema actual,
+     pero con especies acotadas a su animal natural. La física específica
+     por tipo de juguete vendrá en v10.13.30. */
+  'cat_mouse':{id:'cat_mouse',slot:'pelota',nombre:'Ratón de Juguete',desc:'Ideal para cazar — el clásico de gatos',url:'dogs/balls/v2/cat_mouse.png',especies:['gato'],tier:'standard',cost:250,unlock_level:2,bonus:{tipo:'play_energy_cost',value:-0.10}},
+  'rabbit_carrot':{id:'rabbit_carrot',slot:'pelota',nombre:'Zanahoria de Juguete',desc:'Su comida favorita en versión juguete',url:'dogs/balls/v2/rabbit_carrot.png',especies:['conejo'],tier:'standard',cost:250,unlock_level:2,bonus:{tipo:'felicidad_regen',value:0.10}},
+  'dog_bone':{id:'dog_bone',slot:'pelota',nombre:'Hueso de Juguete',desc:'Para masticar y cargar — placer canino',url:'dogs/balls/v2/dog_bone.png',especies:['perro'],tier:'standard',cost:250,unlock_level:2,bonus:{tipo:'play_energy_cost',value:-0.10}},
+  'parrot_bell':{id:'parrot_bell',slot:'pelota',nombre:'Cascabel Multicolor',desc:'A los loros les encantan los cascabeles',url:'dogs/balls/v2/parrot_bell.png',especies:['pajaro'],tier:'standard',cost:250,unlock_level:2,bonus:{tipo:'felicidad_regen',value:0.10}},
 
   /* === CASETAS DE PERRO (4 variantes) === */
   'caseta_brown':{id:'caseta_brown',slot:'caseta',nombre:'Caseta Marrón',desc:'Refugio clásico',url:'dogs/houses/house_brown.png',especies:['perro'],tier:'premium',cost:800,unlock_level:8,bonus:{tipo:'energia_regen',value:0.15}},
@@ -4456,7 +4478,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.28</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.29</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */

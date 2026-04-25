@@ -4432,6 +4432,12 @@ function petBgSVG(habitat){
 
 function renderPetCard(){
   var area=document.getElementById('pet-card-area');if(!area||!P)return;
+  /* v10.13.31: cancelar chase de pelota activo antes de reescribir el DOM,
+     para evitar que el rafId quede huérfano e intente animar elementos
+     destruidos (causaba pelota colgada en el aire y pet detenida). */
+  if(_activeBallChase&&typeof _activeBallChase.cancel==='function'){
+    _activeBallChase.cancel();
+  }
   var pet=P.mascota;
   if(!pet){
     area.innerHTML='<div class="pet-card no-pet" onclick="openM(\'m-pet-select\');initPetSelect()">'+
@@ -4478,7 +4484,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.30</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.31</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -4847,6 +4853,12 @@ function updatePetBowl(){
         pasando la velocidad como params
 */
 var _ballDragState=null;
+/* v10.13.31: handle global del chase loop activo de la pelota.
+   Usado para cancelar la simulación cuando se re-renderiza el cuarto
+   (cambio de mascota, equip de item, etc) — antes el rafId vivía solo
+   en el closure de initBallDrag y quedaba huérfano dejando la pelota
+   colgada en el aire y la mascota detenida. */
+var _activeBallChase=null; /* {cancel: function(), rafId: number} */
 
 /* ═══════════════════════════════════════════════════════════════════════
    v10.13.27: DRAG & DROP DE MUEBLES DE PISO
@@ -5922,9 +5934,23 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
     },1250);
     if(onStop)onStop();
     _ballPhysics=null;
+    /* v10.13.31: limpiar referencia global del chase */
+    _activeBallChase=null;
   }
 
   _ballPhysics={stop:stop};
+  /* v10.13.31: registrar chase activo globalmente para que se pueda
+     cancelar desde renderPetCard cuando se reinicializa el DOM. */
+  _activeBallChase={
+    cancel:function(){
+      stopped=true;
+      if(rafId)cancelAnimationFrame(rafId);
+      if(walker)walker.classList.remove('walking','fast');
+      _walkPaused=prevWalkPaused;
+      _activeBallChase=null;
+      _ballPhysics=null;
+    }
+  };
 
   rafId=requestAnimationFrame(frame);
 
@@ -6196,50 +6222,48 @@ if(typeof window!=='undefined'){
 
 /* Devuelve {bottom, z, onFurniture, furnitureType} para una posición left%.
    Si el pet está sobre cama/plato, ajusta el bottom% y el z-index. */
-/* v10.13.30: detección dinámica de física basada en posiciones REALES
-   de los muebles (lee getFurnitureZones — funciona aunque el usuario
-   los haya movido con drag&drop). */
+/* v10.13.30 + v10.13.31: detección dinámica de física basada en posiciones
+   REALES de los muebles. La mascota AHORA queda SIEMPRE delante de muebles
+   (z=2000) excepto cuando duerme adentro de la casa (z=50, semi-transparente).
+   Esto simplifica el modelo y evita que la mascota desaparezca tras la cama.
+   El único caso de profundidad real es "dormir adentro de la casa".
+   El bottom% sí varía según el mueble (saltar encima, etc). */
 function getPetPhysicsAt(leftPct,mood){
+  var Z_PET_FRONT=2000; /* mascota siempre delante de muebles */
   /* Detectar si está sobre algún mueble */
   var zones=getFurnitureZones();
-  /* Buscar mueble cuyo rango horizontal incluye al pet */
-  var onBed=null, onHouse=null, onBowl=null, onPlant=null;
+  var onBed=null, onHouse=null, onBowl=null;
   for(var i=0;i<zones.length;i++){
     var z=zones[i];
     if(leftPct>=z.leftStart&&leftPct<=z.leftEnd){
       if(z.key==='bed')onBed=z;
       else if(z.key==='house')onHouse=z;
       else if(z.key==='food'||z.key==='water')onBowl=z;
-      else if(z.key==='plant')onPlant=z;
     }
   }
-  /* Caso especial: durmiendo en la cama → encima y delante */
-  if(mood==='sleeping'&&onBed){
-    return {bottom:onBed.bottomStart+5,z:1000,onFurniture:'bed'};
-  }
-  /* Caso especial: durmiendo en la casa → adentro (semi-transparente) */
+  /* Caso especial: durmiendo adentro de la casa → semi-transparente, atrás del techo.
+     Único caso donde la mascota queda DETRÁS de un mueble. */
   if(mood==='sleeping'&&onHouse){
     return {bottom:onHouse.bottomStart+3,z:50,onFurniture:'house',inside:true};
   }
-  /* Caminando sobre cama: pet sube al nivel del techo de la cama y queda DETRÁS de ella
-     para dar efecto de profundidad (la cama tiene "respaldo" que tapa al pet). */
+  /* Durmiendo en la cama → encima */
+  if(mood==='sleeping'&&onBed){
+    return {bottom:onBed.bottomStart+5,z:Z_PET_FRONT,onFurniture:'bed'};
+  }
+  /* Caminando sobre cama → trepada arriba */
   if(onBed){
-    return {bottom:onBed.bottomStart+3,z:80,onFurniture:'bed'};
+    return {bottom:onBed.bottomStart+3,z:Z_PET_FRONT,onFurniture:'bed'};
   }
-  /* Caminando sobre plato: trepa encima */
+  /* Sobre plato → trepada arriba */
   if(onBowl){
-    return {bottom:onBowl.topReach,z:1000,onFurniture:'bowl'};
+    return {bottom:onBowl.topReach,z:Z_PET_FRONT,onFurniture:'bowl'};
   }
-  /* Cerca/dentro de la casa: queda en piso pero detrás del techo */
+  /* Cerca o entrando a la casa (no durmiendo) → al frente */
   if(onHouse){
-    return {bottom:6,z:60,onFurniture:'house'};
+    return {bottom:6,z:Z_PET_FRONT,onFurniture:'house'};
   }
-  /* Junto a la planta: queda detrás (la planta es de adelante) */
-  if(onPlant){
-    return {bottom:6,z:90,onFurniture:'plant'};
-  }
-  /* Piso libre: encima de todo */
-  return {bottom:6,z:1000,onFurniture:null};
+  /* Piso libre → al frente */
+  return {bottom:6,z:Z_PET_FRONT,onFurniture:null};
 }
 
 function computeWalkerZ(leftPct){

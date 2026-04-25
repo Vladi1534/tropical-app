@@ -896,7 +896,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:25%;top:42%;width:45px;height:45px;z-index:5;cursor:grab;-webkit-tap-highlight-color:transparent;transition:transform .15s;touch-action:none}
+.toy-ball{position:absolute;left:25%;top:42%;width:45px;height:45px;z-index:1500;cursor:grab;-webkit-tap-highlight-color:transparent;transition:transform .15s;touch-action:none}
 .toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
@@ -1092,7 +1092,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .feed-item.equipped{border-color:var(--gold);background:rgba(251,191,36,.1);box-shadow:0 0 0 2px rgba(251,191,36,.25)}
 .feed-item.locked{opacity:.45;cursor:not-allowed;filter:grayscale(.6)}
 .feed-item .fi-icon{font-size:24px}
-.feed-item .fi-sprite{width:56px;height:48px;margin:0 auto;background-repeat:no-repeat;background-position:center;background-size:contain;image-rendering:pixelated;image-rendering:crisp-edges}
+.feed-item .fi-sprite{width:42px;height:36px;margin:0 auto;background-repeat:no-repeat;background-position:center;background-size:contain;image-rendering:pixelated;image-rendering:crisp-edges}
 .feed-item .fi-name{font-size:10px;font-weight:700;margin-top:4px;line-height:1.2}
 .feed-item .fi-cost{font-size:9px;color:var(--gold);margin-top:2px}
 .feed-item .fi-xp{font-size:8px;color:var(--green)}
@@ -3637,7 +3637,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='10'; /* v10.13.29: pelotas reextraídas + 4 juguetes específicos */
+var SPRITE_VERSION='11'; /* v10.13.30: bump tras Y-sort universal + colisiones de pelota */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -4478,7 +4478,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.29</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.30</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -4825,6 +4825,9 @@ function updatePetBowl(){
   /* v10.13.27: aplicar posiciones personalizadas de muebles (drag&drop del usuario)
      e inicializar el long-press para activar modo edición. */
   if(typeof applyCustomPositions==='function')applyCustomPositions(pet);
+  /* v10.13.30: aplicar Y-sort universal aunque no haya posiciones custom,
+     para que los muebles default también respeten profundidad por bottom% */
+  if(typeof applyUniversalYSort==='function')applyUniversalYSort();
   if(typeof initFurnitureDrag==='function')initFurnitureDrag();
 }
 
@@ -4897,6 +4900,39 @@ function applyCustomPositions(pet){
   }
   /* Recalcular constantes de física con las nuevas posiciones */
   recalculatePhysicsPositions(pet);
+  /* v10.13.30: aplicar Y-sort universal — cada mueble recibe z-index según
+     su bottom% (más al frente = z mayor) */
+  applyUniversalYSort();
+}
+
+/* v10.13.30: SISTEMA DE Y-SORT UNIVERSAL.
+   Calcula z-index dinámicamente para cada objeto del cuarto (muebles +
+   walker + pelota) basándose en su bottom%. Reemplaza el viejo sistema
+   de rangos hardcoded de getPetPhysicsAt.
+
+   Fórmula: z = 100 + (100 - bottomPct) * 2
+   Eso da:
+     bottom=0%  (al ras del piso, más al frente)  → z=300
+     bottom=30% (mitad de cuarto)                  → z=240
+     bottom=60% (atrás)                            → z=180
+
+   Resultado: los objetos más cercanos al piso tapan a los que están atrás.
+   La cama (bottom~5%) tendrá z más alto que la planta (si está en bottom~10%).
+   La mascota caminando en bottom:6% queda al mismo nivel que la cama,
+   y un offset de altura adicional la pone delante o detrás según donde esté. */
+function applyUniversalYSort(){
+  /* Aplicar a cada mueble draggable */
+  for(var i=0;i<DRAGGABLE_FURNITURE.length;i++){
+    var cfg=DRAGGABLE_FURNITURE[i];
+    var el=document.getElementById(cfg.id);
+    if(!el)continue;
+    /* Leer bottom actual (puede ser default del CSS o custom inline) */
+    var pet=P&&P.mascota;
+    var custom=pet&&pet.decoracion_custom&&pet.decoracion_custom[cfg.key];
+    var bottomPct=custom?custom.y:cfg.defaultY;
+    var z=Math.round(100+(100-bottomPct)*2);
+    el.style.zIndex=z;
+  }
 }
 
 /* Recalcula POS_BED, POS_HOUSE, POS_FOOD, POS_WATER en base a las
@@ -4918,6 +4954,56 @@ function recalculatePhysicsPositions(pet){
   var waterX=custom.water?custom.water.x:16;
   POS_WATER=100-waterX-5;
 }
+
+/* v10.13.30: devuelve array de zonas (rectángulos en %) ocupadas por
+   muebles que tienen volumen físico. Usado para detección de colisiones
+   de pelota y para el Y-sort de la mascota. */
+function getFurnitureZones(){
+  var pet=P&&P.mascota;
+  var custom=(pet&&pet.decoracion_custom)||{};
+  var zones=[];
+  /* Cada mueble: {key, leftStart, leftEnd, bottomStart, topReach}
+     topReach = altura desde el piso hasta arriba del mueble (en %) */
+  /* Cama: ancho 30%, alto ~10% del cuarto */
+  var bedX=custom.bed?custom.bed.x:3;
+  var bedY=custom.bed?custom.bed.y:5;
+  zones.push({key:'bed',     leftStart:bedX, leftEnd:bedX+30, bottomStart:bedY, topReach:bedY+10, bouncy:true});
+  /* Casa: ancho 28%, alto ~28% (incluye techo) */
+  var houseX=custom.house?custom.house.x:14;
+  var houseY=custom.house?custom.house.y:10;
+  zones.push({key:'house',   leftStart:100-houseX-28, leftEnd:100-houseX, bottomStart:houseY, topReach:houseY+28, bouncy:true});
+  /* Plato comida: ancho 10%, alto ~5% */
+  var foodX=custom.food?custom.food.x:28;
+  var foodY=custom.food?custom.food.y:2;
+  zones.push({key:'food',    leftStart:100-foodX-10, leftEnd:100-foodX, bottomStart:foodY, topReach:foodY+5, bouncy:true});
+  /* Plato agua: ancho 10%, alto ~5% */
+  var waterX=custom.water?custom.water.x:16;
+  var waterY=custom.water?custom.water.y:2;
+  zones.push({key:'water',   leftStart:100-waterX-10, leftEnd:100-waterX, bottomStart:waterY, topReach:waterY+5, bouncy:true});
+  /* Planta: ancho 12%, alto ~14% */
+  var plantX=custom.plant?custom.plant.x:0;
+  var plantY=custom.plant?custom.plant.y:2;
+  zones.push({key:'plant',   leftStart:plantX, leftEnd:plantX+12, bottomStart:plantY, topReach:plantY+14, bouncy:false});
+  return zones;
+}
+
+/* Devuelve {leftPct, bottomReachPct, key, isOnTop} si el punto (leftPct, bottomPct)
+   está dentro o sobre algún mueble. Usado para colisiones y sorting. */
+function findFurnitureAt(leftPct, bottomPct){
+  var zones=getFurnitureZones();
+  for(var i=0;i<zones.length;i++){
+    var z=zones[i];
+    /* Está horizontalmente dentro del mueble? */
+    if(leftPct>=z.leftStart&&leftPct<=z.leftEnd){
+      /* Está verticalmente dentro o sobre el mueble? */
+      if(bottomPct>=z.bottomStart&&bottomPct<=z.topReach){
+        return {key:z.key, zone:z, isOnTop:false};
+      }
+    }
+  }
+  return null;
+}
+
 
 /* Estado global del sistema de drag */
 var _dragState={
@@ -5744,6 +5830,35 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
       if(Math.abs(vy)<60)vy=0;
     }
 
+    /* v10.13.30: COLISIÓN CON MUEBLES (cama, casa, platos).
+       La pelota rebota sobre el techo de cada mueble si:
+       - Cae verticalmente (vy>0)
+       - El centro horizontal de la pelota está dentro del rango del mueble
+       - El bottom de la pelota está pasando del techo del mueble */
+    if(typeof getFurnitureZones==='function'){
+      /* Convertir coordenadas px de pelota a % del cuarto */
+      var ballLeftPct=((x+ballSize/2)/sceneW)*100;
+      var ballBottomPct=((sceneH-y-ballSize)/sceneH)*100;
+      var zones=getFurnitureZones();
+      for(var fi=0;fi<zones.length;fi++){
+        var fz=zones[fi];
+        if(!fz.bouncy)continue;
+        /* La pelota está horizontalmente sobre el mueble? */
+        if(ballLeftPct<fz.leftStart||ballLeftPct>fz.leftEnd)continue;
+        /* La pelota cayó por encima del techo del mueble este frame? */
+        var topReachPx=sceneH-(fz.topReach/100)*sceneH;
+        var ballBottomPx=y+ballSize;
+        if(ballBottomPx>=topReachPx&&vy>0){
+          /* Rebote: subir la pelota al techo del mueble e invertir vy */
+          y=topReachPx-ballSize;
+          vy=-vy*BOUNCE;
+          vx*=FLOOR_FRICTION;
+          if(Math.abs(vy)<60)vy=0;
+          break; /* solo un rebote por frame */
+        }
+      }
+    }
+
     /* Colisión con paredes */
     if(x<wallLeft){x=wallLeft;vx=-vx*BOUNCE}
     if(x>wallRight){x=wallRight;vx=-vx*BOUNCE}
@@ -6081,37 +6196,50 @@ if(typeof window!=='undefined'){
 
 /* Devuelve {bottom, z, onFurniture, furnitureType} para una posición left%.
    Si el pet está sobre cama/plato, ajusta el bottom% y el z-index. */
+/* v10.13.30: detección dinámica de física basada en posiciones REALES
+   de los muebles (lee getFurnitureZones — funciona aunque el usuario
+   los haya movido con drag&drop). */
 function getPetPhysicsAt(leftPct,mood){
-  var base={bottom:6,z:10,onFurniture:null};
-  /* Zona cama (5-22%): mascota se trepa encima */
-  if(leftPct>=4&&leftPct<22){
-    if(mood==='sleeping'){
-      /* Durmiendo encima de la cama — VISIBLE DELANTE de ella (z mayor).
-         Bottom sube a ~11% (alto de la cama) para que no se hunda. */
-      return {bottom:10,z:15,onFurniture:'bed'};
+  /* Detectar si está sobre algún mueble */
+  var zones=getFurnitureZones();
+  /* Buscar mueble cuyo rango horizontal incluye al pet */
+  var onBed=null, onHouse=null, onBowl=null, onPlant=null;
+  for(var i=0;i<zones.length;i++){
+    var z=zones[i];
+    if(leftPct>=z.leftStart&&leftPct<=z.leftEnd){
+      if(z.key==='bed')onBed=z;
+      else if(z.key==='house')onHouse=z;
+      else if(z.key==='food'||z.key==='water')onBowl=z;
+      else if(z.key==='plant')onPlant=z;
     }
-    /* Caminando sobre la cama — sube pero queda DETRÁS de ella para
-       dar efecto de "estar dentro/sobre ella" (ilusión de profundidad). */
-    return {bottom:8,z:8,onFurniture:'bed'};
   }
-  /* Zona central (22-60%): piso libre, queda delante de todo */
-  if(leftPct<60){return {bottom:6,z:12,onFurniture:null}}
-  /* Zona platos (60-82%): salta sobre ellos */
-  if(leftPct<82){
-    return {bottom:8,z:11,onFurniture:'bowl'};
+  /* Caso especial: durmiendo en la cama → encima y delante */
+  if(mood==='sleeping'&&onBed){
+    return {bottom:onBed.bottomStart+5,z:1000,onFurniture:'bed'};
   }
-  /* Zona caseta (82%+): entra adentro.
-     v10.13.25: si está durmiendo dentro de la caseta, queda
-     DETRÁS del sprite de la caseta (z=5, menor que caseta z=7) para
-     dar efecto de "está adentro descansando". Solo asoma levemente. */
-  if(mood==='sleeping'){
-    /* Durmiendo adentro de la caseta: queda completamente oculta,
-       el sprite de la caseta la cubre. Opacity reducida para dar
-       efecto de "se metió adentro". */
-    return {bottom:8,z:5,onFurniture:'house',inside:true};
+  /* Caso especial: durmiendo en la casa → adentro (semi-transparente) */
+  if(mood==='sleeping'&&onHouse){
+    return {bottom:onHouse.bottomStart+3,z:50,onFurniture:'house',inside:true};
   }
-  /* Caminando cerca o entrando en la caseta: queda delante */
-  return {bottom:6,z:7,onFurniture:'house'};
+  /* Caminando sobre cama: pet sube al nivel del techo de la cama y queda DETRÁS de ella
+     para dar efecto de profundidad (la cama tiene "respaldo" que tapa al pet). */
+  if(onBed){
+    return {bottom:onBed.bottomStart+3,z:80,onFurniture:'bed'};
+  }
+  /* Caminando sobre plato: trepa encima */
+  if(onBowl){
+    return {bottom:onBowl.topReach,z:1000,onFurniture:'bowl'};
+  }
+  /* Cerca/dentro de la casa: queda en piso pero detrás del techo */
+  if(onHouse){
+    return {bottom:6,z:60,onFurniture:'house'};
+  }
+  /* Junto a la planta: queda detrás (la planta es de adelante) */
+  if(onPlant){
+    return {bottom:6,z:90,onFurniture:'plant'};
+  }
+  /* Piso libre: encima de todo */
+  return {bottom:6,z:1000,onFurniture:null};
 }
 
 function computeWalkerZ(leftPct){

@@ -3272,7 +3272,7 @@ var SPRITE_ANIMS={
       sleep:{file:'sleep.png',frames:8,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:12,fps:5,loop:true},
       eating:{file:'eating.png',frames:7,fps:7,loop:true},
-      excited:{file:'excited.png',frames:6,fps:10,loop:true},
+      excited:{file:'excited.png',frames:11,fps:10,loop:true},
       laydown:{file:'laydown.png',frames:12,fps:5,loop:true},
       sad:{file:'laydown.png',frames:12,fps:4,loop:true},
       walk:{file:'walk.png',frames:6,fps:10,loop:true}
@@ -3287,7 +3287,7 @@ var SPRITE_ANIMS={
       sleep:{file:'sleep.png',frames:3,fps:3,loop:true},
       sleepy:{file:'laydown.png',frames:7,fps:5,loop:true},
       eating:{file:'eating.png',frames:9,fps:8,loop:true},
-      excited:{file:'excited.png',frames:12,fps:10,loop:true},
+      excited:{file:'excited.png',frames:9,fps:10,loop:true},
       laydown:{file:'laydown.png',frames:7,fps:5,loop:true},
       sad:{file:'laydown.png',frames:7,fps:4,loop:true},
       walk:{file:'walk.png',frames:7,fps:10,loop:true}
@@ -3637,7 +3637,7 @@ var SPRITE_ANIMS={
 };
 
 var SPRITE_BUCKET_URL='https://lqbdxzjmxgjlozdoqixx.supabase.co/storage/v1/object/public/pet-sprites/';
-var SPRITE_VERSION='11'; /* v10.13.30: bump tras Y-sort universal + colisiones de pelota */
+var SPRITE_VERSION='12'; /* v10.13.32: bump tras fix excited.png para perros */
 
 function getSpriteUrl(category,variant,animFile){
   return SPRITE_BUCKET_URL+category+'/'+variant+'/'+animFile+'?v='+SPRITE_VERSION;
@@ -4484,7 +4484,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.31</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.32</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */

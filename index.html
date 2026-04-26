@@ -896,7 +896,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .water-bowl:active{transform:scale(.92)}
 .water-bowl::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(34,211,238,.22),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
 .water-bowl.empty-hint::after{opacity:1;animation:bowlPulse 2s ease-in-out infinite}
-.toy-ball{position:absolute;left:25%;top:42%;width:45px;height:45px;z-index:1500;cursor:grab;-webkit-tap-highlight-color:transparent;transition:transform .15s;touch-action:none}
+.toy-ball{position:absolute;left:25%;top:42%;width:24px;height:24px;z-index:2500;cursor:grab;-webkit-tap-highlight-color:transparent;transition:transform .15s;touch-action:none}
 .toy-ball:active{transform:scale(.88)}
 .toy-ball.disabled{opacity:.5;cursor:not-allowed}
 .toy-ball::after{content:'';position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(168,85,247,.25),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
@@ -3914,6 +3914,25 @@ function getEquippedItemUrl(pet,slot){
     var item=TROPISHOP_CATALOG[equippedId];
     if(item&&item.url)return SPRITE_BUCKET_URL+item.url+'?v='+SPRITE_VERSION;
   }
+  /* v10.13.35: para el slot 'pelota' (juguete), si la mascota no tiene
+     algo equipado específicamente, usar el juguete natural de su especie:
+       gato   → ratoncito (cat_mouse)
+       conejo → zanahoria (rabbit_carrot)
+       pájaro → cascabel multicolor (parrot_bell)
+       perro  → pelota azul default (pelota_blue, comportamiento previo)
+     Esto evita que un gato salga con una pelota grande en la repisa. */
+  if(slot==='pelota'){
+    var defaultToy={
+      gato:'cat_mouse',
+      conejo:'rabbit_carrot',
+      pajaro:'parrot_bell',
+      perro:'pelota_blue'
+    }[pet.tipo||'perro'];
+    if(defaultToy&&TROPISHOP_CATALOG[defaultToy]){
+      var dItem=TROPISHOP_CATALOG[defaultToy];
+      if(dItem&&dItem.url)return SPRITE_BUCKET_URL+dItem.url+'?v='+SPRITE_VERSION;
+    }
+  }
   /* Fallback a PET_ACCESSORIES — mapeo slot interno → slot visual */
   var visualSlotMap={
     cama:'bed',
@@ -4484,7 +4503,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.34</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.35</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */

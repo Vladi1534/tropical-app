@@ -1023,7 +1023,7 @@ body.theme-light #tropical-bg g path{opacity:.35}
    según su posición vertical (más abajo = más al frente = z mayor).
    Esto hace que si la mascota camina hacia la cama (que ocupa el
    frente del cuarto), pase CORRECTAMENTE por delante de ella. */
-.pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1);z-index:10;will-change:left,z-index;display:inline-block;text-align:center}
+.pet-walker{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);transition:left 4.5s cubic-bezier(.4,0,.6,1),bottom .55s cubic-bezier(.34,1.56,.64,1);z-index:10;will-change:left,z-index,bottom;display:inline-block;text-align:center}
 .pet-walker.walking .pet-facing{animation:petWalkBounce .42s ease-in-out infinite}
 .pet-walker.walking .pet-facing.face-left{animation:petWalkBounceLeft .42s ease-in-out infinite}
 /* v10.13.26: salto sobre platos — el walker hace un hop pronunciado
@@ -4829,6 +4829,15 @@ function initPetSprite(){
   /* v10.13.19: aplicar Y-sort al walker principal (para arrancar correctamente
      cuando el pet está en zona de cama, no queda por encima) */
   if(w&&typeof applyWalkerZSort==='function')applyWalkerZSort(w);
+  /* v10.13.39: aplicar altura final inicial SIN transición (para que el
+     primer render no muestre el pet flotando antes de bajar al piso) */
+  if(w&&typeof applyWalkerFinalHeight==='function'){
+    var prevTrans=w.style.transition;
+    w.style.transition='none';
+    applyWalkerFinalHeight(w);
+    void w.offsetHeight;
+    w.style.transition=prevTrans;
+  }
   /* Restore facing direction */
   setPetFacing(_lastWalkerFace);
   /* v10.13.25: If sleeping and not already at spot, walk to spot (cama o caseta).
@@ -5091,7 +5100,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.38</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.39</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -6428,6 +6437,8 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
     if(vx<-VEL_THRESHOLD)setPetFacing('left');
     else if(vx>VEL_THRESHOLD)setPetFacing('right');
     /* Mover walker */
+    /* v10.13.39: clamp a paredes del cuarto */
+    ballPct=(typeof clampToWalls==='function')?clampToWalls(ballPct):ballPct;
     walker.style.left=ballPct+'%';
     _lastWalkerLeft=ballPct;
     /* v10.13.19: Y-sort mientras persigue para que pase correctamente
@@ -6736,6 +6747,18 @@ function showTapHeart(e,emoji){showTapParticle(e,emoji||'💕','#ec4899')}
    debe estar más a la derecha para que el sprite no salga del cuarto.
    18% deja el sprite cubriendo cama (4-22%) sin salir por la izquierda. */
 var POS_BED=16;    /* bed at left:3% + width 115px → centro ~16% */
+/* v10.13.39: paredes invisibles del cuarto.
+   Las paredes laterales del SVG ocupan ~3% a cada lado, así que la
+   mascota nunca debe estar fuera de [3, 97]. Cualquier movimiento
+   horizontal (walk, wander, chase) pasa por clampToWalls() antes de
+   aplicarse al style.left. */
+var WALL_LEFT=3;
+var WALL_RIGHT=97;
+function clampToWalls(leftPct){
+  if(leftPct<WALL_LEFT)return WALL_LEFT;
+  if(leftPct>WALL_RIGHT)return WALL_RIGHT;
+  return leftPct;
+}
 var POS_TOY=30;    /* toy ball sobre repisa en left:25% (solo referencia, chase toma control) */
 var POS_FOOD=67;   /* food bowl at right:28% + width 38px = centro ~67% */
 var POS_WATER=79;  /* water bowl at right:16% + width 38px = centro ~79% */
@@ -6930,6 +6953,19 @@ function triggerJumpIfCrossing(walker,fromPct,toPct){
   }
 }
 
+/* v10.13.39: SISTEMA DE SUELO Y ALTURA REAL.
+   Antes (v10.13.31): applyWalkerZSort aplicaba bottom% al instante,
+   causando que la mascota "volara" verticalmente apenas se detectaba
+   la zona del mueble — antes de llegar horizontalmente.
+
+   Ahora: separamos en 2 fases.
+   - Fase A (visual inmediato): aplicar SOLO z-index y opacity.
+   - Fase B (altura física): aplicar bottom% solo cuando el walker
+     terminó su transición horizontal y estamos seguros de que está
+     parado sobre el mueble.
+
+   El bottom% tiene su propia transición CSS suave (.55s parabólica)
+   que da efecto de "trepar" o "bajar". */
 function applyWalkerZSort(walker){
   if(!walker)return;
   var leftPctStr=walker.style.left||'50%';
@@ -6938,11 +6974,8 @@ function applyWalkerZSort(walker){
   var mood=null;
   if(P&&P.mascota)mood=getMood(P.mascota);
   var phys=getPetPhysicsAt(leftPct,mood);
+  /* Z-INDEX y OPACITY se aplican siempre, instantáneo */
   walker.style.zIndex=phys.z;
-  walker.style.bottom=phys.bottom+'%';
-  /* v10.13.25: efecto "adentro de la caseta" — si está durmiendo ahí,
-     se hace semi-transparente para dar sensación de estar oculto.
-     Compare walkers (fantasma) ya tienen opacity 0.85 propio, no tocar. */
   if(!walker.classList.contains('compare-walker')){
     if(phys.inside){
       walker.style.opacity='0.35';
@@ -6950,6 +6983,26 @@ function applyWalkerZSort(walker){
       walker.style.opacity='1';
     }
   }
+  /* v10.13.39: BOTTOM% solo se aplica si la mascota NO se está moviendo
+     horizontalmente (no tiene clase 'walking' o 'fast'). Si está caminando,
+     aplicar bottom haría que se eleve ANTES de llegar al mueble.
+     Cuando termine la transición horizontal, applyFinalPhysics se llama. */
+  var isMoving=walker.classList.contains('walking')||walker.classList.contains('fast');
+  if(!isMoving){
+    walker.style.bottom=phys.bottom+'%';
+  }
+}
+
+/* v10.13.39: aplica la altura final (bottom%) cuando la mascota terminó
+   de moverse horizontalmente. La transición CSS hace que suba/baje suave. */
+function applyWalkerFinalHeight(walker){
+  if(!walker)return;
+  var leftPctStr=walker.style.left||'50%';
+  var leftPct=parseFloat(leftPctStr)||50;
+  var mood=null;
+  if(P&&P.mascota)mood=getMood(P.mascota);
+  var phys=getPetPhysicsAt(leftPct,mood);
+  walker.style.bottom=phys.bottom+'%';
 }
 
 function petWalkTo(targetPct,callback){
@@ -6979,6 +7032,8 @@ function petWalkTo(targetPct,callback){
   void w.offsetHeight;
   /* v10.13.26: detectar si cruza plato y activar salto */
   triggerJumpIfCrossing(w,_lastWalkerLeft,targetPct);
+  /* v10.13.39: clamp a paredes del cuarto */
+  targetPct=clampToWalls(targetPct);
   w.style.left=targetPct+'%';
   _lastWalkerLeft=targetPct;
   /* v10.13.19: Y-sort ya mismo y también al finalizar transición */
@@ -6986,7 +7041,14 @@ function petWalkTo(targetPct,callback){
   /* After walk completes (1.5s), stop bouncing and run callback */
   setTimeout(function(){
     var wMid=document.querySelector('.pet-walker');
-    if(wMid){wMid.classList.remove('walking');applyWalkerZSort(wMid)}
+    if(wMid){
+      wMid.classList.remove('walking');
+      /* v10.13.39: ya terminó de moverse horizontalmente — aplicar
+         altura final (subir si está sobre cama/casa, bajar si volvió al piso).
+         La transición CSS bottom .55s hace que el cambio sea suave. */
+      applyWalkerFinalHeight(wMid);
+      applyWalkerZSort(wMid);
+    }
     /* v10.12-fase1c: respetar mood al llegar (NO forzar idle).
        Si la mascota fue a la cama y mood='sleeping', se acuesta a dormir.
        Si va a comer y mood='hungry', queda comiendo. El callback puede
@@ -7066,13 +7128,20 @@ function petWander(){
   }
   /* v10.13.26: detectar si cruza plato y activar salto */
   triggerJumpIfCrossing(w,_lastWalkerLeft,newLeft);
+  /* v10.13.39: clamp a paredes del cuarto */
+  newLeft=clampToWalls(newLeft);
   w.style.left=newLeft+'%';
   _lastWalkerLeft=newLeft;
   /* v10.13.19: Y-sort inmediato al cambiar de posición */
   applyWalkerZSort(w);
   setTimeout(function(){
     var wEnd=document.querySelector('.pet-walker');
-    if(wEnd){wEnd.classList.remove('walking');applyWalkerZSort(wEnd)}
+    if(wEnd){
+      wEnd.classList.remove('walking');
+      /* v10.13.39: aplicar altura final tras llegar (suave por CSS transition) */
+      applyWalkerFinalHeight(wEnd);
+      applyWalkerZSort(wEnd);
+    }
     if(hasW&&_currentPetController)applyPetMoodState();
   },4600);
 }

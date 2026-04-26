@@ -1045,6 +1045,34 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-shadow{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:62px;height:9px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.22) 45%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
 @keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1);opacity:.85}50%{transform:translateX(-50%) scale(.92,.85);opacity:.7}}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+/* v10.13.36: card de misiones diarias.
+   Renderizada arriba del pet-card. Compacta para no robar mucho espacio
+   pero visible suficiente para que el usuario la note. */
+.missions-card{margin:10px 6px 0;padding:10px 12px;border-radius:var(--r);background:linear-gradient(180deg,rgba(168,85,247,.10),rgba(236,72,153,.05));border:1px solid rgba(168,85,247,.25);position:relative}
+.missions-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.missions-title{font-family:'Fredoka',sans-serif;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:.2px}
+.missions-list{display:flex;flex-direction:column;gap:8px}
+.mission-row{display:flex;gap:10px;align-items:center;padding:8px 10px;background:rgba(0,0,0,.22);border-radius:10px;border:1px solid rgba(255,255,255,.05);transition:all .3s}
+.mission-row.mission-ready{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45);animation:missionReadyPulse 1.6s ease-in-out infinite}
+.mission-row.mission-claimed{background:rgba(0,0,0,.10);opacity:.65}
+.mission-icon{font-size:18px;flex:0 0 auto;width:28px;text-align:center}
+.mission-body{flex:1;min-width:0}
+.mission-text{font-size:11px;color:#e2e8f0;font-weight:600;margin-bottom:3px;line-height:1.25}
+.mission-bar{width:100%;height:5px;background:rgba(0,0,0,.35);border-radius:3px;overflow:hidden;margin:2px 0}
+.mission-fill{height:100%;background:linear-gradient(90deg,var(--gold),#fb923c);transition:width .35s cubic-bezier(.4,0,.2,1);border-radius:3px}
+.mission-row.mission-ready .mission-fill{background:linear-gradient(90deg,#22c55e,#10b981)}
+.mission-row.mission-claimed .mission-fill{background:rgba(255,255,255,.25)}
+.mission-meta{display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;font-family:monospace;margin-top:2px}
+.mission-reward{color:var(--gold);font-weight:700}
+.mission-row.mission-claimed .mission-reward{color:#94a3b8}
+.missions-footer{margin-top:8px;padding:6px 10px;border-radius:8px;font-size:10px;text-align:center;font-weight:600}
+.missions-footer.all-done{background:rgba(34,197,94,.20);color:#bbf7d0;border:1px solid rgba(34,197,94,.4)}
+.missions-footer.warn{background:rgba(251,146,60,.18);color:#fdba74;border:1px solid rgba(251,146,60,.4)}
+@keyframes missionReadyPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}
+  50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}
+}
+
 .pet-card{margin:10px 6px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(251,191,36,.2);background:linear-gradient(180deg,rgba(251,191,36,.06),rgba(168,85,247,.04));position:relative}
 .pet-card.no-pet{cursor:pointer;text-align:center;padding:20px;border-style:dashed}
 .pet-card.no-pet:active{transform:scale(.98)}
@@ -1447,6 +1475,10 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:10px">
     <button class="bs" onclick="compareClear()" style="background:rgba(239,68,68,.15)">🧹 Limpiar compare</button>
     <button class="bs" onclick="resetFurniturePositions()" style="background:rgba(250,204,21,.15);color:var(--gold)">🔄 Reset muebles</button>
+    <button class="bs" onclick="devCompletarMisiones()" style="background:rgba(34,197,94,.15);color:#22c55e">🎯 Completar misiones</button>
+    <button class="bs" onclick="devSetStreak(prompt('Streak días:',7))" style="background:rgba(168,85,247,.15)">🔥 Set streak</button>
+    <button class="bs" onclick="devToggleTransmitio()" style="background:rgba(59,130,246,.15)">📡 Toggle transmitió</button>
+    <button class="bs" onclick="devResetMisiones()" style="background:rgba(239,68,68,.10)">♻️ Reset misiones</button>
   </div>
 
   <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px">😊 Mood test</div>
@@ -1627,6 +1659,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <!-- ====== MASCOTA ====== -->
 <div class="sec" id="s-mascota">
+  <div id="missions-card-area"></div>
   <div id="pet-card-area"></div>
 </div>
 
@@ -3891,7 +3924,352 @@ function ensureInventoryStructure(pet){
   if(!pet.decoracion_custom){
     pet.decoracion_custom={};
   }
+  /* v10.13.36: Sistema de misiones diarias + streak.
+     Estructura:
+       pet.misiones_dia = {
+         fecha: 'YYYY-MM-DD',           // UTC - fecha de generación
+         caricia: {target, progress, claimed, reward},
+         cuidado: {target, progress, claimed, reward, action},
+         logro:   {target, progress, claimed, reward, type}
+       }
+       pet.streak = {
+         dias: 0,                        // días consecutivos con las 3 misiones
+         ultima_fecha: 'YYYY-MM-DD',     // fecha del último día completado
+         max_alcanzado: 0,               // récord histórico (no se rompe)
+         hitos_obtenidos: []             // [3, 7, 14, 30] hitos ya cobrados
+       }
+       pet.transmitio_hoy = false;       // flag seteado por n8n al transmitir
+       pet.transmitio_fecha = null;      // YYYY-MM-DD UTC del último flag */
+  if(!pet.streak){
+    pet.streak={dias:0, ultima_fecha:null, max_alcanzado:0, hitos_obtenidos:[]};
+  }
+  if(typeof pet.transmitio_hoy==='undefined')pet.transmitio_hoy=false;
+  if(typeof pet.transmitio_fecha==='undefined')pet.transmitio_fecha=null;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v10.13.36: SISTEMA DE MISIONES DIARIAS + STREAK
+   ═══════════════════════════════════════════════════════════════════════
+   - 3 misiones por día (caricia/cuidado/logro), reset a las 00:00 UTC
+   - Dificultad escalada por nivel del pet
+   - Recompensas: pts y caja sorpresa para el logro
+   - Streak crece cuando se cumplen las 3 misiones del día
+   - Streak se rompe si pasa 1 día sin entrar al juego
+   - Hitos celebrados: 3 / 7 / 14 / 30 días
+   - Día 7+ requiere haber transmitido (flag pet.transmitio_hoy seteado por n8n) */
+
+/* Devuelve YYYY-MM-DD en UTC para el momento dado (default ahora).
+   Usado como key de fecha del día — todas las emisoras del mundo comparten
+   el mismo "día" (00:00 UTC = corte global). */
+function getUTCDateKey(d){
+  d=d||new Date();
+  var y=d.getUTCFullYear();
+  var m=String(d.getUTCMonth()+1).padStart(2,'0');
+  var dd=String(d.getUTCDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
+
+/* Devuelve YYYY-MM-DD del día anterior. Usado para detectar continuidad
+   del streak (ayer=ayer, hoy=hoy, ayer+1=hoy → streak continúa). */
+function getUTCDateKeyYesterday(){
+  var d=new Date();
+  d.setUTCDate(d.getUTCDate()-1);
+  return getUTCDateKey(d);
+}
+
+/* PRNG determinístico simple basado en (fecha + nivel).
+   Usa hash básico para que misión cada día sea reproducible pero distinta. */
+function _missionSeed(dateStr,nivel){
+  var s=dateStr+'-L'+nivel;
+  var h=0;
+  for(var i=0;i<s.length;i++){
+    h=((h<<5)-h)+s.charCodeAt(i);
+    h=h&h;
+  }
+  return Math.abs(h);
+}
+function _seedRand(seed,offset){
+  /* Genera número [0,1) determinístico a partir de seed+offset */
+  var x=Math.sin(seed+offset*1000)*10000;
+  return x-Math.floor(x);
+}
+
+/* Genera las 3 misiones del día para un pet dado.
+   La dificultad escala por nivel (más nivel = números más altos). */
+function generateDailyMissions(pet){
+  var today=getUTCDateKey();
+  var nivel=pet.nivel||1;
+  var seed=_missionSeed(today,nivel);
+  /* Factor de dificultad: 1.0 en lvl 1, ~1.5 en lvl 10, ~2.0 en lvl 20+ */
+  var dif=1+Math.min(nivel-1,20)*0.05;
+
+  /* === MISIÓN 1: CARICIA (fácil) === */
+  var cariciaTargets=[5,8,10,12,15];
+  var cariciaIdx=Math.floor(_seedRand(seed,1)*cariciaTargets.length);
+  var cariciaT=Math.round(cariciaTargets[cariciaIdx]*dif);
+
+  /* === MISIÓN 2: CUIDADO (media, rotativo) === */
+  var cuidadoOptions=[
+    {action:'feed',  text:'Alimentá a {nombre}',     icon:'🍖', targets:[2,3,4]},
+    {action:'drink', text:'Dale agua a {nombre}',     icon:'💧', targets:[3,4,5]},
+    {action:'play',  text:'Jugá con {nombre}',         icon:'🎾', targets:[3,4,5,6]},
+    {action:'walk',  text:'Llevá a {nombre} a pasear', icon:'🚶', targets:[2,3]} /* solo perro */
+  ];
+  /* Filtrar walk si no es perro */
+  if(pet.tipo!=='perro')cuidadoOptions=cuidadoOptions.filter(function(o){return o.action!=='walk'});
+  var cuidadoIdx=Math.floor(_seedRand(seed,2)*cuidadoOptions.length);
+  var cuidadoSel=cuidadoOptions[cuidadoIdx];
+  var cuidadoTargetIdx=Math.floor(_seedRand(seed,3)*cuidadoSel.targets.length);
+  var cuidadoT=Math.round(cuidadoSel.targets[cuidadoTargetIdx]*dif);
+
+  /* === MISIÓN 3: LOGRO (difícil, varía por nivel) === */
+  var logroOptions;
+  if(nivel<5){
+    /* Niveles bajos: misiones simples acumulativas */
+    logroOptions=[
+      {type:'felicidad_high', text:'Llevá la felicidad de {nombre} a 90+', icon:'😊', target:90},
+      {type:'play_xp',         text:'Ganá 100 XP jugando',                    icon:'🎯', target:100}
+    ];
+  }else if(nivel<15){
+    /* Niveles medios: misiones más exigentes */
+    logroOptions=[
+      {type:'level_up',     text:'Subí 1 nivel hoy',                  icon:'🆙', target:1},
+      {type:'felicidad_max',text:'Mantené felicidad 95+ por 30 min',  icon:'⭐', target:30},
+      {type:'play_xp',      text:'Ganá 200 XP jugando',                icon:'🎯', target:200}
+    ];
+  }else{
+    /* Niveles altos: misiones de maestría */
+    logroOptions=[
+      {type:'level_up',  text:'Subí 1 nivel hoy',          icon:'🆙', target:1},
+      {type:'play_xp',    text:'Ganá 400 XP jugando',        icon:'🎯', target:400},
+      {type:'session_30', text:'Pasá 30 min en el juego',    icon:'⏱️', target:30}
+    ];
+  }
+  var logroIdx=Math.floor(_seedRand(seed,4)*logroOptions.length);
+  var logroSel=logroOptions[logroIdx];
+
+  return {
+    fecha:today,
+    caricia:{
+      text:'Hacé {target} caricias a {nombre}',
+      icon:'❤️',
+      target:cariciaT,
+      progress:0,
+      claimed:false,
+      reward:50
+    },
+    cuidado:{
+      action:cuidadoSel.action,
+      text:cuidadoSel.text,
+      icon:cuidadoSel.icon,
+      target:cuidadoT,
+      progress:0,
+      claimed:false,
+      reward:100
+    },
+    logro:{
+      type:logroSel.type,
+      text:logroSel.text,
+      icon:logroSel.icon,
+      target:logroSel.target,
+      progress:0,
+      claimed:false,
+      reward:200,
+      caja_sorpresa:true
+    }
+  };
+}
+
+/* Asegura que pet.misiones_dia esté actualizado para el día UTC actual.
+   Si la fecha guardada no es hoy, regenera las misiones. */
+function ensureMissionsForToday(pet){
+  if(!pet)return;
+  var today=getUTCDateKey();
+  if(!pet.misiones_dia||pet.misiones_dia.fecha!==today){
+    pet.misiones_dia=generateDailyMissions(pet);
+    /* Reset del flag de transmisión si pasó el día */
+    if(pet.transmitio_fecha!==today){
+      pet.transmitio_hoy=false;
+      pet.transmitio_fecha=today;
+    }
+  }
+}
+
+/* Incrementa el progreso de la misión 'caricia' en 1.
+   Llamada desde petTap cuando una caricia es exitosa. */
+function trackMissionCaricia(pet){
+  if(!pet||!pet.misiones_dia)return;
+  var m=pet.misiones_dia.caricia;
+  if(!m||m.claimed)return;
+  if(m.progress>=m.target)return; /* ya completa, falta solo claim */
+  m.progress++;
+  if(m.progress>=m.target){
+    /* Auto-claim de la fácil — toast suave */
+    awardMissionReward(pet,'caricia');
+  }
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
+}
+
+/* Incrementa progreso de la misión 'cuidado' según action.
+   Llamada desde feed/drink/play/walk handlers. */
+function trackMissionCuidado(pet,action){
+  if(!pet||!pet.misiones_dia)return;
+  var m=pet.misiones_dia.cuidado;
+  if(!m||m.claimed||m.action!==action)return;
+  if(m.progress>=m.target)return;
+  m.progress++;
+  if(m.progress>=m.target){
+    awardMissionReward(pet,'cuidado');
+  }
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
+}
+
+/* Incrementa progreso del logro según type.
+   Llamada desde awardXP, levelUp, etc.
+   Para tipos 'felicidad_high' y similares, usa el valor actual del pet. */
+function trackMissionLogro(pet,type,delta){
+  delta=delta||1;
+  if(!pet||!pet.misiones_dia)return;
+  var m=pet.misiones_dia.logro;
+  if(!m||m.claimed)return;
+  /* v10.13.36: para felicidad_high y stats-based, leer valor actual */
+  if(type==='felicidad_high'&&m.type==='felicidad_high'){
+    var fel=pet.felicidad||0;
+    if(fel>=m.target&&!m.claimed){
+      m.progress=m.target;
+      awardMissionReward(pet,'logro');
+    }
+    return;
+  }
+  if(m.type!==type)return;
+  if(m.progress>=m.target)return;
+  m.progress=Math.min(m.target,m.progress+delta);
+  if(m.progress>=m.target){
+    awardMissionReward(pet,'logro');
+  }
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
+}
+
+/* Otorga reward de misión + chequea si las 3 están completas → updateStreak.
+   slot: 'caricia' | 'cuidado' | 'logro' */
+function awardMissionReward(pet,slot){
+  if(!pet||!pet.misiones_dia)return;
+  var m=pet.misiones_dia[slot];
+  if(!m||m.claimed)return;
+  m.claimed=true;
+  /* Otorgar puntitos */
+  P.puntitos=(P.puntitos||0)+m.reward;
+  toast('🎯 ¡Misión cumplida! +'+m.reward+' puntitos');
+  /* Si es el logro, también caja sorpresa */
+  if(slot==='logro'&&m.caja_sorpresa){
+    var prize=openMissionLootbox(pet);
+    if(prize){
+      toast('🎁 Caja sorpresa: '+prize.nombre);
+    }
+  }
+  /* Chequear streak */
+  if(allMissionsClaimed(pet)){
+    updateStreak(pet);
+  }
+  savePet();
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
+}
+
+function allMissionsClaimed(pet){
+  if(!pet||!pet.misiones_dia)return false;
+  return pet.misiones_dia.caricia.claimed&&
+         pet.misiones_dia.cuidado.claimed&&
+         pet.misiones_dia.logro.claimed;
+}
+
+/* Genera un item random del catálogo según rareza ponderada.
+   Lo agrega al inventario del pet (slot pelota o equiv). */
+function openMissionLootbox(pet){
+  if(!pet||typeof TROPISHOP_CATALOG==='undefined')return null;
+  /* Pool de items — 60% basic, 30% standard, 8% premium, 2% premium-plus */
+  var roll=Math.random();
+  var tier;
+  if(roll<0.60)tier='basic';
+  else if(roll<0.90)tier='standard';
+  else if(roll<0.98)tier='premium';
+  else tier='premium-plus';
+  /* Filtrar catálogo por tier + especie compatible */
+  var pool=[];
+  for(var k in TROPISHOP_CATALOG){
+    var it=TROPISHOP_CATALOG[k];
+    if(!it||it.tier!==tier)continue;
+    if(it.especies&&it.especies.indexOf(pet.tipo||'perro')<0)continue;
+    pool.push(it);
+  }
+  if(!pool.length)return null;
+  var item=pool[Math.floor(Math.random()*pool.length)];
+  /* Marcar como owned (en pet.inventario o estructura similar) */
+  if(!pet.inventario)pet.inventario={};
+  pet.inventario[item.id]=true;
+  return item;
+}
+
+/* Lógica del streak. Llamada cuando las 3 misiones del día se completan.
+   Reglas:
+   - Si pet.streak.ultima_fecha === ayer → continuar streak (+1)
+   - Si pet.streak.ultima_fecha === hoy → ya se contó (no-op)
+   - Si pet.streak.ultima_fecha es null o más viejo → reset a 1
+   - Si streak alcanza 7+: requiere pet.transmitio_hoy=true para avanzar
+   - Hitos 3/7/14/30: bonus especial */
+function updateStreak(pet){
+  if(!pet)return;
+  if(!pet.streak)pet.streak={dias:0, ultima_fecha:null, max_alcanzado:0, hitos_obtenidos:[]};
+  var today=getUTCDateKey();
+  var yesterday=getUTCDateKeyYesterday();
+  /* Ya contado hoy */
+  if(pet.streak.ultima_fecha===today)return;
+  var nuevoDias;
+  if(pet.streak.ultima_fecha===yesterday){
+    /* Continuidad — chequear gate de transmisión para 7+ */
+    if(pet.streak.dias>=6&&!pet.transmitio_hoy){
+      /* Día 7+ requiere transmitir. Streak NO avanza pero tampoco rompe. */
+      toast('🔥 Día 7+ del streak requiere transmitir hoy. Lográlo y volvé!');
+      return;
+    }
+    nuevoDias=pet.streak.dias+1;
+  }else{
+    /* Quebrado o primer día */
+    nuevoDias=1;
+  }
+  pet.streak.dias=nuevoDias;
+  pet.streak.ultima_fecha=today;
+  if(nuevoDias>pet.streak.max_alcanzado){
+    pet.streak.max_alcanzado=nuevoDias;
+  }
+  /* Hitos celebrados */
+  var hitos=[3,7,14,30];
+  for(var i=0;i<hitos.length;i++){
+    var h=hitos[i];
+    if(nuevoDias===h&&pet.streak.hitos_obtenidos.indexOf(h)<0){
+      pet.streak.hitos_obtenidos.push(h);
+      celebrarHito(pet,h);
+      break;
+    }
+  }
+  toast('🔥 Streak '+nuevoDias+' día'+(nuevoDias>1?'s':'')+' seguido'+(nuevoDias>1?'s':'')+'!');
+}
+
+/* Celebración de hito alcanzado (3/7/14/30).
+   Otorga reward gigante según el hito. */
+function celebrarHito(pet,dias){
+  var rewards={
+    3:  {pts:500,  badge:'🥉', titulo:'Bronce'},
+    7:  {pts:1500, badge:'🥈', titulo:'Plata'},
+    14: {pts:3000, badge:'🥇', titulo:'Oro'},
+    30: {pts:8000, badge:'💎', titulo:'Diamante'}
+  };
+  var r=rewards[dias];
+  if(!r)return;
+  P.puntitos=(P.puntitos||0)+r.pts;
+  toast('🏆 ¡HITO '+r.badge+' '+r.titulo+'! '+dias+' días seguidos · +'+r.pts+' puntitos!');
+  /* TODO: animación grande + caja sorpresa premium para hitos altos */
+}
+
 
 /* Dado un pet y un slot, devuelve la URL del sprite equipado.
    FALLBACK chain:
@@ -4404,6 +4782,8 @@ function initPetSprite(){
   updateTimeOverlay();
   /* Show accessories */
   renderAccessoriesOverlay();
+  /* v10.13.36: render del panel de misiones (arriba del cuarto). */
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
 }
 function petSpriteSetState(state){
   if(_currentPetController)_currentPetController.setState(state);
@@ -4447,6 +4827,76 @@ function petBgSVG(habitat){
   if(legacyMap[habitat])bgNum=legacyMap[habitat];
   var url=getBgUrl(bgNum);
   return '<img src="'+url+'" alt="" loading="eager" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none;image-rendering:pixelated">';
+}
+
+/* v10.13.36: render del panel de misiones diarias.
+   Ubicado arriba del pet-card-area. Incluye badge del streak, las 3 misiones
+   con barra de progreso, reward visible, y botón de claim si está completa. */
+function renderMissionsCard(){
+  var area=document.getElementById('missions-card-area');
+  if(!area||!P||!P.mascota)return;
+  var pet=P.mascota;
+  /* Asegurar que las misiones estén actualizadas para hoy */
+  ensureMissionsForToday(pet);
+  if(!pet.misiones_dia)return;
+
+  var nombre=pet.nombre||'tu mascota';
+  var streakDias=(pet.streak&&pet.streak.dias)||0;
+
+  /* Badge del streak con tier visual */
+  var streakColor='var(--gold)';
+  var streakIcon='🔥';
+  if(streakDias>=30){streakColor='#67e8f9';streakIcon='💎'}
+  else if(streakDias>=14){streakColor='#fde68a';streakIcon='🥇'}
+  else if(streakDias>=7){streakColor='#e2e8f0';streakIcon='🥈'}
+  else if(streakDias>=3){streakColor='#fb923c';streakIcon='🥉'}
+
+  var streakBadge=streakDias>0?
+    '<div style="display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.35);padding:3px 8px;border-radius:10px;font-size:11px;color:'+streakColor+';font-weight:700">'+
+      streakIcon+' '+streakDias+' día'+(streakDias!==1?'s':'')+
+    '</div>' : '';
+
+  /* Helper para renderizar una misión */
+  function missionRow(slot,m){
+    var done=m.progress>=m.target;
+    var claimed=m.claimed;
+    var pct=Math.min(100,Math.round((m.progress/m.target)*100));
+    var stateClass=claimed?'mission-claimed':(done?'mission-ready':'');
+    var rewardLabel=m.reward+' pts'+(m.caja_sorpresa?' + 🎁':'');
+    /* Texto de la misión con interpolación */
+    var text=(m.text||'').replace('{nombre}',nombre).replace('{target}',m.target);
+    return '<div class="mission-row '+stateClass+'">'+
+      '<div class="mission-icon">'+m.icon+'</div>'+
+      '<div class="mission-body">'+
+        '<div class="mission-text">'+text+'</div>'+
+        '<div class="mission-bar"><div class="mission-fill" style="width:'+pct+'%"></div></div>'+
+        '<div class="mission-meta">'+
+          '<span>'+m.progress+'/'+m.target+'</span>'+
+          '<span class="mission-reward">'+(claimed?'✅ Cobrado':rewardLabel)+'</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  var h='<div class="missions-card">';
+  h+='<div class="missions-header">';
+  h+='<div class="missions-title">🎯 Misiones del día</div>';
+  h+=streakBadge;
+  h+='</div>';
+  h+='<div class="missions-list">';
+  h+=missionRow('caricia',pet.misiones_dia.caricia);
+  h+=missionRow('cuidado',pet.misiones_dia.cuidado);
+  h+=missionRow('logro',pet.misiones_dia.logro);
+  h+='</div>';
+
+  /* Mensaje de estado al fondo */
+  if(allMissionsClaimed(pet)){
+    h+='<div class="missions-footer all-done">🌟 ¡Todas completadas! Volvé mañana</div>';
+  }else if(streakDias>=6&&!pet.transmitio_hoy){
+    h+='<div class="missions-footer warn">⚠️ Día 7+ del streak requiere transmitir hoy</div>';
+  }
+  h+='</div>';
+  area.innerHTML=h;
 }
 
 function renderPetCard(){
@@ -4503,7 +4953,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.35</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.36</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -4644,11 +5094,16 @@ function petDailyUpdate(pet){
 
 function checkPetLevelUp(pet){
   var lvl=pet.nivel||1;var needed=xpForLevel(lvl);
+  var oldLvl=lvl;
   while(pet.xp>=needed&&lvl<60){lvl++;needed=xpForLevel(lvl);
     if(lvl===8)toast('🌟 ¡'+(pet.nombre)+' evolucionó a Joven!');
     else if(lvl===18)toast('🔥 ¡'+(pet.nombre)+' evolucionó a Adulta!');
     else if(lvl===28)toast('👑 ¡'+(pet.nombre)+' alcanzó nivel Tropical!');
   }pet.nivel=lvl;
+  /* v10.13.36: trackear misiones de logro 'level_up' si subió */
+  if(lvl>oldLvl&&typeof trackMissionLogro==='function'){
+    trackMissionLogro(pet,'level_up',lvl-oldLvl);
+  }
 }
 
 /* v10.11.2: inline stats update — actualiza barras y XP SIN destruir el DOM
@@ -5513,6 +5968,9 @@ function consumeWater(waterId){
   checkPetLevelUp(pet);savePet();
   closeM('m-pet-drink');
   updatePetStatsInline();
+  /* v10.13.36: tracking misión cuidado — drink */
+  if(typeof trackMissionCuidado==='function')trackMissionCuidado(pet,'drink');
+  if(typeof trackMissionLogro==='function')trackMissionLogro(pet,'play_xp',water.xp||0);
   /* v10.13.14: walk to water, drinking anim + partículas siempre (mix opción 3) */
   setTimeout(function(){
     petWalkTo(POS_WATER,function(){
@@ -5623,6 +6081,9 @@ function consumeFood(foodId){
   checkPetLevelUp(pet);savePet();
   closeM('m-pet-feed');
   updatePetStatsInline();
+  /* v10.13.36: tracking de misión cuidado — feed */
+  if(typeof trackMissionCuidado==='function')trackMissionCuidado(pet,'feed');
+  if(typeof trackMissionLogro==='function')trackMissionLogro(pet,'play_xp',food.xp||0);
   /* v10.13.14: walk to bowl, eating anim.
      Gato: oculta el bowl (su sprite tiene uno propio dibujado).
      Resto: mantiene bowl visible + partículas flotantes con emoji de la comida. */
@@ -5682,6 +6143,9 @@ function petPlay(dragVx,dragVy,dragX,dragY){
   /* Track plays for stats but no daily limit */
   pet.juegos_total=(pet.juegos_total||0)+1;
   checkPetLevelUp(pet);savePet();updatePetStatsInline();
+  /* v10.13.36: tracking misión cuidado — play */
+  if(typeof trackMissionCuidado==='function')trackMissionCuidado(pet,'play');
+  if(typeof trackMissionLogro==='function')trackMissionLogro(pet,'play_xp',xpGain);
   /* v10.13.2a: la pelota sale disparada con física, la mascota la persigue
      en tiempo real (dentro de showPlayAnimation). NO hacemos petWalkTo a
      un POS_TOY fijo — el chase toma control del walker hasta que la
@@ -6060,6 +6524,12 @@ function petTap(e){
   pet.xp=(pet.xp||0)+3;
   checkPetLevelUp(pet);
   showTapParticle(e,'+3 XP','#fbbf24');
+  /* v10.13.36: tracking de misiones — caricia exitosa */
+  if(typeof trackMissionCaricia==='function')trackMissionCaricia(pet);
+  if(typeof trackMissionLogro==='function'){
+    /* logros que avanzan con caricias */
+    trackMissionLogro(pet,'felicidad_high',0); /* solo chequeo de bound */
+  }
   /* Activar cooldown durante animación */
   _caricia_cooldown=true;
   /* Elegir animación: tickle si existe, sino excited, sino bounce */
@@ -6782,6 +7252,47 @@ function devClearAccs(){
 function devTriggerWander(){
   petWander();
   toast('🛠️ Wander forzado');
+}
+
+/* v10.13.36: dev helpers para misiones y streak */
+function devCompletarMisiones(){
+  var pet=P&&P.mascota;if(!pet)return;
+  ensureMissionsForToday(pet);
+  if(!pet.misiones_dia)return;
+  pet.misiones_dia.caricia.progress=pet.misiones_dia.caricia.target;
+  awardMissionReward(pet,'caricia');
+  pet.misiones_dia.cuidado.progress=pet.misiones_dia.cuidado.target;
+  awardMissionReward(pet,'cuidado');
+  pet.misiones_dia.logro.progress=pet.misiones_dia.logro.target;
+  awardMissionReward(pet,'logro');
+  toast('🛠️ 3 misiones completadas');
+}
+function devSetStreak(dias){
+  var pet=P&&P.mascota;if(!pet)return;
+  dias=parseInt(dias)||0;
+  if(!pet.streak)pet.streak={dias:0,ultima_fecha:null,max_alcanzado:0,hitos_obtenidos:[]};
+  pet.streak.dias=dias;
+  pet.streak.ultima_fecha=getUTCDateKey();
+  if(dias>pet.streak.max_alcanzado)pet.streak.max_alcanzado=dias;
+  savePet();
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
+  toast('🛠️ Streak seteado a '+dias);
+}
+function devToggleTransmitio(){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.transmitio_hoy=!pet.transmitio_hoy;
+  pet.transmitio_fecha=getUTCDateKey();
+  savePet();
+  toast('🛠️ transmitio_hoy = '+pet.transmitio_hoy);
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
+}
+function devResetMisiones(){
+  var pet=P&&P.mascota;if(!pet)return;
+  pet.misiones_dia=null;
+  ensureMissionsForToday(pet);
+  savePet();
+  if(typeof renderMissionsCard==='function')renderMissionsCard();
+  toast('🛠️ Misiones regeneradas');
 }
 function devTriggerPlay(){
   showPlayAnimation();

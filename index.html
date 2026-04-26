@@ -1045,27 +1045,92 @@ body.theme-light #tropical-bg g path{opacity:.35}
 .pet-shadow{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:62px;height:9px;background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.22) 45%,transparent 75%);pointer-events:none;z-index:1;animation:petShadowBreathe 3s ease-in-out infinite}
 @keyframes petShadowBreathe{0%,100%{transform:translateX(-50%) scale(1,1);opacity:.85}50%{transform:translateX(-50%) scale(.92,.85);opacity:.7}}
 @keyframes petHungryShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
-/* v10.13.36: card de misiones diarias.
-   Renderizada arriba del pet-card. Compacta para no robar mucho espacio
-   pero visible suficiente para que el usuario la note. */
-.missions-card{margin:10px 6px 0;padding:10px 12px;border-radius:var(--r);background:linear-gradient(180deg,rgba(168,85,247,.10),rgba(236,72,153,.05));border:1px solid rgba(168,85,247,.25);position:relative}
-.missions-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.missions-title{font-family:'Fredoka',sans-serif;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:.2px}
+/* v10.13.36b: BADGE COMPACTO de misiones dentro del cuarto.
+   Reemplaza la card grande de v10.13.36 que comía todo el header.
+   Posicionado en esquina superior izquierda, debajo del reloj. */
+.pet-missions-badge{
+  position:absolute;top:38px;left:10px;z-index:11;
+  display:flex;align-items:center;gap:5px;
+  background:rgba(15,15,30,.8);
+  padding:4px 10px;border-radius:12px;
+  font-size:11px;font-weight:700;color:#fff;
+  cursor:pointer;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border:1px solid rgba(168,85,247,.35);
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+  letter-spacing:.3px;
+  transition:all .25s;
+  user-select:none;-webkit-user-select:none;
+}
+.pet-missions-badge:active{transform:scale(.94)}
+.pet-missions-badge .pmb-icon{font-size:13px;line-height:1}
+.pet-missions-badge .pmb-count{font-family:monospace;color:var(--gold)}
+.pet-missions-badge .pmb-sep{width:1px;height:11px;background:rgba(255,255,255,.18)}
+.pet-missions-badge .pmb-streak{color:#fb923c;font-size:10px}
+/* Estado: hay misión completa esperando claim → glow verde pulsante */
+.pet-missions-badge.has-claim{
+  border-color:rgba(34,197,94,.6);
+  background:rgba(20,40,30,.85);
+  animation:badgeReadyPulse 1.4s ease-in-out infinite;
+}
+.pet-missions-badge.has-claim .pmb-count{color:#86efac}
+@keyframes badgeReadyPulse{
+  0%,100%{box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 0 rgba(34,197,94,.4)}
+  50%{box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 6px rgba(34,197,94,0)}
+}
+/* Estado: las 3 cobradas */
+.pet-missions-badge.all-done{
+  border-color:rgba(168,85,247,.6);
+  background:rgba(40,20,50,.85);
+}
+.pet-missions-badge.all-done .pmb-count{color:#c084fc}
+
+/* === Estilos para el MODAL de misiones (v10.13.36b) === */
+.missions-streak-banner{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:12px;
+  margin-bottom:12px;
+  background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(236,72,153,.10));
+  border:1px solid rgba(168,85,247,.3);
+}
+.missions-streak-banner.streak-tier-bronze{background:linear-gradient(135deg,rgba(251,146,60,.20),rgba(168,85,247,.06));border-color:rgba(251,146,60,.4)}
+.missions-streak-banner.streak-tier-silver{background:linear-gradient(135deg,rgba(226,232,240,.15),rgba(168,85,247,.06));border-color:rgba(226,232,240,.4)}
+.missions-streak-banner.streak-tier-gold{background:linear-gradient(135deg,rgba(253,230,138,.25),rgba(251,191,36,.10));border-color:rgba(253,230,138,.5)}
+.missions-streak-banner.streak-tier-diamond{background:linear-gradient(135deg,rgba(103,232,249,.25),rgba(168,85,247,.10));border-color:rgba(103,232,249,.5)}
+.msb-icon{font-size:32px;flex:0 0 auto}
+.msb-info{flex:1;min-width:0}
+.msb-label{font-family:'Fredoka',sans-serif;font-size:14px;font-weight:700;color:#fff;letter-spacing:.2px}
+.msb-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+.missions-hito-next{
+  font-size:11px;color:#fdba74;text-align:center;
+  margin:0 0 12px;padding:6px 10px;
+  background:rgba(251,146,60,.08);border-radius:8px;
+  border:1px dashed rgba(251,146,60,.25);
+}
 .missions-list{display:flex;flex-direction:column;gap:8px}
-.mission-row{display:flex;gap:10px;align-items:center;padding:8px 10px;background:rgba(0,0,0,.22);border-radius:10px;border:1px solid rgba(255,255,255,.05);transition:all .3s}
+.mission-row{display:flex;gap:10px;align-items:center;padding:10px 12px;background:rgba(0,0,0,.22);border-radius:10px;border:1px solid rgba(255,255,255,.05);transition:all .3s}
 .mission-row.mission-ready{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45);animation:missionReadyPulse 1.6s ease-in-out infinite}
 .mission-row.mission-claimed{background:rgba(0,0,0,.10);opacity:.65}
-.mission-icon{font-size:18px;flex:0 0 auto;width:28px;text-align:center}
+.mission-icon{font-size:22px;flex:0 0 auto;width:30px;text-align:center}
 .mission-body{flex:1;min-width:0}
-.mission-text{font-size:11px;color:#e2e8f0;font-weight:600;margin-bottom:3px;line-height:1.25}
-.mission-bar{width:100%;height:5px;background:rgba(0,0,0,.35);border-radius:3px;overflow:hidden;margin:2px 0}
+.mission-text{font-size:12px;color:#e2e8f0;font-weight:600;margin-bottom:4px;line-height:1.3}
+.mission-bar{width:100%;height:6px;background:rgba(0,0,0,.35);border-radius:3px;overflow:hidden;margin:3px 0}
 .mission-fill{height:100%;background:linear-gradient(90deg,var(--gold),#fb923c);transition:width .35s cubic-bezier(.4,0,.2,1);border-radius:3px}
 .mission-row.mission-ready .mission-fill{background:linear-gradient(90deg,#22c55e,#10b981)}
 .mission-row.mission-claimed .mission-fill{background:rgba(255,255,255,.25)}
-.mission-meta{display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;font-family:monospace;margin-top:2px}
+.mission-meta{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;font-family:monospace;margin-top:3px}
 .mission-reward{color:var(--gold);font-weight:700}
 .mission-row.mission-claimed .mission-reward{color:#94a3b8}
-.missions-footer{margin-top:8px;padding:6px 10px;border-radius:8px;font-size:10px;text-align:center;font-weight:600}
+.mission-claim-btn{
+  flex:0 0 auto;
+  background:linear-gradient(135deg,#22c55e,#10b981);
+  color:#fff;border:none;border-radius:10px;
+  padding:8px 12px;font-size:11px;font-weight:700;
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(34,197,94,.35);
+}
+.mission-claim-btn:active{transform:scale(.95)}
+.missions-footer{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:11px;text-align:center;font-weight:600}
 .missions-footer.all-done{background:rgba(34,197,94,.20);color:#bbf7d0;border:1px solid rgba(34,197,94,.4)}
 .missions-footer.warn{background:rgba(251,146,60,.18);color:#fdba74;border:1px solid rgba(251,146,60,.4)}
 @keyframes missionReadyPulse{
@@ -1659,7 +1724,6 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <!-- ====== MASCOTA ====== -->
 <div class="sec" id="s-mascota">
-  <div id="missions-card-area"></div>
   <div id="pet-card-area"></div>
 </div>
 
@@ -4829,42 +4893,98 @@ function petBgSVG(habitat){
   return '<img src="'+url+'" alt="" loading="eager" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none;image-rendering:pixelated">';
 }
 
-/* v10.13.36: render del panel de misiones diarias.
-   Ubicado arriba del pet-card-area. Incluye badge del streak, las 3 misiones
-   con barra de progreso, reward visible, y botón de claim si está completa. */
+/* v10.13.36b: render del badge compacto de misiones dentro del cuarto.
+   Reemplaza la card grande que comía todo el header. Ahora es un badge
+   discreto en la esquina superior izquierda (debajo del reloj) que
+   abre un modal grande al tocarse. */
 function renderMissionsCard(){
-  var area=document.getElementById('missions-card-area');
-  if(!area||!P||!P.mascota)return;
-  var pet=P.mascota;
-  /* Asegurar que las misiones estén actualizadas para hoy */
+  var pet=P&&P.mascota;if(!pet)return;
   ensureMissionsForToday(pet);
   if(!pet.misiones_dia)return;
+  /* Buscar el badge dentro del cuarto */
+  var badge=document.getElementById('pet-missions-badge');
+  if(!badge)return;
+  badge.style.display='flex';
+  /* Contar misiones cobradas y listas */
+  var m=pet.misiones_dia;
+  var cobradas=0;
+  var listas=0; /* completas pero sin claim */
+  ['caricia','cuidado','logro'].forEach(function(slot){
+    var ms=m[slot];if(!ms)return;
+    if(ms.claimed)cobradas++;
+    else if(ms.progress>=ms.target)listas++;
+  });
+  /* Tier visual del badge según estado */
+  var stateClass='';
+  if(cobradas===3)stateClass='all-done';
+  else if(listas>0)stateClass='has-claim';
+  /* Streak */
+  var streakDias=(pet.streak&&pet.streak.dias)||0;
+  var streakIcon='🔥';
+  if(streakDias>=30)streakIcon='💎';
+  else if(streakDias>=14)streakIcon='🥇';
+  else if(streakDias>=7)streakIcon='🥈';
+  else if(streakDias>=3)streakIcon='🥉';
+  /* Render compacto: 🎯 X/3   🔥 5 */
+  var streakHTML=streakDias>0?
+    '<span class="pmb-sep"></span><span class="pmb-streak">'+streakIcon+' '+streakDias+'</span>':
+    '';
+  badge.className='pet-missions-badge '+stateClass;
+  badge.innerHTML='<span class="pmb-icon">🎯</span><span class="pmb-count">'+cobradas+'/3</span>'+streakHTML;
+}
 
+/* v10.13.36b: modal con las 3 misiones completas + streak detallado.
+   Se abre al tocar el badge del cuarto. */
+function openMissionsModal(){
+  var pet=P&&P.mascota;if(!pet)return;
+  ensureMissionsForToday(pet);
+  if(!pet.misiones_dia)return;
+  var modal=document.getElementById('m-pet-missions');
+  if(!modal){
+    /* Crear el modal una sola vez */
+    var div=document.createElement('div');
+    div.id='m-pet-missions';
+    div.className='m';
+    div.innerHTML='<div class="mc"><div class="mh"><div class="mt">🎯 Misiones del día</div><button class="mx" onclick="closeM(\'m-pet-missions\')">✕</button></div><div class="mb" id="missions-modal-body"></div></div>';
+    document.body.appendChild(div);
+  }
+  /* Render del cuerpo */
+  var body=document.getElementById('missions-modal-body');
   var nombre=pet.nombre||'tu mascota';
   var streakDias=(pet.streak&&pet.streak.dias)||0;
-
-  /* Badge del streak con tier visual */
-  var streakColor='var(--gold)';
+  var streakMax=(pet.streak&&pet.streak.max_alcanzado)||0;
+  /* Header del streak */
   var streakIcon='🔥';
-  if(streakDias>=30){streakColor='#67e8f9';streakIcon='💎'}
-  else if(streakDias>=14){streakColor='#fde68a';streakIcon='🥇'}
-  else if(streakDias>=7){streakColor='#e2e8f0';streakIcon='🥈'}
-  else if(streakDias>=3){streakColor='#fb923c';streakIcon='🥉'}
-
-  var streakBadge=streakDias>0?
-    '<div style="display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.35);padding:3px 8px;border-radius:10px;font-size:11px;color:'+streakColor+';font-weight:700">'+
-      streakIcon+' '+streakDias+' día'+(streakDias!==1?'s':'')+
-    '</div>' : '';
-
-  /* Helper para renderizar una misión */
-  function missionRow(slot,m){
+  var streakLabel='Día '+streakDias;
+  if(streakDias>=30){streakIcon='💎';streakLabel='💎 '+streakDias+' días — Diamante'}
+  else if(streakDias>=14){streakIcon='🥇';streakLabel='🥇 '+streakDias+' días — Oro'}
+  else if(streakDias>=7){streakIcon='🥈';streakLabel='🥈 '+streakDias+' días — Plata'}
+  else if(streakDias>=3){streakIcon='🥉';streakLabel='🥉 '+streakDias+' días — Bronce'}
+  else if(streakDias>0){streakLabel='🔥 '+streakDias+' día'+(streakDias>1?'s':'')+' seguido'+(streakDias>1?'s':'')}
+  else streakLabel='Empezá tu racha hoy';
+  /* Próximo hito */
+  var hitos=[3,7,14,30];
+  var proximoHito=null;
+  for(var hi=0;hi<hitos.length;hi++){
+    if(streakDias<hitos[hi]){proximoHito=hitos[hi];break}
+  }
+  var hitoHTML='';
+  if(proximoHito){
+    var faltan=proximoHito-streakDias;
+    hitoHTML='<div class="missions-hito-next">Próximo hito: '+proximoHito+' días · faltan '+faltan+'</div>';
+  }
+  /* Helper de mission row */
+  function row(slot,m){
     var done=m.progress>=m.target;
     var claimed=m.claimed;
     var pct=Math.min(100,Math.round((m.progress/m.target)*100));
     var stateClass=claimed?'mission-claimed':(done?'mission-ready':'');
     var rewardLabel=m.reward+' pts'+(m.caja_sorpresa?' + 🎁':'');
-    /* Texto de la misión con interpolación */
     var text=(m.text||'').replace('{nombre}',nombre).replace('{target}',m.target);
+    var actionBtn='';
+    if(done&&!claimed){
+      actionBtn='<button class="mission-claim-btn" onclick="claimMissionFromModal(\''+slot+'\')">Cobrar</button>';
+    }
     return '<div class="mission-row '+stateClass+'">'+
       '<div class="mission-icon">'+m.icon+'</div>'+
       '<div class="mission-body">'+
@@ -4875,28 +4995,43 @@ function renderMissionsCard(){
           '<span class="mission-reward">'+(claimed?'✅ Cobrado':rewardLabel)+'</span>'+
         '</div>'+
       '</div>'+
+      actionBtn+
     '</div>';
   }
-
-  var h='<div class="missions-card">';
-  h+='<div class="missions-header">';
-  h+='<div class="missions-title">🎯 Misiones del día</div>';
-  h+=streakBadge;
+  var h='';
+  /* Banner del streak arriba */
+  h+='<div class="missions-streak-banner streak-tier-'+(streakDias>=30?'diamond':streakDias>=14?'gold':streakDias>=7?'silver':streakDias>=3?'bronze':'starter')+'">';
+  h+='<div class="msb-icon">'+streakIcon+'</div>';
+  h+='<div class="msb-info">';
+  h+='<div class="msb-label">'+streakLabel+'</div>';
+  h+='<div class="msb-sub">Récord: '+streakMax+' días</div>';
   h+='</div>';
+  h+='</div>';
+  if(proximoHito)h+=hitoHTML;
+  /* Las 3 misiones */
   h+='<div class="missions-list">';
-  h+=missionRow('caricia',pet.misiones_dia.caricia);
-  h+=missionRow('cuidado',pet.misiones_dia.cuidado);
-  h+=missionRow('logro',pet.misiones_dia.logro);
+  h+=row('caricia',pet.misiones_dia.caricia);
+  h+=row('cuidado',pet.misiones_dia.cuidado);
+  h+=row('logro',pet.misiones_dia.logro);
   h+='</div>';
-
-  /* Mensaje de estado al fondo */
+  /* Footer */
   if(allMissionsClaimed(pet)){
     h+='<div class="missions-footer all-done">🌟 ¡Todas completadas! Volvé mañana</div>';
   }else if(streakDias>=6&&!pet.transmitio_hoy){
-    h+='<div class="missions-footer warn">⚠️ Día 7+ del streak requiere transmitir hoy</div>';
+    h+='<div class="missions-footer warn">⚠️ Día 7+ requiere transmitir hoy</div>';
   }
-  h+='</div>';
-  area.innerHTML=h;
+  body.innerHTML=h;
+  openM('m-pet-missions');
+}
+
+/* Cobrar misión desde el modal manualmente.
+   Las completables auto-cobrar también (no hace daño llamarla). */
+function claimMissionFromModal(slot){
+  var pet=P&&P.mascota;if(!pet||!pet.misiones_dia)return;
+  awardMissionReward(pet,slot);
+  /* Re-render del modal y badge */
+  openMissionsModal();
+  renderMissionsCard();
 }
 
 function renderPetCard(){
@@ -4937,6 +5072,9 @@ function renderPetCard(){
   /* v10.13.28: banner flotante que aparece al entrar en modo edición (drag&drop) */
   h+='<div class="edit-mode-banner" id="edit-mode-banner"><span class="eb-dot"></span>Modo edición · arrastrá y soltá</div>';
   h+='<div class="pet-time-badge" id="pet-time-badge"></div>';
+  /* v10.13.36b: badge compacto de misiones en esquina superior izquierda
+     (debajo del reloj). Renderizado por renderMissionsBadge tras renderPetCard. */
+  h+='<div class="pet-missions-badge" id="pet-missions-badge" onclick="openMissionsModal()" style="display:none"></div>';
   h+='<div class="pet-wall-window" id="pet-wall-window"></div>';
   h+='<div class="pet-wall-shelf" id="pet-wall-shelf"></div>';
   h+='<div class="pet-wall-lamp" id="pet-wall-lamp"></div>';
@@ -4953,7 +5091,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.36</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.37</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */

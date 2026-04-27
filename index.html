@@ -5100,7 +5100,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.39</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.40</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -6086,16 +6086,19 @@ function openBowl(){
   var pet=P&&P.mascota;if(!pet)return;
   /* v10.13.14: tocar el plato abre menú para comprar/ver comida del inventario.
      La mascota come sola cuando tiene hambre <30%, elige la mejor del inventario.
-     El menú ahora es INFORMATIVO: muestra qué hay y permite comprar más directo. */
-  if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
+     El menú ahora es INFORMATIVO: muestra qué hay y permite comprar más directo.
+     v10.13.40: REMOVIDO el bloqueo cuando duerme — rellenar el plato es una
+     acción sobre el CUARTO, no sobre la mascota. La mascota encontrará la
+     comida cuando se despierte. La consumeFood (que sí 'usa' a la mascota)
+     mantiene su propio chequeo si hace falta. */
   openM('m-pet-feed');
   renderFeedMenu();
 }
 
 function openWaterBowl(){
   var pet=P&&P.mascota;if(!pet)return;
-  /* v10.13.14: mismo que openBowl pero para agua */
-  if(getMood(pet)==='sleeping'){toast('💤 Está durmiendo, déjala descansar');return}
+  /* v10.13.40: igual que openBowl — rellenar agua es acción del cuarto,
+     NO molesta a la mascota dormida. */
   openM('m-pet-drink');
   renderDrinkMenu();
 }
@@ -6121,17 +6124,27 @@ function consumeWater(waterId){
   /* v10.13.36: tracking misión cuidado — drink */
   if(typeof trackMissionCuidado==='function')trackMissionCuidado(pet,'drink');
   if(typeof trackMissionLogro==='function')trackMissionLogro(pet,'play_xp',water.xp||0);
-  /* v10.13.14: walk to water, drinking anim + partículas siempre (mix opción 3) */
-  setTimeout(function(){
-    petWalkTo(POS_WATER,function(){
-      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
-        petSpritePlayOnce('eating');
-      }
-      if(typeof showEatDrinkParticles==='function'){
-        showEatDrinkParticles('💧','#22d3ee');
-      }
-    });
-  },100);
+  /* v10.13.40: si la mascota está durmiendo, NO la despertamos — el agua
+     queda lista en el plato. El walking+drinking pasa solo si está despierta. */
+  var isSleeping=getMood(pet)==='sleeping';
+  if(!isSleeping){
+    /* v10.13.14: walk to water, drinking anim + partículas siempre (mix opción 3) */
+    setTimeout(function(){
+      petWalkTo(POS_WATER,function(){
+        if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
+          petSpritePlayOnce('eating');
+        }
+        if(typeof showEatDrinkParticles==='function'){
+          showEatDrinkParticles('💧','#22d3ee');
+        }
+      });
+    },100);
+  }else{
+    /* Está dormida — el plato muestra que está lleno (water_drinking_at se
+       seteó arriba) pero no hay caminata ni animación. Re-render del plato
+       para que muestre el estado lleno. */
+    updatePetBowl();
+  }
   /* Flag de "tomando" se limpia tras ~3s para que el plato pueda
      volver a vacío si no hay más agua */
   setTimeout(function(){
@@ -6141,7 +6154,8 @@ function consumeWater(waterId){
       updatePetBowl();
     }
   },3500);
-  toast('💧 '+(pet.nombre||'Tu mascota')+' bebe '+water.name.toLowerCase()+' (+'+water.sed+' sed · +'+water.xp+' XP)');
+  toast(isSleeping?'💧 Plato lleno · '+(pet.nombre||'Tu mascota')+' beberá al despertar':
+                   '💧 '+(pet.nombre||'Tu mascota')+' bebe '+water.name.toLowerCase()+' (+'+water.sed+' sed · +'+water.xp+' XP)');
 }
 
 function renderDrinkMenu(){
@@ -6234,23 +6248,34 @@ function consumeFood(foodId){
   /* v10.13.36: tracking de misión cuidado — feed */
   if(typeof trackMissionCuidado==='function')trackMissionCuidado(pet,'feed');
   if(typeof trackMissionLogro==='function')trackMissionLogro(pet,'play_xp',food.xp||0);
+  /* v10.13.40: si la mascota está durmiendo, NO la despertamos. El plato
+     queda lleno (bowl_filled_at se seteó arriba) y la mascota irá a comer
+     cuando se despierte por su cuenta. */
+  var isSleeping=getMood(pet)==='sleeping';
   /* v10.13.14: walk to bowl, eating anim.
      Gato: oculta el bowl (su sprite tiene uno propio dibujado).
      Resto: mantiene bowl visible + partículas flotantes con emoji de la comida. */
   var isCat=(pet.tipo==='gato');
-  setTimeout(function(){
-    petWalkTo(POS_FOOD,function(){
-      var bowlEl=document.getElementById('pet-bowl-el');
-      if(isCat&&bowlEl)bowlEl.classList.add('hide-for-eating');
-      if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
-        petSpritePlayOnce('eating');
-      }
-      if(!isCat&&typeof showEatDrinkParticles==='function'){
-        showEatDrinkParticles(food.icon,'#fbbf24');
-      }
-    });
-  },100);
-  /* Restaurar estado tras animación */
+  if(!isSleeping){
+    setTimeout(function(){
+      petWalkTo(POS_FOOD,function(){
+        var bowlEl=document.getElementById('pet-bowl-el');
+        if(isCat&&bowlEl)bowlEl.classList.add('hide-for-eating');
+        if(_currentPetController&&_currentPetController.config&&_currentPetController.config.eating){
+          petSpritePlayOnce('eating');
+        }
+        if(!isCat&&typeof showEatDrinkParticles==='function'){
+          showEatDrinkParticles(food.icon,'#fbbf24');
+        }
+      });
+    },100);
+  }else{
+    /* Está dormida — solo refrescar el plato visualmente (lleno) */
+    updatePetBowl();
+  }
+  /* Restaurar estado tras animación. Si está dormida, dejamos el plato
+     lleno mucho más tiempo (15s) para dar margen a que se despierte y coma.
+     Si está despierta, 4.5s como antes (animación de comida). */
   setTimeout(function(){
     if(P&&P.mascota){
       P.mascota.bowl_filled_at=null;
@@ -6260,8 +6285,9 @@ function consumeFood(foodId){
       var bowlEl=document.getElementById('pet-bowl-el');
       if(bowlEl)bowlEl.classList.remove('hide-for-eating');
     }
-  },4500);
-  toast(food.icon+' '+(pet.nombre)+' va a comer '+food.name+' · +'+food.xp+' XP');
+  },isSleeping?15000:4500);
+  toast(isSleeping?'🍽️ Plato lleno · '+(pet.nombre||'Tu mascota')+' comerá al despertar':
+                   food.icon+' '+(pet.nombre)+' va a comer '+food.name+' · +'+food.xp+' XP');
 }
 
 /* Backwards compat: feedPet still callable but routes to consumeFood */

@@ -1036,9 +1036,10 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes petJumpOver{0%{transform:translateY(0)}40%{transform:translateY(-14px)}70%{transform:translateY(-10px)}100%{transform:translateY(0)}}
 @keyframes petJumpOverLeft{0%{transform:scaleX(-1) translateY(0)}40%{transform:scaleX(-1) translateY(-14px)}70%{transform:scaleX(-1) translateY(-10px)}100%{transform:scaleX(-1) translateY(0)}}
 .pet-time-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;mix-blend-mode:multiply;transition:background-color 2s ease,opacity 2s ease;opacity:0}
-.pet-time-overlay.dusk{background:linear-gradient(to bottom,rgba(255,180,120,.45),rgba(220,140,170,.4));opacity:1}
-.pet-time-overlay.night{background:linear-gradient(to bottom,rgba(80,90,140,.5),rgba(60,70,120,.55));opacity:1}
-.pet-time-overlay.dawn{background:linear-gradient(to bottom,rgba(255,210,160,.4),rgba(255,225,190,.3));opacity:1}
+/* v10.13.41: tintes más sutiles para no tapar el cuarto. */
+.pet-time-overlay.dusk{background:linear-gradient(to bottom,rgba(255,180,120,.25),rgba(220,140,170,.22));opacity:1}
+.pet-time-overlay.night{background:linear-gradient(to bottom,rgba(80,90,140,.32),rgba(60,70,120,.36));opacity:1}
+.pet-time-overlay.dawn{background:linear-gradient(to bottom,rgba(255,210,160,.22),rgba(255,225,190,.16));opacity:1}
 .pet-time-badge{position:absolute;top:10px;left:10px;z-index:10;font-size:10px;color:#fff;background:rgba(15,15,30,.75);padding:4px 9px;border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;font-weight:700;letter-spacing:.3px;border:1px solid rgba(255,255,255,.1);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .pet-facing{display:inline-block;position:relative}
 .pet-facing.face-left{transform:scaleX(-1)}
@@ -2953,7 +2954,22 @@ function getPetTargetHeight(pet){
 }
 function xpForLevel(lvl){return PET_XP_TABLE[Math.min(lvl,PET_XP_TABLE.length-1)]||(83300+(lvl-49)*5000)}
 function coinsToCroquetas(c){if(c<=0)return 0;return Math.max(1,Math.round(Math.log(c+1)*3.2))}
-function getMood(pet){var h=pet.hambre||0,f=pet.felicidad||0,e=pet.energia||0;if(e<15)return'sleeping';if(h<15)return'hungry';if(f<20)return'sad';if(f>70&&h>50)return'happy';if(f>50)return'content';return'neutral'}
+function getMood(pet){
+  var h=pet.hambre||0,f=pet.felicidad||0,e=pet.energia||0;
+  if(e<15)return'sleeping';
+  /* v10.13.41: sueño nocturno automático (22:00-06:00 hora local).
+     La mascota se duerme sola si está en estado tranquilo (hambre y sed
+     suficientes). Si tiene hambre crítica (<25), se queda despierta para
+     buscar comida. */
+  if(typeof isNightTime==='function'&&isNightTime()&&h>=25&&!pet.bowl_filled_at){
+    return 'sleeping';
+  }
+  if(h<15)return'hungry';
+  if(f<20)return'sad';
+  if(f>70&&h>50)return'happy';
+  if(f>50)return'content';
+  return'neutral';
+}
 function petGenderName(pet){var t=PET_TYPES[pet.tipo]||PET_TYPES.gato;return pet.genero==='macho'?t.nameM:t.name}
 function getMoodEmoji(mood){return{happy:'😄',content:'😊',neutral:'😐',sad:'😢',hungry:'🤤',sleeping:'😴'}[mood]||'😐'}
 /* v10.13.24: moods con género.
@@ -4772,21 +4788,94 @@ function getPetLocalHour(){
   }
   return new Date().getHours();
 }
+/* v10.13.41: devuelve la hora local del usuario en formato decimal
+   (ej: 14.5 = 14:30). Usado para chequeos de rangos horarios. */
+function getPetLocalHourDecimal(){
+  var d=new Date();
+  return d.getHours()+(d.getMinutes()/60);
+}
+/* v10.13.41: detecta si la hora actual es PICO de actividad para la
+   especie. Cada animal tiene horas naturales de mayor actividad. */
+function isSpeciesPeakHour(tipo){
+  var h=getPetLocalHourDecimal();
+  if(tipo==='perro'){
+    /* Perro: pico de día (8-20), tranquilo de noche */
+    return h>=8&&h<20;
+  }
+  if(tipo==='gato'){
+    /* Gato: crepuscular (6-8 + 18-22), activo en límites */
+    return (h>=6&&h<8)||(h>=18&&h<22);
+  }
+  if(tipo==='conejo'){
+    /* Conejo: amanecer/atardecer (6-9 + 17-20) */
+    return (h>=6&&h<9)||(h>=17&&h<20);
+  }
+  if(tipo==='pajaro'){
+    /* Pájaro: solo de día (7-19), duerme firme de noche */
+    return h>=7&&h<19;
+  }
+  return false;
+}
+/* v10.13.41: detecta si es horario de sueño nocturno (22:00-06:00). */
+function isNightTime(){
+  var h=getPetLocalHourDecimal();
+  return h>=22||h<6;
+}
+/* v10.13.41: buffs por horario de comida/cariño.
+   Devuelve {xpMult, happyMult} con los multiplicadores activos. */
+function getTimeBonus(){
+  var h=getPetLocalHourDecimal();
+  /* Almuerzo: +50% XP al alimentar */
+  if(h>=12&&h<14)return {kind:'almuerzo',xpMult:1.5,happyMult:1.0};
+  /* Cena: +30% XP al alimentar */
+  if(h>=19&&h<21)return {kind:'cena',xpMult:1.3,happyMult:1.0};
+  /* Despertar: +25% felicidad al acariciar */
+  if(h>=6&&h<8)return {kind:'despertar',xpMult:1.0,happyMult:1.25};
+  return {kind:null,xpMult:1.0,happyMult:1.0};
+}
+
 function updateTimeOverlay(){
   var overlay=document.getElementById('pet-time-overlay');
   var badge=document.getElementById('pet-time-badge');
   if(!overlay)return;
-  var h=getPetLocalHour();
+  var d=new Date();
+  var h=d.getHours();
+  var m=d.getMinutes();
   var phase='day';
   var icon='☀️';
   var label='Día';
-  if(h>=21||h<5){phase='night';icon='🌙';label='Noche'}
-  else if(h>=5&&h<7){phase='dawn';icon='🌅';label='Amanecer'}
-  else if(h>=18&&h<21){phase='dusk';icon='🌇';label='Atardecer'}
+  /* v10.13.41: 4 fases del día — ampliadas a horarios más naturales */
+  if(h>=22||h<6){phase='night';icon='🌙';label='Noche'}
+  else if(h>=6&&h<12){phase='dawn';icon='🌅';label='Mañana'}
+  else if(h>=18&&h<22){phase='dusk';icon='🌇';label='Tarde'}
+  /* 12-18 = day por defecto (sin tinte) */
   overlay.className='pet-time-overlay'+(phase==='day'?'':' '+phase);
   if(badge){
-    badge.textContent=icon+' '+label+' '+(h<10?'0'+h:h)+':00';
+    /* v10.13.41: HH:MM real (no HH:00 como antes). Auto-refresh cada minuto. */
+    var hStr=h<10?'0'+h:h;
+    var mStr=m<10?'0'+m:m;
+    /* Indicador de buff activo a la derecha del reloj */
+    var bonus=getTimeBonus();
+    var bonusBadge='';
+    if(bonus.kind==='almuerzo')bonusBadge=' · 🍽️+50%XP';
+    else if(bonus.kind==='cena')bonusBadge=' · 🍴+30%XP';
+    else if(bonus.kind==='despertar')bonusBadge=' · 💕+25%';
+    badge.textContent=icon+' '+label+' '+hStr+':'+mStr+bonusBadge;
   }
+}
+
+/* v10.13.41: timer global que refresca el reloj cada minuto. Solo se
+   inicializa una vez. */
+var _timeOverlayTimer=null;
+function ensureTimeOverlayTimer(){
+  if(_timeOverlayTimer)return;
+  _timeOverlayTimer=setInterval(function(){
+    /* Solo actualiza si la sección mascota está activa (ahorra trabajo) */
+    var sec=document.getElementById('s-mascota');
+    if(sec&&sec.classList.contains('a')){
+      updateTimeOverlay();
+    }
+  },60000); /* cada 60s */
 }
 
 function initPetSprite(){
@@ -4853,6 +4942,8 @@ function initPetSprite(){
   }
   /* Update day/night overlay */
   updateTimeOverlay();
+  /* v10.13.41: asegurar que el reloj siga refrescándose cada minuto */
+  if(typeof ensureTimeOverlayTimer==='function')ensureTimeOverlayTimer();
   /* Show accessories */
   renderAccessoriesOverlay();
   /* v10.13.36: render del panel de misiones (arriba del cuarto). */
@@ -5100,7 +5191,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.40</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.41</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -6234,11 +6325,14 @@ function consumeFood(foodId){
   if(!food)return;
   /* Consume from inventory */
   pet.inventario_comida[foodId]=(pet.inventario_comida[foodId]||0)-1;
+  /* v10.13.41: bonus XP por horario (almuerzo +50%, cena +30%) */
+  var timeBonus=(typeof getTimeBonus==='function')?getTimeBonus():{xpMult:1,happyMult:1,kind:null};
+  var xpGain=Math.round((food.xp||0)*timeBonus.xpMult);
   /* Apply stats boost */
   pet.hambre=Math.min(100,(pet.hambre||0)+food.hunger);
   pet.felicidad=Math.min(100,(pet.felicidad||0)+food.happy);
   pet.energia=Math.min(100,(pet.energia||0)+(food.energy||0));
-  pet.xp=(pet.xp||0)+food.xp;
+  pet.xp=(pet.xp||0)+xpGain;
   pet.ultima_comida=new Date().toISOString().slice(0,10);
   pet.bowl_filled_at=Date.now();
   pet.bowl_food=foodId;
@@ -6286,8 +6380,12 @@ function consumeFood(foodId){
       if(bowlEl)bowlEl.classList.remove('hide-for-eating');
     }
   },isSleeping?15000:4500);
+  /* v10.13.41: incluir bonus de horario en el toast si aplica */
+  var bonusTxt='';
+  if(timeBonus.kind==='almuerzo')bonusTxt=' 🍽️ +50% bonus almuerzo';
+  else if(timeBonus.kind==='cena')bonusTxt=' 🍴 +30% bonus cena';
   toast(isSleeping?'🍽️ Plato lleno · '+(pet.nombre||'Tu mascota')+' comerá al despertar':
-                   food.icon+' '+(pet.nombre)+' va a comer '+food.name+' · +'+food.xp+' XP');
+                   food.icon+' '+(pet.nombre)+' va a comer '+food.name+' · +'+xpGain+' XP'+bonusTxt);
 }
 
 /* Backwards compat: feedPet still callable but routes to consumeFood */
@@ -6700,10 +6798,16 @@ function petTap(e){
     return;
   }
   /* Caricia normal: +3 XP, +3 felicidad, animación tickle */
-  pet.felicidad=Math.min(100,(pet.felicidad||0)+3);
+  /* v10.13.41: bonus de felicidad por horario matutino (06:00-08:00 → +25%) */
+  var tapBonus=(typeof getTimeBonus==='function')?getTimeBonus():{xpMult:1,happyMult:1,kind:null};
+  var happyGain=Math.round(3*tapBonus.happyMult);
+  pet.felicidad=Math.min(100,(pet.felicidad||0)+happyGain);
   pet.xp=(pet.xp||0)+3;
   checkPetLevelUp(pet);
-  showTapParticle(e,'+3 XP','#fbbf24');
+  /* Si hubo bonus, ajustar partícula */
+  var tapLabel='+3 XP';
+  if(tapBonus.kind==='despertar')tapLabel='+'+happyGain+' 💕';
+  showTapParticle(e,tapLabel,'#fbbf24');
   /* v10.13.36: tracking de misiones — caricia exitosa */
   if(typeof trackMissionCaricia==='function')trackMissionCaricia(pet);
   if(typeof trackMissionLogro==='function'){
@@ -7096,7 +7200,27 @@ var _petWanderInterval=null;
 var _petTimeInterval=null;
 function startPetWander(){
   if(_petWanderInterval)clearInterval(_petWanderInterval);
-  _petWanderInterval=setInterval(petWander,8000);
+  /* v10.13.41: el intervalo de wander se ajusta dinámicamente a hora pico
+     vs hora tranquila. La función schedulePetWander se llama recursivamente
+     con un timeout que varía según el biorritmo de la especie. */
+  function schedulePetWander(){
+    if(_petWanderInterval)clearInterval(_petWanderInterval);
+    var pet=P&&P.mascota;
+    var baseDelay=8000; /* default: 8s */
+    if(pet&&typeof isSpeciesPeakHour==='function'){
+      if(isSpeciesPeakHour(pet.tipo)){
+        baseDelay=5000; /* hora pico: cada 5s — más activa */
+      }else if(typeof isNightTime==='function'&&isNightTime()){
+        baseDelay=20000; /* noche: cada 20s — casi quieta */
+      }else{
+        baseDelay=12000; /* hora baja: cada 12s — relajada */
+      }
+    }
+    _petWanderInterval=setInterval(petWander,baseDelay);
+  }
+  schedulePetWander();
+  /* Re-evaluar el ritmo cada 5 min para que se adapte a la hora del día */
+  setInterval(schedulePetWander,5*60*1000);
   setTimeout(petWander,2000); /* first move after a moment */
   /* Also refresh time-of-day overlay every minute so day→dusk→night transitions are visible */
   if(_petTimeInterval)clearInterval(_petTimeInterval);

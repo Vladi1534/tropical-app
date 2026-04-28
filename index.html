@@ -5196,7 +5196,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.42</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.43</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -6590,6 +6590,11 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
   var rafId=null;
   var stopped=false;
   var onStop=null;
+  /* v10.13.43: tracking de la última superficie tocada (piso o techo de
+     mueble). Se setea cuando hay colisión bouncy. Si la pelota se queda
+     casi quieta cerca de esa Y, dispara stop() aunque no haya llegado al
+     piso real — fix del bug 'pelota colgada sobre la casa del perro'. */
+  var _lastSurfaceY=null;
 
   /* ===== PET CHASE =====
      La mascota persigue la pelota. En cada frame ajusta el walker.left
@@ -6695,6 +6700,10 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
           vy=-vy*BOUNCE;
           vx*=FLOOR_FRICTION;
           if(Math.abs(vy)<60)vy=0;
+          /* v10.13.43: registrar la superficie sobre la que está descansando.
+             Si la pelota se queda casi quieta sobre esta superficie, stop()
+             debe dispararse aunque no haya tocado el piso. */
+          _lastSurfaceY=topReachPx-ballSize;
           break; /* solo un rebote por frame */
         }
       }
@@ -6717,6 +6726,15 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
       stop();
       return;
     }
+    /* v10.13.43: detener si está casi quieta sobre un mueble (cama/casa).
+       Bug reportado: la pelota rebotaba sobre la casa del perro y nunca
+       caía al piso → la mascota quedaba congelada esperando.
+       Si la pelota está dentro de 2px del último techo de mueble tocado y
+       casi sin velocidad → stop. */
+    if(_lastSurfaceY!==null&&Math.abs(y-_lastSurfaceY)<2&&totalVel<MIN_VELOCITY){
+      stop();
+      return;
+    }
 
     rafId=requestAnimationFrame(frame);
   }
@@ -6725,42 +6743,108 @@ function showPlayAnimation(initialVx,initialVy,initialX,initialY){
     if(stopped)return;
     stopped=true;
     if(rafId)cancelAnimationFrame(rafId);
-    /* Restaurar ball a su slot original */
-    setTimeout(function(){
-      ballEl.style.transition='left .5s ease-out,top .5s ease-out';
-      setTimeout(function(){
-        ballEl.style.left=originalStyle.left;
-        ballEl.style.top=originalStyle.top;
-        ballEl.style.bottom=originalStyle.bottom;
-        ballEl.style.right=originalStyle.right;
-        setTimeout(function(){
-          ballEl.style.transition=originalStyle.transition;
-        },550);
-      },50);
-    },400);
-    /* Restaurar walker */
+    /* Detener walker en su posición actual */
     if(walker){
-      walker.classList.remove('walking');
-      walker.style.transition='';
+      walker.classList.remove('walking','fast');
     }
-    /* Volver al mood natural */
-    if(_currentPetController){
+    /* v10.13.43: NUEVA SECUENCIA — mascota recoge la pelota y la lleva
+       a la repisa con animación de "morder" (eating sprite).
+       1. Mascota camina hasta la pelota (si no está ya ahí)
+       2. Animación eating (~1s) — morder la pelota
+       3. La pelota se "pega" al walker y siguen juntos
+       4. Caminan hacia la repisa (left:25%)
+       5. La pelota vuelve a su posición original
+       6. Mood natural
+       Si no hay walker o controller, fallback al comportamiento anterior. */
+    var rect=scene.getBoundingClientRect();
+    var ballCenterPct=((parseFloat(ballEl.style.left)+ballSize/2)/rect.width)*100;
+    var hasController=_currentPetController&&_currentPetController.config&&_currentPetController.config.eating;
+    if(walker&&hasController){
+      /* Fase 1: caminar hasta la pelota (si no está cerca) */
+      var walkerLeftPct=parseFloat(walker.style.left||'50');
+      var distToBall=Math.abs(walkerLeftPct-ballCenterPct);
+      function pickup(){
+        /* Fase 2: animación eating (morder) */
+        if(typeof petSpritePlayOnce==='function'){
+          petSpritePlayOnce('eating');
+        }
+        /* Fase 3-4: tras 900ms, caminar a la repisa con la pelota pegada */
+        setTimeout(function(){
+          /* Pelota "pegada" al walker — sigue su movimiento horizontal */
+          var ballFollowInterval=setInterval(function(){
+            if(!walker||stopped===false)return;
+            var wRect=walker.getBoundingClientRect();
+            var sRect=scene.getBoundingClientRect();
+            ballEl.style.left=(wRect.left-sRect.left+wRect.width/2-ballSize/2)+'px';
+            ballEl.style.top=(wRect.top-sRect.top+10)+'px'; /* a la altura del hocico */
+          },50);
+          /* Caminar a la repisa (left:25%) */
+          if(typeof petWalkTo==='function'){
+            petWalkTo(25,function(){
+              /* Fase 5: la pelota vuelve a su slot original */
+              clearInterval(ballFollowInterval);
+              ballEl.style.transition='left .4s ease-out,top .4s ease-out';
+              setTimeout(function(){
+                ballEl.style.left=originalStyle.left;
+                ballEl.style.top=originalStyle.top;
+                ballEl.style.bottom=originalStyle.bottom;
+                ballEl.style.right=originalStyle.right;
+                setTimeout(function(){
+                  ballEl.style.transition=originalStyle.transition;
+                },450);
+              },50);
+              /* Fase 6: mood natural */
+              if(typeof applyPetMoodState==='function')applyPetMoodState();
+            });
+          }else{
+            /* Fallback: solo restaurar pelota */
+            clearInterval(ballFollowInterval);
+            ballEl.style.transition='left .5s ease-out,top .5s ease-out';
+            ballEl.style.left=originalStyle.left;
+            ballEl.style.top=originalStyle.top;
+            ballEl.style.bottom=originalStyle.bottom;
+            ballEl.style.right=originalStyle.right;
+          }
+        },900); /* tiempo de la animación eating */
+      }
+      if(distToBall>3){
+        /* Necesita caminar a la pelota primero */
+        if(typeof petWalkTo==='function'){
+          petWalkTo(ballCenterPct,pickup);
+        }else{
+          pickup();
+        }
+      }else{
+        /* Ya está al lado de la pelota */
+        pickup();
+      }
+    }else{
+      /* Sin controller — fallback al comportamiento anterior */
       setTimeout(function(){
-        if(typeof applyPetMoodState==='function')applyPetMoodState();
-      },300);
+        ballEl.style.transition='left .5s ease-out,top .5s ease-out';
+        setTimeout(function(){
+          ballEl.style.left=originalStyle.left;
+          ballEl.style.top=originalStyle.top;
+          ballEl.style.bottom=originalStyle.bottom;
+          ballEl.style.right=originalStyle.right;
+          setTimeout(function(){
+            ballEl.style.transition=originalStyle.transition;
+          },550);
+        },50);
+      },400);
+      if(_currentPetController){
+        setTimeout(function(){
+          if(typeof applyPetMoodState==='function')applyPetMoodState();
+        },300);
+      }
     }
-    /* Reanudar wander tras el chase Y re-chequear mood.
-       v10.13.2c: si terminó sin energía, applyPetMoodState debe correr
-       DESPUÉS de _walkPaused=false para que pueda caminar a la cama.
-       El primer applyPetMoodState (ms 300) encuentra _walkPaused=true
-       y NO dispara el walkTo. Este segundo re-check (ms 1250) sí puede. */
+    /* Reanudar wander tras la secuencia completa.
+       v10.13.43: ajustado a ~3500ms (caminata + eating + caminata + restore) */
     setTimeout(function(){
       _walkPaused=prevWalkPaused;
       if(walker)walker.classList.remove('fast');
-      /* Re-aplicar mood state AHORA que _walkPaused está libre.
-         Si mood=sleeping, esto dispara petWalkTo(POS_BED). */
       if(typeof applyPetMoodState==='function')applyPetMoodState();
-    },1250);
+    },3500);
     if(onStop)onStop();
     _ballPhysics=null;
     /* v10.13.31: limpiar referencia global del chase */

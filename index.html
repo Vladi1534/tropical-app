@@ -1036,10 +1036,10 @@ body.theme-light #tropical-bg g path{opacity:.35}
 @keyframes petJumpOver{0%{transform:translateY(0)}40%{transform:translateY(-14px)}70%{transform:translateY(-10px)}100%{transform:translateY(0)}}
 @keyframes petJumpOverLeft{0%{transform:scaleX(-1) translateY(0)}40%{transform:scaleX(-1) translateY(-14px)}70%{transform:scaleX(-1) translateY(-10px)}100%{transform:scaleX(-1) translateY(0)}}
 .pet-time-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;mix-blend-mode:multiply;transition:background-color 2s ease,opacity 2s ease;opacity:0}
-/* v10.13.41: tintes más sutiles para no tapar el cuarto. */
-.pet-time-overlay.dusk{background:linear-gradient(to bottom,rgba(255,180,120,.25),rgba(220,140,170,.22));opacity:1}
-.pet-time-overlay.night{background:linear-gradient(to bottom,rgba(80,90,140,.32),rgba(60,70,120,.36));opacity:1}
-.pet-time-overlay.dawn{background:linear-gradient(to bottom,rgba(255,210,160,.22),rgba(255,225,190,.16));opacity:1}
+/* v10.13.42: tintes más visibles (Vladi pidió que se note el cambio). */
+.pet-time-overlay.dusk{background:linear-gradient(to bottom,rgba(255,180,120,.40),rgba(220,140,170,.36));opacity:1}
+.pet-time-overlay.night{background:linear-gradient(to bottom,rgba(80,90,140,.48),rgba(60,70,120,.52));opacity:1}
+.pet-time-overlay.dawn{background:linear-gradient(to bottom,rgba(255,210,160,.36),rgba(255,225,190,.28));opacity:1}
 .pet-time-badge{position:absolute;top:10px;left:10px;z-index:10;font-size:10px;color:#fff;background:rgba(15,15,30,.75);padding:4px 9px;border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;font-weight:700;letter-spacing:.3px;border:1px solid rgba(255,255,255,.1);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .pet-facing{display:inline-block;position:relative}
 .pet-facing.face-left{transform:scaleX(-1)}
@@ -2957,11 +2957,12 @@ function coinsToCroquetas(c){if(c<=0)return 0;return Math.max(1,Math.round(Math.
 function getMood(pet){
   var h=pet.hambre||0,f=pet.felicidad||0,e=pet.energia||0;
   if(e<15)return'sleeping';
-  /* v10.13.41: sueño nocturno automático (22:00-06:00 hora local).
-     La mascota se duerme sola si está en estado tranquilo (hambre y sed
-     suficientes). Si tiene hambre crítica (<25), se queda despierta para
-     buscar comida. */
-  if(typeof isNightTime==='function'&&isNightTime()&&h>=25&&!pet.bowl_filled_at){
+  /* v10.13.42: sueño nocturno automático SOLO si está cansada Y es de noche.
+     Antes (v10.13.41) la mascota se dormía solo por horario nocturno
+     ignorando energía — quedaba dormida 8 horas seguidas sin poder hacer
+     nada. Ahora requiere también que la energía esté por debajo de 40
+     (cansada). Si tiene energía completa de noche, queda neutral/idle. */
+  if(typeof isNightTime==='function'&&isNightTime()&&e<40&&h>=25&&!pet.bowl_filled_at){
     return 'sleeping';
   }
   if(h<15)return'hungry';
@@ -4788,41 +4789,44 @@ function getPetLocalHour(){
   }
   return new Date().getHours();
 }
-/* v10.13.41: devuelve la hora local del usuario en formato decimal
-   (ej: 14.5 = 14:30). Usado para chequeos de rangos horarios. */
+/* v10.13.42: hora UTC global (no local). Decisión de Vladi: todas las
+   emisoras del mundo viven el mismo "día/noche" a la vez — sincroniza
+   biorritmos y buffs entre usuarios. */
 function getPetLocalHourDecimal(){
   var d=new Date();
-  return d.getHours()+(d.getMinutes()/60);
+  return d.getUTCHours()+(d.getUTCMinutes()/60);
 }
 /* v10.13.41: detecta si la hora actual es PICO de actividad para la
-   especie. Cada animal tiene horas naturales de mayor actividad. */
+   especie. Cada animal tiene horas naturales de mayor actividad.
+   v10.13.42: usa UTC global, no hora local. */
 function isSpeciesPeakHour(tipo){
   var h=getPetLocalHourDecimal();
   if(tipo==='perro'){
-    /* Perro: pico de día (8-20), tranquilo de noche */
+    /* Perro: pico de día (8-20 UTC), tranquilo de noche */
     return h>=8&&h<20;
   }
   if(tipo==='gato'){
-    /* Gato: crepuscular (6-8 + 18-22), activo en límites */
+    /* Gato: crepuscular (6-8 + 18-22 UTC), activo en límites */
     return (h>=6&&h<8)||(h>=18&&h<22);
   }
   if(tipo==='conejo'){
-    /* Conejo: amanecer/atardecer (6-9 + 17-20) */
+    /* Conejo: amanecer/atardecer (6-9 + 17-20 UTC) */
     return (h>=6&&h<9)||(h>=17&&h<20);
   }
   if(tipo==='pajaro'){
-    /* Pájaro: solo de día (7-19), duerme firme de noche */
+    /* Pájaro: solo de día (7-19 UTC), duerme firme de noche */
     return h>=7&&h<19;
   }
   return false;
 }
-/* v10.13.41: detecta si es horario de sueño nocturno (22:00-06:00). */
+/* v10.13.41: detecta si es horario de sueño nocturno (22-06 UTC). */
 function isNightTime(){
   var h=getPetLocalHourDecimal();
   return h>=22||h<6;
 }
 /* v10.13.41: buffs por horario de comida/cariño.
-   Devuelve {xpMult, happyMult} con los multiplicadores activos. */
+   Devuelve {xpMult, happyMult} con los multiplicadores activos.
+   v10.13.42: UTC global. */
 function getTimeBonus(){
   var h=getPetLocalHourDecimal();
   /* Almuerzo: +50% XP al alimentar */
@@ -4838,20 +4842,21 @@ function updateTimeOverlay(){
   var overlay=document.getElementById('pet-time-overlay');
   var badge=document.getElementById('pet-time-badge');
   if(!overlay)return;
+  /* v10.13.42: usar UTC global (no hora local) */
   var d=new Date();
-  var h=d.getHours();
-  var m=d.getMinutes();
+  var h=d.getUTCHours();
+  var m=d.getUTCMinutes();
   var phase='day';
   var icon='☀️';
   var label='Día';
-  /* v10.13.41: 4 fases del día — ampliadas a horarios más naturales */
+  /* v10.13.41: 4 fases del día — ampliadas a horarios más naturales (UTC) */
   if(h>=22||h<6){phase='night';icon='🌙';label='Noche'}
   else if(h>=6&&h<12){phase='dawn';icon='🌅';label='Mañana'}
   else if(h>=18&&h<22){phase='dusk';icon='🌇';label='Tarde'}
-  /* 12-18 = day por defecto (sin tinte) */
+  /* 12-18 UTC = day por defecto (sin tinte) */
   overlay.className='pet-time-overlay'+(phase==='day'?'':' '+phase);
   if(badge){
-    /* v10.13.41: HH:MM real (no HH:00 como antes). Auto-refresh cada minuto. */
+    /* v10.13.41: HH:MM UTC. Auto-refresh cada minuto. */
     var hStr=h<10?'0'+h:h;
     var mStr=m<10?'0'+m:m;
     /* Indicador de buff activo a la derecha del reloj */
@@ -4860,7 +4865,7 @@ function updateTimeOverlay(){
     if(bonus.kind==='almuerzo')bonusBadge=' · 🍽️+50%XP';
     else if(bonus.kind==='cena')bonusBadge=' · 🍴+30%XP';
     else if(bonus.kind==='despertar')bonusBadge=' · 💕+25%';
-    badge.textContent=icon+' '+label+' '+hStr+':'+mStr+bonusBadge;
+    badge.textContent=icon+' '+label+' '+hStr+':'+mStr+' UTC'+bonusBadge;
   }
 }
 
@@ -5191,7 +5196,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.41</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.42</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -5215,15 +5220,44 @@ function renderPetCard(){
   /* Sleep progress bar */
   if(isSleep&&pet.ultima_energia_ts){
     var energiaActual=pet.energia||0;
-    var energiaObjetivo=30; /* Wake up at 30 energy */
-    var energiaFaltante=Math.max(0,energiaObjetivo-energiaActual);
-    var horasFaltantes=Math.ceil(energiaFaltante/10);
-    var minutosEnHora=Math.floor((Date.now()-pet.ultima_energia_ts)%3600000/60000);
-    var minutosParaSig=60-minutosEnHora;
+    /* v10.13.42: distinguir si duerme por NOCHE o por CANSANCIO.
+       Si es nocturno: mostrar cuándo amanece (06:00 UTC) en vez de horas
+       de regen. Si es por cansancio: mostrar horas faltantes para recuperar. */
+    var nightMode=(typeof isNightTime==='function'&&isNightTime()&&energiaActual>=15);
     h+='<div style="margin:8px 14px;padding:10px;background:rgba(99,102,241,.1);border-radius:10px;border:1px dashed rgba(99,102,241,.3)">';
-    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:16px">💤</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--cyan)">'+pet.nombre+' está durmiendo</div><div style="font-size:9px;color:var(--txt3)">Despertará en ~'+horasFaltantes+'h '+minutosParaSig+'min</div></div></div>';
-    var sleepPct=Math.min(100,(energiaActual/energiaObjetivo)*100);
-    h+='<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#6366f1,#22d3ee);width:'+sleepPct+'%;transition:width .5s"></div></div>';
+    if(nightMode){
+      /* Calcular minutos hasta las 06:00 UTC */
+      var nowD=new Date();
+      var hUTC=nowD.getUTCHours();
+      var mUTC=nowD.getUTCMinutes();
+      var minsHastaAmanecer;
+      if(hUTC>=22)minsHastaAmanecer=(24-hUTC+6)*60-mUTC;
+      else if(hUTC<6)minsHastaAmanecer=(6-hUTC)*60-mUTC;
+      else minsHastaAmanecer=0;
+      var hAmanecer=Math.floor(minsHastaAmanecer/60);
+      var mAmanecer=minsHastaAmanecer%60;
+      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:16px">🌙</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--cyan)">'+pet.nombre+' duerme de noche</div><div style="font-size:9px;color:var(--txt3)">Amanece en '+hAmanecer+'h '+mAmanecer+'min (06:00 UTC)</div></div></div>';
+      /* Barra: progreso de la noche */
+      var nightProgress;
+      if(hUTC>=22)nightProgress=((hUTC-22)*60+mUTC)/((2+6)*60)*100; /* de 22 a 06 = 8h */
+      else nightProgress=(hUTC*60+mUTC+2*60)/((2+6)*60)*100;
+      h+='<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#6366f1,#22d3ee);width:'+Math.min(100,nightProgress)+'%;transition:width .5s"></div></div>';
+    }else{
+      /* Modo cansancio: original con fix de "0h 60min" */
+      var energiaObjetivo=30; /* Wake up at 30 energy */
+      var energiaFaltante=Math.max(0,energiaObjetivo-energiaActual);
+      /* v10.13.42: fix bug "0 horas y 60 minutos" — si energiaFaltante=0,
+         significa que ya se debería haber despertado. */
+      var horasFaltantes=Math.ceil(energiaFaltante/10);
+      var minutosEnHora=Math.floor((Date.now()-pet.ultima_energia_ts)%3600000/60000);
+      var minutosParaSig=horasFaltantes>0?(60-minutosEnHora):0;
+      var msgDespertar=horasFaltantes>0?
+        'Despertará en ~'+horasFaltantes+'h '+minutosParaSig+'min':
+        'Despertando ahora...';
+      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:16px">💤</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--cyan)">'+pet.nombre+' está cansada</div><div style="font-size:9px;color:var(--txt3)">'+msgDespertar+'</div></div></div>';
+      var sleepPct=Math.min(100,(energiaActual/energiaObjetivo)*100);
+      h+='<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#6366f1,#22d3ee);width:'+sleepPct+'%;transition:width .5s"></div></div>';
+    }
     h+='</div>';
   }
 
@@ -5312,15 +5346,37 @@ function petDailyUpdate(pet){
       pet.ultima_energia_ts=nowTs;
     }
   }else{pet.ultima_energia_ts=nowTs}
+  /* v10.13.42: DECAY POR HORA de hambre y sed.
+     Antes estos stats solo bajaban cuando el usuario no abría el juego en
+     varios días — dentro del día nunca tenía hambre. Ahora bajan hora a hora
+     como en cualquier Tamagotchi:
+       hambre: -2/hora
+       sed:    -3/hora (más rápido porque la sed es más urgente)
+     Si está durmiendo, bajan a la mitad (no quema tantas calorías).
+     Las pelotas premium con bonus felicidad_regen también dan reducción
+     pequeña al decay (efecto secundario del bonus). */
+  if(!pet.ultima_decay_ts)pet.ultima_decay_ts=nowTs;
+  var hoursSinceDecay=(nowTs-pet.ultima_decay_ts)/3600000;
+  if(hoursSinceDecay>=0.1){ /* aplicar decay si pasaron al menos 6 minutos */
+    var sleeping=getMood(pet)==='sleeping';
+    var decayMult=sleeping?0.5:1.0;
+    var hambreLoss=hoursSinceDecay*2*decayMult; /* 2/h base */
+    var sedLoss=hoursSinceDecay*3*decayMult;    /* 3/h base */
+    pet.hambre=Math.max(0,(pet.hambre||100)-hambreLoss);
+    pet.sed=Math.max(0,(pet.sed||100)-sedLoss);
+    pet.ultima_decay_ts=nowTs;
+  }
   /* Daily login logic */
   if(pet.ultimo_login===nowDate)return;
   var diasSin=0;
   if(pet.ultimo_login){var last=new Date(pet.ultimo_login);var now=new Date(nowDate);diasSin=Math.floor((now-last)/86400000)}
   if(diasSin>0){
-    pet.hambre=Math.max(0,(pet.hambre||50)-diasSin*20);
+    /* v10.13.42: si pasó >1 día sin entrar, aplicar decay ADICIONAL fuerte
+       de "abandono". Antes hacía -20/-25 por día como ÚNICA fuente de decay,
+       ahora es complementario al horario. Reduzco un poco para no doblar. */
+    pet.hambre=Math.max(0,(pet.hambre||50)-diasSin*15);
     pet.felicidad=Math.max(0,(pet.felicidad||50)-diasSin*12);
-    pet.sed=Math.max(0,(pet.sed||100)-diasSin*25);
-    /* Energy is handled hourly, skip here */
+    pet.sed=Math.max(0,(pet.sed||100)-diasSin*18);
   }
   pet.felicidad=Math.min(100,(pet.felicidad||50)+3);pet.xp=(pet.xp||0)+3;
   pet.racha_dias=(diasSin<=1)?(pet.racha_dias||0)+1:1;
@@ -6412,6 +6468,18 @@ function petPlay(dragVx,dragVy,dragX,dragY){
   var felicidadGain=Math.round(15*bonuses.felicidad_regen);
   pet.energia=Math.max(0,(pet.energia||0)-energyCost);
   pet.felicidad=Math.min(100,(pet.felicidad||0)+felicidadGain);
+  /* v10.13.42: jugar también consume hambre y sed (proporcional al juguete).
+     Lógica: si la pelota es premium → costo bajo de energía Y bajo consumo
+     de hambre/sed (calidad superior). Si es basic → costo alto Y mayor
+     consumo. Vladi pidió que la mascota antes de dormir vaya a comer y
+     beber porque jugar la cansa, le da hambre y le da sed.
+     Fórmula: hambre_loss = energyCost * 0.4, sed_loss = energyCost * 0.5
+     Con energyCost=15 (basic) → -6 hambre, -7 sed
+     Con energyCost=12 (premium) → -5 hambre, -6 sed */
+  var hambreLoss=Math.round(energyCost*0.4);
+  var sedLoss=Math.round(energyCost*0.5);
+  pet.hambre=Math.max(0,(pet.hambre||0)-hambreLoss);
+  pet.sed=Math.max(0,(pet.sed||0)-sedLoss);
   pet.xp=(pet.xp||0)+xpGain;
   pet.ultima_energia_ts=Date.now(); /* Reset energy regen timer */
   /* Track plays for stats but no daily limit */
@@ -9466,6 +9534,14 @@ function closeTabTutorial(tabId){
 
 function go(t){
   if(qzActive&&t!=='quiz'){toast('🔒 Completa el quiz primero');return}
+  /* v10.13.42: cerrar el modal de misiones si está abierto al cambiar de
+     pestaña (Vladi reportó que se veía en otras tabs). El modal se appendea
+     a document.body para layering, así que no se oculta solo con el switch
+     de .sec. */
+  if(typeof closeM==='function'){
+    var mm=document.getElementById('m-pet-missions');
+    if(mm&&mm.classList.contains('s'))closeM('m-pet-missions');
+  }
   var ts=document.querySelectorAll('#nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
   var ss=document.querySelectorAll('#app-emisora .sec');for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
   var mp={perfil:0,mascota:1,progreso:2,calc:3,catalogo:4,logros:5,quiz:6};

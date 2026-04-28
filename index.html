@@ -5242,7 +5242,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.45</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.46</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -5784,37 +5784,160 @@ function recalculatePhysicsPositions(pet){
 /* v10.13.30: devuelve array de zonas (rectángulos en %) ocupadas por
    muebles que tienen volumen físico. Usado para detección de colisiones
    de pelota y para el Y-sort de la mascota. */
+/* v10.13.46: AUDITORÍA DE COLISIONES — medidas reales del DOM.
+   Antes usábamos % aproximados que asumían un cuarto fijo de 370x462px.
+   Eso generaba desfases entre el bounding box de colisión y la silueta
+   visual del mueble (la pelota rebotaba "en el aire" sobre el techo).
+   Ahora cada mueble se mide con getBoundingClientRect del elemento real
+   y se convierte a % del cuarto en cada llamada. Funciona para cualquier
+   tamaño de pantalla y respeta drag&drop automáticamente. */
 function getFurnitureZones(){
   var pet=P&&P.mascota;
   var custom=(pet&&pet.decoracion_custom)||{};
   var zones=[];
-  /* Cada mueble: {key, leftStart, leftEnd, bottomStart, topReach}
-     topReach = altura desde el piso hasta arriba del mueble (en %) */
-  /* Cama: ancho 30%, alto ~10% del cuarto */
-  var bedX=custom.bed?custom.bed.x:3;
-  var bedY=custom.bed?custom.bed.y:5;
-  zones.push({key:'bed',     leftStart:bedX, leftEnd:bedX+30, bottomStart:bedY, topReach:bedY+10, bouncy:true});
-  /* Casa: ancho 28%, alto ~28% (incluye techo) */
-  var houseX=custom.house?custom.house.x:14;
-  var houseY=custom.house?custom.house.y:10;
-  zones.push({key:'house',   leftStart:100-houseX-28, leftEnd:100-houseX, bottomStart:houseY, topReach:houseY+28, bouncy:true});
-  /* Plato comida: ancho 10%, alto ~5% */
-  var foodX=custom.food?custom.food.x:28;
-  var foodY=custom.food?custom.food.y:2;
-  zones.push({key:'food',    leftStart:100-foodX-10, leftEnd:100-foodX, bottomStart:foodY, topReach:foodY+5, bouncy:true});
-  /* Plato agua: ancho 10%, alto ~5% */
-  var waterX=custom.water?custom.water.x:16;
-  var waterY=custom.water?custom.water.y:2;
-  zones.push({key:'water',   leftStart:100-waterX-10, leftEnd:100-waterX, bottomStart:waterY, topReach:waterY+5, bouncy:true});
-  /* Planta: ancho 12%, alto ~14% */
-  var plantX=custom.plant?custom.plant.x:0;
-  var plantY=custom.plant?custom.plant.y:2;
-  zones.push({key:'plant',   leftStart:plantX, leftEnd:plantX+12, bottomStart:plantY, topReach:plantY+14, bouncy:false});
+  var scene=document.querySelector('.pet-scene');
+  if(!scene){
+    /* Fallback estático si el DOM no está listo todavía */
+    return getFurnitureZonesStatic(custom);
+  }
+  var sceneRect=scene.getBoundingClientRect();
+  if(sceneRect.width<10||sceneRect.height<10){
+    return getFurnitureZonesStatic(custom);
+  }
+
+  /* Helper: convierte un elemento del DOM a una zona en % del cuarto.
+     Devuelve null si el elemento no existe o no es visible.
+     v10.13.46: acepta un objeto 'shrink' opcional para reducir la zona de
+     colisión respecto al bounding box. Útil para sprites con padding
+     transparente (la casa en particular tiene techo redondeado pero el
+     bbox cuadrado incluye aire en las esquinas). */
+  function elementToZone(el, key, bouncy, shrink){
+    if(!el)return null;
+    var style=window.getComputedStyle(el);
+    if(style.display==='none'||style.visibility==='hidden')return null;
+    var r=el.getBoundingClientRect();
+    if(r.width<2||r.height<2)return null;
+    /* Convertir px → % del cuarto */
+    var leftPct=((r.left-sceneRect.left)/sceneRect.width)*100;
+    var rightPct=((r.right-sceneRect.left)/sceneRect.width)*100;
+    /* Y: el sistema usa "bottom%" donde 0 = piso, 100 = techo */
+    var topReachPct=((sceneRect.bottom-r.top)/sceneRect.height)*100;
+    var bottomStartPct=((sceneRect.bottom-r.bottom)/sceneRect.height)*100;
+    /* Aplicar shrink si se pasó */
+    if(shrink){
+      if(shrink.left)leftPct+=shrink.left;
+      if(shrink.right)rightPct-=shrink.right;
+      if(shrink.top)topReachPct-=shrink.top;
+      if(shrink.bottom)bottomStartPct+=shrink.bottom;
+    }
+    return {
+      key:key,
+      leftStart:leftPct,
+      leftEnd:rightPct,
+      bottomStart:bottomStartPct,
+      topReach:topReachPct,
+      bouncy:bouncy
+    };
+  }
+
+  /* Cama: el sprite tiene base ancha y borde redondeado, casi sin padding.
+     Sin shrink (uso el bbox completo). */
+  var bed=elementToZone(document.getElementById('pet-decor-bed'),'bed',true);
+  if(bed)zones.push(bed);
+
+  /* Casa: el sprite tiene techo a dos aguas — las esquinas superiores son
+     transparentes. Reducir un poco el topReach para que la pelota choque
+     en el "techo real" y no en el aire de las esquinas.
+     Shrink top 4% = ~3-4px en cuarto típico, suficiente para emparejar
+     el techo visible. */
+  var house=elementToZone(document.getElementById('pet-decor-house'),'house',true,{top:3});
+  if(house)zones.push(house);
+
+  /* Platos: forma circular dentro del bbox cuadrado. Pequeño shrink en X
+     para que la pelota no rebote en el "aire" lateral del cuadrado. */
+  var food=elementToZone(document.getElementById('pet-bowl-el'),'food',true,{left:1,right:1});
+  if(food)zones.push(food);
+  var water=elementToZone(document.getElementById('water-bowl-el'),'water',true,{left:1,right:1});
+  if(water)zones.push(water);
+
+  /* Planta: NO bouncy (la mascota la atraviesa, la pelota también) */
+  var plant=elementToZone(document.getElementById('pet-floor-plant'),'plant',false);
+  if(plant)zones.push(plant);
+
+  /* Repisa de pared (donde duerme la pelota) — bouncy para que la pelota
+     rebote si la lanzás contra ella. Shrink top 0 (es delgada). */
+  var shelf=elementToZone(document.getElementById('pet-wall-shelf'),'shelf',true);
+  if(shelf)zones.push(shelf);
+
   return zones;
 }
 
-/* Devuelve {leftPct, bottomReachPct, key, isOnTop} si el punto (leftPct, bottomPct)
-   está dentro o sobre algún mueble. Usado para colisiones y sorting. */
+/* Fallback con medidas estáticas aproximadas — solo se usa si el DOM
+   aún no está renderizado. Refleja medidas REALES del CSS aproximadas
+   (cuarto ≈ 370x462px). */
+function getFurnitureZonesStatic(custom){
+  var zones=[];
+  var bedX=custom.bed?custom.bed.x:3;
+  var bedY=custom.bed?custom.bed.y:5;
+  zones.push({key:'bed', leftStart:bedX, leftEnd:bedX+31, bottomStart:bedY, topReach:bedY+12, bouncy:true});
+  var houseX=custom.house?custom.house.x:14;
+  var houseY=custom.house?custom.house.y:10;
+  zones.push({key:'house', leftStart:100-houseX-29, leftEnd:100-houseX, bottomStart:houseY, topReach:houseY+23, bouncy:true});
+  var foodX=custom.food?custom.food.x:28;
+  var foodY=custom.food?custom.food.y:2;
+  zones.push({key:'food', leftStart:100-foodX-10, leftEnd:100-foodX, bottomStart:foodY, topReach:foodY+8, bouncy:true});
+  var waterX=custom.water?custom.water.x:16;
+  var waterY=custom.water?custom.water.y:2;
+  zones.push({key:'water', leftStart:100-waterX-10, leftEnd:100-waterX, bottomStart:waterY, topReach:waterY+8, bouncy:true});
+  var plantX=custom.plant?custom.plant.x:0;
+  var plantY=custom.plant?custom.plant.y:2;
+  zones.push({key:'plant', leftStart:plantX, leftEnd:plantX+12, bottomStart:plantY, topReach:plantY+14, bouncy:false});
+  return zones;
+}
+
+/* v10.13.46: dibuja las cajas de colisión sobre el cuarto cuando el
+   debug overlay está activo. Cada zona se ve como un rectángulo
+   semi-transparente con su nombre. Solo se llama desde
+   updatePetDebugOverlay (que se llama en setPetFacing y otros eventos). */
+function drawCollisionBoxes(){
+  if(!isDebugOverlayEnabled||!isDebugOverlayEnabled())return;
+  var scene=document.querySelector('.pet-scene');
+  if(!scene)return;
+  /* Limpiar overlays previos */
+  var existing=scene.querySelectorAll('.collision-debug-box');
+  for(var i=0;i<existing.length;i++)existing[i].remove();
+  /* Dibujar zonas */
+  var zones=getFurnitureZones();
+  var colors={
+    bed:'rgba(34,197,94,.35)',     /* verde */
+    house:'rgba(168,85,247,.35)',  /* violeta */
+    food:'rgba(251,191,36,.35)',   /* dorado */
+    water:'rgba(34,211,238,.35)',  /* cyan */
+    plant:'rgba(132,204,22,.20)',  /* verde lima (no bouncy) */
+    shelf:'rgba(236,72,153,.35)'   /* rosa */
+  };
+  for(var z=0;z<zones.length;z++){
+    var zn=zones[z];
+    var d=document.createElement('div');
+    d.className='collision-debug-box';
+    /* posición y tamaño en % */
+    d.style.cssText='position:absolute;'+
+      'left:'+zn.leftStart+'%;'+
+      'bottom:'+zn.bottomStart+'%;'+
+      'width:'+(zn.leftEnd-zn.leftStart)+'%;'+
+      'height:'+(zn.topReach-zn.bottomStart)+'%;'+
+      'background:'+(colors[zn.key]||'rgba(255,255,255,.25)')+';'+
+      'border:1px dashed '+(zn.bouncy?'#fff':'#666')+';'+
+      'pointer-events:none;z-index:50;'+
+      'font-family:monospace;font-size:9px;color:#fff;'+
+      'text-shadow:0 1px 2px rgba(0,0,0,.8);'+
+      'padding:2px;box-sizing:border-box';
+    d.textContent=zn.key+(zn.bouncy?'':'·!b');
+    scene.appendChild(d);
+  }
+}
+
+
 function findFurnitureAt(leftPct, bottomPct){
   var zones=getFurnitureZones();
   for(var i=0;i<zones.length;i++){
@@ -7200,6 +7323,10 @@ function setPetFacing(direction){
 function updatePetDebugOverlay(){
   var el=document.getElementById('pet-debug-overlay');
   if(!el)return;
+  /* v10.13.46: dibujar las cajas de colisión visualmente cuando el debug
+     overlay está activo. Permite a Vladi/dev verificar que cada caja
+     se alinea con la silueta visible del sprite. */
+  drawCollisionBoxes();
   var cat='?',variant='?',defaultFacing='?(fallback=right)';
   if(_currentPetController){
     cat=_currentPetController.category||'?';

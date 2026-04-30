@@ -5277,7 +5277,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.50</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.51</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -7872,6 +7872,16 @@ function devModeActive(){
 }
 function devEnable(){try{window.localStorage&&window.localStorage.setItem('tropical-dev','1')}catch(e){}toast('🛠️ Dev mode activado')}
 function devDisable(){try{window.localStorage&&window.localStorage.removeItem('tropical-dev')}catch(e){}closeM('m-dev-panel');renderPetCard();toast('🚪 Dev mode desactivado')}
+/* v10.13.51: helper exponible desde consola para mostrar/ocultar la
+   pestaña Bot manualmente. Útil si por algún motivo el chequeo automático
+   falla en producción. Usar desde DevTools: devShowBotTab() */
+function devShowBotTab(){
+  var bhNav=document.getElementById('nav-bothistory');
+  if(!bhNav){console.warn('nav-bothistory no existe en el DOM (¿estás en modo emisora?)');return}
+  bhNav.style.display='';
+  console.log('Pestaña Bot mostrada. Cambia a modo Jefa para verla.');
+  return true;
+}
 /* v10.13.12: toggle para debug overlay (solo aparece cuando el dev quiere verlo) */
 function isDebugOverlayEnabled(){
   try{return window.localStorage&&window.localStorage.getItem('tropical-debug-overlay')==='1'}catch(e){return false}
@@ -10107,9 +10117,15 @@ function loadAll(){
     /* v10.8: Show Seguridad tab for admin + superadmin */
     var segNav=document.getElementById('nav-seguridad');
     if(segNav&&(currentRole==='admin'||currentRole==='superadmin'))segNav.style.display='';
-    /* v10.13.50: pestaña Bot historia solo para devs (dueños de DEV_USER_IDS) */
+    /* v10.13.50: pestaña Bot historia solo para devs (dueños de DEV_USER_IDS).
+       v10.13.51: chequeamos U.id directamente contra DEV_USER_IDS porque
+       devModeActive puede fallar si U aún no está totalmente cargado en
+       este punto del flujo admin. */
     var bhNav=document.getElementById('nav-bothistory');
-    if(bhNav&&typeof devModeActive==='function'&&devModeActive())bhNav.style.display='';
+    if(bhNav&&U&&U.id&&typeof DEV_USER_IDS!=='undefined'&&DEV_USER_IDS.indexOf(U.id)>=0){
+      bhNav.style.display='';
+      console.log('[bothistory] Pestaña Bot activada para dev user:',U.id);
+    }
     
     /* v10.8: Emergency mode banner */
     if(_emergencyMode){
@@ -10996,12 +11012,10 @@ function deleteBib(id,name){
 function admGo(t){
   var ts=document.querySelectorAll('#adm-nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
   var ss=document.querySelectorAll('#app-admin .sec');for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
-  /* v10.13.50: bothistory pestaña dev — viene primero (índice 0) si está
-     habilitada, así que tenemos que calcular el índice dinámicamente. */
-  var hasBotTab=document.getElementById('nav-bothistory')&&document.getElementById('nav-bothistory').style.display!=='none';
-  var offset=hasBotTab?1:0;
-  var mp={ranking:0+offset,regalos:1+offset,salarios:2+offset,reglas:3+offset,biblioteca:4+offset,equipo:5+offset,seguridad:6+offset};
-  if(hasBotTab)mp.bothistory=0;
+  /* v10.13.51: índices fijos. Bot=0, Ranking=1, ... — corresponden al
+     orden real del DOM. Aunque el botón Bot esté oculto (display:none),
+     existe en querySelectorAll y ocupa el índice 0. */
+  var mp={bothistory:0,ranking:1,regalos:2,salarios:3,reglas:4,biblioteca:5,equipo:6,seguridad:7};
   if(mp[t]!==undefined&&ts[mp[t]])ts[mp[t]].classList.add('a');
   var s=document.getElementById('s-'+t);if(s)s.classList.add('a');
   if(ts[mp[t]])ts[mp[t]].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});

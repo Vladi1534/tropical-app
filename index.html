@@ -5277,7 +5277,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.56</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.57</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -11445,7 +11445,11 @@ var _bhData=[]; /* cache de mensajes crudos */
 var _bhEmisoras={}; /* cache id→emisora para resolver session_id */
 
 function loadBotHistory(){
-  if(!devModeActive()){toast('🔒 Solo dev');return}
+  /* v10.13.57: REMOVIDO el chequeo if(!devModeActive()) que causaba
+     toast 'Solo dev' falso positivo. La pestaña Bot ya tiene
+     display:none por default y solo se hace visible si isCurrentUserDev()
+     es true (en showAdminDevTabs). Si el usuario llegó hasta acá, ya
+     sabemos que es dev — no necesitamos chequear de nuevo. */
   var listEl=document.getElementById('bh-list');
   if(listEl)listEl.innerHTML='<div style="text-align:center;color:var(--txt3);font-size:12px;padding:20px">⏳ Cargando historial del bot...</div>';
   /* Cargar últimos 500 mensajes ordenados por id desc (más recientes primero).

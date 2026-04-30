@@ -5243,7 +5243,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.48</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.49</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -8863,12 +8863,27 @@ function syncFromSessions(){
   var ghostReal=0,ghostCont=0,ghostSessions=0;
   var orgReal=0,orgCont=0;
   var byDate={};
+  /* v10.13.49: ajuste_inicial se acumula aparte SIN cap diario. Las horas
+     que la emisora ya tenía al iniciar el mes cuentan tal cual, no se
+     reparten en días. */
+  var ajusteHoras=0;
   var bestCoins=P.mejor_dia_monedas||0,bestDate=P.mejor_dia_fecha||null;
   
   for(var i=0;i<allS.length;i++){
     var h=parseFloat(allS[i].horas_transmitidas)||0;
     var c=parseInt(allS[i].monedas_reportadas)||0;
     var tipo=(allS[i].tipo_horas||'Orgánica').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    /* v10.13.49: ajuste_inicial bypass del cap — cuenta directo */
+    if(allS[i].tipo_sesion==='ajuste_inicial'){
+      ajusteHoras+=h;
+      totalReal+=h;
+      continue;
+    }
+    /* v10.13.49: Sala PV no cuenta horas (en realidad hr=0 siempre, pero
+       por seguridad lo skip) */
+    if(allS[i].tipo_sesion==='sala_pv'||tipo==='sala pv'){
+      continue;
+    }
     totalReal+=h;
     var dt=allS[i].created_at?allS[i].created_at.slice(0,10):'unknown';
     if(!byDate[dt])byDate[dt]={h:0,c:0,ghost:0,org:0};
@@ -8888,6 +8903,8 @@ function syncFromSessions(){
     }
   }
   
+  /* v10.13.49: contables = ajuste_inicial sin cap + cap diario por día */
+  totalCont=ajusteHoras;
   for(var d in byDate){
     totalCont+=Math.min(3,byDate[d].h);
     ghostCont+=Math.min(3,byDate[d].ghost);
@@ -8961,8 +8978,12 @@ function saveStartingValues(){
   if(!sh){alert('Ingresa las horas');return}
   var ses={emisora_id:U.id,tipo_sesion:'ajuste_inicial',monedas_reportadas:0,horas_transmitidas:sh,tipo_horas:'Orgánica',show_descrito:'Horas iniciales del mes',resumen:'Ajuste inicial de horas del mes'};
   sbq('historial_sesiones',{m:'POST',b:ses,h:{'Prefer':'return=representation'}}).then(function(r){return r.json()}).then(function(d){
+    /* v10.13.49: ajuste_inicial cuenta directo en horas_mes y horas_contables.
+       Antes aplicaba Math.min(3, sh) — pero el ajuste representa horas que
+       ya tenía hechas la emisora (potencialmente repartidas en muchos días),
+       así que NO debe limitarse al cap diario. */
     P.horas_mes=Math.round(((P.horas_mes||0)+sh)*10)/10;
-    P.horas_contables=Math.round(((P.horas_contables||0)+Math.min(3,sh))*10)/10;
+    P.horas_contables=Math.round(((P.horas_contables||0)+sh)*10)/10;
     save({horas_mes:P.horas_mes,horas_contables:P.horas_contables});
     var ns=Array.isArray(d)?d[0]:d;if(!ns)ns=ses;ns.created_at=ns.created_at||new Date().toISOString();allS.unshift(ns);
     refreshAll();renderSes();
@@ -8992,8 +9013,8 @@ function toggleDateField(){
 /* v10.13.48: helper para recalcular horas_contables del mes vigente
    leyendo allS (sesiones cargadas). Aplica el cap diario CORRECTAMENTE
    (3h máximo por día sumando todas las sesiones del día), respeta filtros:
-   - tipo_sesion='ajuste_inicial' → no cuenta
-   - tipo_horas='Sala PV' → no cuenta horas
+   - tipo_sesion='ajuste_inicial' → suma DIRECTO sin cap (v10.13.49: lo que ya tenían)
+   - tipo_horas='Sala PV' → no cuenta horas (en realidad ya tienen hr=0)
    - 'Mixta' → cuenta todas las horas (la división organica/fantasma es
      solo para reporting interno, las horas son reales para el bono)
 
@@ -9001,17 +9022,22 @@ function toggleDateField(){
 function recomputeHorasContables(){
   if(!allS||!allS.length)return 0;
   var byDate={};
+  var ajusteTotal=0;
   for(var i=0;i<allS.length;i++){
     var s=allS[i];
-    if(s.tipo_sesion==='ajuste_inicial')continue;
+    var h=parseFloat(s.horas_transmitidas)||0;
+    /* v10.13.49: ajuste_inicial cuenta directo, sin cap diario */
+    if(s.tipo_sesion==='ajuste_inicial'){
+      ajusteTotal+=h;
+      continue;
+    }
     var tipo=(s.tipo_horas||'').toLowerCase();
     if(tipo.indexOf('sala pv')>=0||s.tipo_sesion==='sala_pv')continue;
-    var h=parseFloat(s.horas_transmitidas)||0;
     var dt=s.created_at?s.created_at.slice(0,10):'unknown';
     if(!byDate[dt])byDate[dt]=0;
     byDate[dt]+=h;
   }
-  var totalCont=0;
+  var totalCont=ajusteTotal;
   for(var d in byDate){
     if(d==='unknown')continue;
     totalCont+=Math.min(3,byDate[d]);

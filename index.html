@@ -2030,14 +2030,14 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <!-- NAV -->
 <div class="nav" id="adm-nav" style="display:none">
-  <button class="nt" onclick="admGo('bothistory')" id="nav-bothistory" style="display:none">🤖 Bot</button>
-  <button class="nt a" onclick="admGo('ranking')">🏆 Ranking</button>
-  <button class="nt" onclick="admGo('regalos')">🎁 Regalos</button>
-  <button class="nt" onclick="admGo('salarios')">💰 Metas</button>
-  <button class="nt" onclick="admGo('reglas')">⚖️ Reglas</button>
-  <button class="nt" onclick="admGo('biblioteca')">📚 Media</button>
-  <button class="nt" onclick="admGo('equipo')">👥 Equipo</button>
-  <button class="nt" onclick="admGo('seguridad')" id="nav-seguridad" style="display:none">🔐 Seguridad</button>
+  <button class="nt" data-tab="bothistory" onclick="admGo('bothistory')" id="nav-bothistory" style="display:none">🤖 Bot</button>
+  <button class="nt a" data-tab="ranking" onclick="admGo('ranking')">🏆 Ranking</button>
+  <button class="nt" data-tab="regalos" onclick="admGo('regalos')">🎁 Regalos</button>
+  <button class="nt" data-tab="salarios" onclick="admGo('salarios')">💰 Metas</button>
+  <button class="nt" data-tab="reglas" onclick="admGo('reglas')">⚖️ Reglas</button>
+  <button class="nt" data-tab="biblioteca" onclick="admGo('biblioteca')">📚 Media</button>
+  <button class="nt" data-tab="equipo" onclick="admGo('equipo')">👥 Equipo</button>
+  <button class="nt" data-tab="seguridad" onclick="admGo('seguridad')" id="nav-seguridad" style="display:none">🔐 Seguridad</button>
 </div>
 
 <!-- ====== BOT HISTORY (DEV ONLY) ====== -->
@@ -5277,7 +5277,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.51</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.52</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -10120,12 +10120,9 @@ function loadAll(){
     /* v10.13.50: pestaña Bot historia solo para devs (dueños de DEV_USER_IDS).
        v10.13.51: chequeamos U.id directamente contra DEV_USER_IDS porque
        devModeActive puede fallar si U aún no está totalmente cargado en
-       este punto del flujo admin. */
-    var bhNav=document.getElementById('nav-bothistory');
-    if(bhNav&&U&&U.id&&typeof DEV_USER_IDS!=='undefined'&&DEV_USER_IDS.indexOf(U.id)>=0){
-      bhNav.style.display='';
-      console.log('[bothistory] Pestaña Bot activada para dev user:',U.id);
-    }
+       este punto del flujo admin.
+       v10.13.52: extraído a showAdminDevTabs() para reusar en toggleMode. */
+    if(typeof showAdminDevTabs==='function')showAdminDevTabs();
     
     /* v10.8: Emergency mode banner */
     if(_emergencyMode){
@@ -11010,15 +11007,21 @@ function deleteBib(id,name){
 
 /* ===== NAV ===== */
 function admGo(t){
-  var ts=document.querySelectorAll('#adm-nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
-  var ss=document.querySelectorAll('#app-admin .sec');for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
-  /* v10.13.51: índices fijos. Bot=0, Ranking=1, ... — corresponden al
-     orden real del DOM. Aunque el botón Bot esté oculto (display:none),
-     existe en querySelectorAll y ocupa el índice 0. */
-  var mp={bothistory:0,ranking:1,regalos:2,salarios:3,reglas:4,biblioteca:5,equipo:6,seguridad:7};
-  if(mp[t]!==undefined&&ts[mp[t]])ts[mp[t]].classList.add('a');
-  var s=document.getElementById('s-'+t);if(s)s.classList.add('a');
-  if(ts[mp[t]])ts[mp[t]].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  /* v10.13.52: matchea por data-tab directamente — más confiable que
+     índices fijos. Si en el futuro se agregan/reordenan pestañas, no se
+     desfasa la selección visual. */
+  var ts=document.querySelectorAll('#adm-nav .nt');
+  for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
+  var ss=document.querySelectorAll('#app-admin .sec');
+  for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
+  /* Marcar el botón activo por su atributo data-tab */
+  var activeBtn=document.querySelector('#adm-nav .nt[data-tab="'+t+'"]');
+  if(activeBtn){
+    activeBtn.classList.add('a');
+    activeBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  }
+  var s=document.getElementById('s-'+t);
+  if(s)s.classList.add('a');
   window.scrollTo({top:0,behavior:'smooth'});
   if(t==='seguridad')loadSecurity();
   if(t==='bothistory')loadBotHistory();
@@ -11946,8 +11949,19 @@ function unifiedAuth(){
   }
 }
 function startEmisoraMode(){document.getElementById('unified-auth').classList.add('hide');document.getElementById('app-emisora').style.display='block';document.getElementById('sticky-logo').style.display='flex';document.getElementById('sl-mode').textContent='Mi Carrera';currentMode='emisora';if(!U||!U.id)init();else if(!P||!P.id)init()}
+/* v10.13.52: helper para mostrar pestañas dev en el panel admin.
+   Se llama tanto en loadAll (entrada directa) como en toggleMode (toggle
+   desde modo emisora). Antes solo se ejecutaba en loadAll, así que la
+   pestaña Bot no aparecía cuando se entraba vía toggle. */
+function showAdminDevTabs(){
+  var bhNav=document.getElementById('nav-bothistory');
+  if(bhNav&&U&&U.id&&typeof DEV_USER_IDS!=='undefined'&&DEV_USER_IDS.indexOf(U.id)>=0){
+    bhNav.style.display='';
+  }
+}
+
 function startAdminMode(){document.getElementById('unified-auth').classList.add('hide');document.getElementById('ld').classList.add('out');document.getElementById('app-admin').style.display='block';document.getElementById('fab').style.display='flex';document.getElementById('sticky-logo').style.display='flex';document.getElementById('sl-mode').textContent='Panel Admin';currentMode='admin';loadAll()}
-function toggleMode(){var fab=document.getElementById('fab');var sl=document.getElementById('sl-mode');if(currentMode==='admin'){document.getElementById('app-admin').style.display='none';document.getElementById('app-emisora').style.display='block';fab.innerHTML='👑 Modo Jefa';fab.className='fab fab-admin';sl.textContent='Mi Carrera';currentMode='emisora';if(!U||!U.id||!P||!P.id){init()}else{var hasActive=document.querySelector('#app-emisora .sec.a');if(!hasActive)go('perfil')}}else{document.getElementById('app-emisora').style.display='none';document.getElementById('app-admin').style.display='block';fab.innerHTML='🌴 Mi Carrera';fab.className='fab fab-emisora';sl.textContent='Panel Admin';currentMode='admin'}window.scrollTo({top:0,behavior:'smooth'})}
+function toggleMode(){var fab=document.getElementById('fab');var sl=document.getElementById('sl-mode');if(currentMode==='admin'){document.getElementById('app-admin').style.display='none';document.getElementById('app-emisora').style.display='block';fab.innerHTML='👑 Modo Jefa';fab.className='fab fab-admin';sl.textContent='Mi Carrera';currentMode='emisora';if(!U||!U.id||!P||!P.id){init()}else{var hasActive=document.querySelector('#app-emisora .sec.a');if(!hasActive)go('perfil')}}else{document.getElementById('app-emisora').style.display='none';document.getElementById('app-admin').style.display='block';fab.innerHTML='🌴 Mi Carrera';fab.className='fab fab-emisora';sl.textContent='Panel Admin';currentMode='admin';showAdminDevTabs();}window.scrollTo({top:0,behavior:'smooth'})}
 
 /* Hide MC loading initially, let unified auth decide */
 (function(){var ld=document.getElementById('ld');if(ld)ld.classList.add('out')})();

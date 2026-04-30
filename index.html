@@ -2030,6 +2030,7 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
 
 <!-- NAV -->
 <div class="nav" id="adm-nav" style="display:none">
+  <button class="nt" onclick="admGo('bothistory')" id="nav-bothistory" style="display:none">🤖 Bot</button>
   <button class="nt a" onclick="admGo('ranking')">🏆 Ranking</button>
   <button class="nt" onclick="admGo('regalos')">🎁 Regalos</button>
   <button class="nt" onclick="admGo('salarios')">💰 Metas</button>
@@ -2037,6 +2038,39 @@ body.theme-light.theme-cherry #unified-auth,body.theme-light.theme-cherry #onboa
   <button class="nt" onclick="admGo('biblioteca')">📚 Media</button>
   <button class="nt" onclick="admGo('equipo')">👥 Equipo</button>
   <button class="nt" onclick="admGo('seguridad')" id="nav-seguridad" style="display:none">🔐 Seguridad</button>
+</div>
+
+<!-- ====== BOT HISTORY (DEV ONLY) ====== -->
+<div class="sec" id="s-bothistory">
+  <div class="section-title">🤖 Historial del Bot <span class="count-badge" id="bh-count">0</span></div>
+  <div style="font-size:11px;color:var(--txt3);margin-bottom:12px">
+    Solo visible para devs. Filtrá conversaciones para ir mejorando las reglas del bot.
+  </div>
+
+  <!-- Filtros -->
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+    <input type="text" id="bh-filter-user" placeholder="🔎 Filtrar por nombre, username o ID de emisora" oninput="bhRender()" style="width:100%;padding:10px 12px;border-radius:var(--rs);border:1.5px solid rgba(168,85,247,.2);background:var(--card2);color:var(--txt);font-size:13px;outline:none;font-family:'Nunito',sans-serif">
+
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="text" id="bh-filter-text" placeholder="📝 Buscar texto en mensajes (ej: 'no se', 'admin')" oninput="bhRender()" style="flex:1;padding:10px 12px;border-radius:var(--rs);border:1.5px solid rgba(168,85,247,.2);background:var(--card2);color:var(--txt);font-size:13px;outline:none;font-family:'Nunito',sans-serif">
+      <button onclick="bhPresetFilter()" style="padding:10px 12px;border-radius:var(--rs);border:1.5px solid rgba(251,191,36,.4);background:rgba(251,191,36,.1);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">⚠️ Sin saber</button>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--txt3)">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+        <input type="checkbox" id="bh-only-ai" onchange="bhRender()" style="margin:0">
+        Solo respuestas del bot
+      </label>
+      <button onclick="bhRefresh()" style="margin-left:auto;padding:5px 10px;border-radius:8px;border:1px solid rgba(34,211,238,.4);background:rgba(34,211,238,.1);color:var(--cyan);font-size:11px;font-weight:700;cursor:pointer">🔄 Recargar</button>
+    </div>
+  </div>
+
+  <!-- Lista de conversaciones -->
+  <div id="bh-list" style="display:flex;flex-direction:column;gap:8px">
+    <div style="text-align:center;color:var(--txt3);font-size:12px;padding:20px">
+      Cargá la pestaña para ver las conversaciones
+    </div>
+  </div>
 </div>
 
 <!-- ====== RANKING ====== -->
@@ -5243,7 +5277,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.49</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.50</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -10073,6 +10107,9 @@ function loadAll(){
     /* v10.8: Show Seguridad tab for admin + superadmin */
     var segNav=document.getElementById('nav-seguridad');
     if(segNav&&(currentRole==='admin'||currentRole==='superadmin'))segNav.style.display='';
+    /* v10.13.50: pestaña Bot historia solo para devs (dueños de DEV_USER_IDS) */
+    var bhNav=document.getElementById('nav-bothistory');
+    if(bhNav&&typeof devModeActive==='function'&&devModeActive())bhNav.style.display='';
     
     /* v10.8: Emergency mode banner */
     if(_emergencyMode){
@@ -10959,12 +10996,18 @@ function deleteBib(id,name){
 function admGo(t){
   var ts=document.querySelectorAll('#adm-nav .nt');for(var i=0;i<ts.length;i++)ts[i].classList.remove('a');
   var ss=document.querySelectorAll('#app-admin .sec');for(var j=0;j<ss.length;j++)ss[j].classList.remove('a');
-  var mp={ranking:0,regalos:1,salarios:2,reglas:3,biblioteca:4,equipo:5,seguridad:6};
+  /* v10.13.50: bothistory pestaña dev — viene primero (índice 0) si está
+     habilitada, así que tenemos que calcular el índice dinámicamente. */
+  var hasBotTab=document.getElementById('nav-bothistory')&&document.getElementById('nav-bothistory').style.display!=='none';
+  var offset=hasBotTab?1:0;
+  var mp={ranking:0+offset,regalos:1+offset,salarios:2+offset,reglas:3+offset,biblioteca:4+offset,equipo:5+offset,seguridad:6+offset};
+  if(hasBotTab)mp.bothistory=0;
   if(mp[t]!==undefined&&ts[mp[t]])ts[mp[t]].classList.add('a');
   var s=document.getElementById('s-'+t);if(s)s.classList.add('a');
   if(ts[mp[t]])ts[mp[t]].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
   window.scrollTo({top:0,behavior:'smooth'});
   if(t==='seguridad')loadSecurity();
+  if(t==='bothistory')loadBotHistory();
 }
 
 
@@ -11332,6 +11375,152 @@ function saveForcedPin(userId){
 /* ===== SECURITY PANEL ===== */
 
 function loadSecurity(){renderSecAdmins()}
+
+/* ===== v10.13.50: BOT HISTORY (DEV ONLY) =====
+   Lectura de la tabla n8n_chat_histories de Supabase. Solo se ejecuta
+   si devModeActive(). Permite a Vladi ver qué dudas tienen las emisoras
+   sobre la app y mejorar las reglas del bot.
+
+   Estructura esperada de la tabla (default n8n Chat Memory):
+     id (int)
+     session_id (text — típicamente el Telegram user ID)
+     message (json — {type: 'human'|'ai', content: '...', additional_kwargs:{}})
+     created_at (timestamp)
+
+   Si tu tabla tiene columnas distintas, ajustar el SELECT abajo. */
+var _bhData=[]; /* cache de mensajes crudos */
+var _bhEmisoras={}; /* cache id→emisora para resolver session_id */
+
+function loadBotHistory(){
+  if(!devModeActive()){toast('🔒 Solo dev');return}
+  var listEl=document.getElementById('bh-list');
+  if(listEl)listEl.innerHTML='<div style="text-align:center;color:var(--txt3);font-size:12px;padding:20px">⏳ Cargando historial del bot...</div>';
+  /* Cargar últimos 500 mensajes ordenados por id desc (más recientes primero).
+     Si querés ver más, ajustá el limit. */
+  sbq('n8n_chat_histories?select=*&order=id.desc&limit=500')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(!Array.isArray(d)){
+        listEl.innerHTML='<div style="text-align:center;color:var(--red);font-size:12px;padding:20px">⚠️ Error al leer la tabla. Revisá las políticas RLS de Supabase.<br><small style="color:var(--txt3)">'+JSON.stringify(d).slice(0,200)+'</small></div>';
+        return;
+      }
+      _bhData=d;
+      /* Construir mapa session_id→emisora desde el array global emisoras (si está cargado) */
+      if(typeof emisoras!=='undefined'&&emisoras&&emisoras.length){
+        _bhEmisoras={};
+        for(var k=0;k<emisoras.length;k++){
+          var em=emisoras[k];
+          if(em.id)_bhEmisoras[String(em.id)]=em;
+        }
+      }
+      bhRender();
+    }).catch(function(e){
+      console.error('loadBotHistory error:',e);
+      if(listEl)listEl.innerHTML='<div style="text-align:center;color:var(--red);font-size:12px;padding:20px">❌ Error de red al cargar historial</div>';
+    });
+}
+
+function bhRefresh(){loadBotHistory()}
+
+/* Aplica un filtro común para detectar conversaciones donde el bot no sabe
+   o redirige al admin humano. */
+function bhPresetFilter(){
+  var inp=document.getElementById('bh-filter-text');
+  if(!inp)return;
+  /* Si ya está activo, lo limpia. Si no, lo activa. */
+  var preset='no se|admin humano|no tengo|no puedo responder|no estoy seguro|no lo se|consulta a un admin|preguntá a';
+  if(inp.value===preset){inp.value=''}else{inp.value=preset}
+  bhRender();
+}
+
+function bhRender(){
+  var listEl=document.getElementById('bh-list');
+  var countEl=document.getElementById('bh-count');
+  if(!listEl)return;
+  var fUser=(document.getElementById('bh-filter-user').value||'').toLowerCase().trim();
+  var fText=(document.getElementById('bh-filter-text').value||'').toLowerCase().trim();
+  var onlyAi=document.getElementById('bh-only-ai').checked;
+  /* Si filtro de texto contiene |, es regex OR */
+  var textPatterns=fText?fText.split('|').map(function(s){return s.trim()}).filter(Boolean):[];
+
+  var rows=[];
+  for(var i=0;i<_bhData.length;i++){
+    var msg=_bhData[i];
+    /* Parsear el campo message (puede venir como object o string JSON) */
+    var m=msg.message;
+    if(typeof m==='string'){try{m=JSON.parse(m)}catch(e){m={type:'unknown',content:msg.message}}}
+    var content=(m&&m.content)||'';
+    var msgType=(m&&m.type)||'unknown';
+    /* Filtros */
+    if(onlyAi&&msgType!=='ai')continue;
+    /* Filtro user: matchea contra session_id, ID emisora, nombre, username */
+    if(fUser){
+      var sessId=String(msg.session_id||'');
+      var em=_bhEmisoras[sessId];
+      var hay=sessId.toLowerCase();
+      if(em){
+        hay+=' '+(em.nombre||'').toLowerCase()+' '+(em.username||'').toLowerCase()+' '+(em.buzzcast_id||'').toLowerCase();
+      }
+      if(hay.indexOf(fUser)<0)continue;
+    }
+    /* Filtro texto: matchea contra content del mensaje */
+    if(textPatterns.length){
+      var contentLower=content.toLowerCase();
+      var match=false;
+      for(var p=0;p<textPatterns.length;p++){
+        if(contentLower.indexOf(textPatterns[p])>=0){match=true;break}
+      }
+      if(!match)continue;
+    }
+    rows.push({raw:msg, type:msgType, content:content});
+  }
+
+  if(countEl)countEl.textContent=rows.length;
+
+  if(!rows.length){
+    listEl.innerHTML='<div style="text-align:center;color:var(--txt3);font-size:12px;padding:20px">Sin resultados con esos filtros</div>';
+    return;
+  }
+
+  /* Render: cada fila es una tarjeta compacta */
+  var h='';
+  for(var r=0;r<rows.length;r++){
+    var row=rows[r];
+    var sId=String(row.raw.session_id||'—');
+    var em=_bhEmisoras[sId];
+    var emName=em?(em.nombre||em.username||sId):sId;
+    var emSub=em?('@'+(em.username||'sin-user')+' · '+(em.buzzcast_id||'sin-bzid')):('Session ID: '+sId);
+    var dt=row.raw.created_at?new Date(row.raw.created_at):null;
+    var dtStr=dt?(dt.toLocaleDateString('es-AR')+' '+dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})):'—';
+    var typeBadge='';
+    if(row.type==='human')typeBadge='<span style="background:rgba(34,211,238,.15);color:var(--cyan);padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700">👤 EMISORA</span>';
+    else if(row.type==='ai')typeBadge='<span style="background:rgba(168,85,247,.15);color:#c084fc;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700">🤖 BOT</span>';
+    else typeBadge='<span style="background:rgba(255,255,255,.05);color:var(--txt3);padding:2px 6px;border-radius:6px;font-size:9px">'+row.type+'</span>';
+    /* Resumir mensaje a 280 chars con escape HTML básico */
+    var safe=String(row.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var preview=safe.length>280?safe.slice(0,280)+'…':safe;
+    /* Highlight de patrones del filtro de texto */
+    if(textPatterns.length){
+      for(var pp=0;pp<textPatterns.length;pp++){
+        var pat=textPatterns[pp];
+        if(!pat)continue;
+        var re=new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+        preview=preview.replace(re,'<mark style="background:rgba(251,191,36,.4);color:#fff;padding:0 2px;border-radius:2px">$&</mark>');
+      }
+    }
+    h+='<div style="background:var(--card2);border:1px solid rgba(168,85,247,.15);border-radius:var(--rs);padding:10px 12px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">';
+    h+='<div style="flex:1;min-width:0">';
+    h+='<div style="font-weight:700;font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+emName+' '+typeBadge+'</div>';
+    h+='<div style="font-size:9px;color:var(--txt3);margin-top:2px">'+emSub+'</div>';
+    h+='</div>';
+    h+='<div style="font-size:9px;color:var(--txt3);text-align:right;flex:0 0 auto">'+dtStr+'</div>';
+    h+='</div>';
+    h+='<div style="font-size:11px;color:var(--txt2);line-height:1.4;white-space:pre-wrap;word-break:break-word">'+preview+'</div>';
+    h+='</div>';
+  }
+  listEl.innerHTML=h;
+}
 
 function secTab(t){
   _secTab=t;

@@ -5277,7 +5277,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.52</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.53</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -11953,10 +11953,28 @@ function startEmisoraMode(){document.getElementById('unified-auth').classList.ad
    Se llama tanto en loadAll (entrada directa) como en toggleMode (toggle
    desde modo emisora). Antes solo se ejecutaba en loadAll, así que la
    pestaña Bot no aparecía cuando se entraba vía toggle. */
+/* v10.13.52: helper para mostrar pestañas dev en el panel admin.
+   Se llama tanto en loadAll (entrada directa) como en toggleMode (toggle
+   desde modo emisora). Antes solo se ejecutaba en loadAll, así que la
+   pestaña Bot no aparecía cuando se entraba vía toggle.
+   v10.13.53: el ID puede estar en U.id (flujo emisora), currentUser.id
+   (flujo admin login con PIN) o userId (variable global). Chequeamos los 3. */
 function showAdminDevTabs(){
   var bhNav=document.getElementById('nav-bothistory');
-  if(bhNav&&U&&U.id&&typeof DEV_USER_IDS!=='undefined'&&DEV_USER_IDS.indexOf(U.id)>=0){
+  if(!bhNav)return;
+  /* Buscar el ID del usuario actual en cualquiera de las 3 variables */
+  var myId=null;
+  if(typeof U!=='undefined'&&U&&U.id)myId=U.id;
+  else if(typeof currentUser!=='undefined'&&currentUser&&currentUser.id)myId=currentUser.id;
+  else if(typeof userId!=='undefined'&&userId)myId=userId;
+  /* Convertir a number si es string */
+  if(typeof myId==='string')myId=parseInt(myId)||myId;
+  console.log('[showAdminDevTabs] myId=',myId,'DEV_USER_IDS=',DEV_USER_IDS);
+  if(myId&&typeof DEV_USER_IDS!=='undefined'&&DEV_USER_IDS.indexOf(myId)>=0){
     bhNav.style.display='';
+    console.log('[showAdminDevTabs] Pestaña Bot activada');
+  }else{
+    console.log('[showAdminDevTabs] User no es dev — pestaña Bot oculta');
   }
 }
 

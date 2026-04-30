@@ -5277,7 +5277,7 @@ function renderPetCard(){
   /* v10.13.12: debug panel solo si dev mode + toggle activado */
   if(devModeActive()&&isDebugOverlayEnabled()){
     h+='<div id="pet-debug-overlay" style="position:absolute;bottom:4px;left:4px;z-index:20;background:rgba(0,0,0,.8);color:#0f0;font-family:monospace;font-size:9px;line-height:1.3;padding:4px 6px;border-radius:4px;border:1px solid #0f0;pointer-events:none;white-space:pre">debug init...</div>';
-    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.53</div>';
+    h+='<div id="pet-version-badge" style="position:absolute;top:4px;left:4px;z-index:20;background:rgba(168,85,247,.85);color:#fff;font-family:monospace;font-size:9px;padding:2px 5px;border-radius:3px;pointer-events:none">v10.13.54</div>';
   }
   h+='</div>';
   /* v10.13.18: badge + barra de edad visual */
@@ -11967,18 +11967,22 @@ function showAdminDevTabs(){
   if(typeof U!=='undefined'&&U&&U.id)myId=U.id;
   else if(typeof currentUser!=='undefined'&&currentUser&&currentUser.id)myId=currentUser.id;
   else if(typeof userId!=='undefined'&&userId)myId=userId;
-  /* Convertir a number si es string */
-  if(typeof myId==='string')myId=parseInt(myId)||myId;
-  console.log('[showAdminDevTabs] myId=',myId,'DEV_USER_IDS=',DEV_USER_IDS);
-  if(myId&&typeof DEV_USER_IDS!=='undefined'&&DEV_USER_IDS.indexOf(myId)>=0){
+  /* v10.13.54: comparar como STRING para evitar mismatches por tipo
+     (Supabase puede devolver id como number, string, BigInt, etc.).
+     Antes con DEV_USER_IDS.indexOf(myId) podía fallar si myId era '1493651830'
+     (string) y el array era [1493651830] (number). */
+  var myIdStr=String(myId||'');
+  var devIdsStr=(typeof DEV_USER_IDS!=='undefined'?DEV_USER_IDS:[]).map(function(x){return String(x)});
+  console.log('[showAdminDevTabs] myIdStr=',myIdStr,'devIdsStr=',devIdsStr);
+  if(myIdStr&&devIdsStr.indexOf(myIdStr)>=0){
     bhNav.style.display='';
-    console.log('[showAdminDevTabs] Pestaña Bot activada');
+    console.log('[showAdminDevTabs] Pestaña Bot activada ✓');
   }else{
     console.log('[showAdminDevTabs] User no es dev — pestaña Bot oculta');
   }
 }
 
-function startAdminMode(){document.getElementById('unified-auth').classList.add('hide');document.getElementById('ld').classList.add('out');document.getElementById('app-admin').style.display='block';document.getElementById('fab').style.display='flex';document.getElementById('sticky-logo').style.display='flex';document.getElementById('sl-mode').textContent='Panel Admin';currentMode='admin';loadAll()}
+function startAdminMode(){document.getElementById('unified-auth').classList.add('hide');document.getElementById('ld').classList.add('out');document.getElementById('app-admin').style.display='block';document.getElementById('fab').style.display='flex';document.getElementById('sticky-logo').style.display='flex';document.getElementById('sl-mode').textContent='Panel Admin';currentMode='admin';/* v10.13.54: mostrar pestaña dev ANTES del loadAll para que aparezca al instante (no tras el fetch) */if(typeof showAdminDevTabs==='function')showAdminDevTabs();loadAll()}
 function toggleMode(){var fab=document.getElementById('fab');var sl=document.getElementById('sl-mode');if(currentMode==='admin'){document.getElementById('app-admin').style.display='none';document.getElementById('app-emisora').style.display='block';fab.innerHTML='👑 Modo Jefa';fab.className='fab fab-admin';sl.textContent='Mi Carrera';currentMode='emisora';if(!U||!U.id||!P||!P.id){init()}else{var hasActive=document.querySelector('#app-emisora .sec.a');if(!hasActive)go('perfil')}}else{document.getElementById('app-emisora').style.display='none';document.getElementById('app-admin').style.display='block';fab.innerHTML='🌴 Mi Carrera';fab.className='fab fab-emisora';sl.textContent='Panel Admin';currentMode='admin';showAdminDevTabs();}window.scrollTo({top:0,behavior:'smooth'})}
 
 /* Hide MC loading initially, let unified auth decide */
